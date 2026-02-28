@@ -139,6 +139,57 @@ const TOTAL_ROUNDS = 15;
 const MAX_BUYS = 3;
 const PLAYER_COLORS = ["#e84855","#3a86ff","#06d6a0","#ffbe0b","#fb5607","#8338ec","#ff006e","#3ddc84"];
 
+// ─── TURN GOALS ───────────────────────────────────────────────────────────────
+// Each hand = array of [value, suit]. suit "★" = joker card.
+const TURN_GOALS = [
+  { emoji:"😌", flavor:"Uppvärmning. Njut av det medans det varar.",
+    hands:[ [["7","♥"],["7","♦"],["7","♠"]], [["J","♣"],["J","♠"],["J","♥"]] ] },
+
+  { emoji:"🎰", flavor:"Rätt färg eller döden.",
+    hands:[ [["3","♥"],["4","♥"],["5","♥"],["6","♥"]] ] },
+
+  { emoji:"😤", flavor:"Alla fyra. Ingen slipper undan.",
+    hands:[ [["8","♠"],["8","♥"],["8","♦"],["8","♣"]], [["Q","♠"],["Q","♥"],["Q","♦"],["Q","♣"]] ] },
+
+  { emoji:"🌈", flavor:"Dubbel flusch! Hoppas du gillar en färg.",
+    hands:[ [["4","♦"],["5","♦"],["6","♦"],["7","♦"]], [["9","♣"],["10","♣"],["J","♣"],["Q","♣"]] ] },
+
+  { emoji:"🤔", flavor:"Nu börjar det hetta till lite smått...",
+    hands:[ [["6","♠"],["6","♥"],["6","♦"]], [["9","♣"],["9","♠"],["9","♥"]], [["2","♦"],["3","♦"],["4","♦"],["5","♦"]] ] },
+
+  { emoji:"😬", flavor:"Fem i rad. Och ett fyrtal. Självklart.",
+    hands:[ [["K","♠"],["K","♥"],["K","♦"],["K","♣"]], [["6","♥"],["7","♥"],["8","♥"],["9","♥"],["10","♥"]] ] },
+
+  { emoji:"🤯", flavor:"FEMTAL. Det kräver joker. Lycka till.",
+    hands:[ [["4","♠"],["4","♥"],["4","♦"],["4","♣"],["★","★"]], [["A","♠"],["A","♥"],["A","♦"],["A","♣"],["★","★"]] ] },
+
+  { emoji:"😱", flavor:"Dubbel LÅNG flusch. Helt rimligt.",
+    hands:[ [["2","♠"],["3","♠"],["4","♠"],["5","♠"],["6","♠"]], [["8","♥"],["9","♥"],["10","♥"],["J","♥"],["Q","♥"]] ] },
+
+  { emoji:"😰", flavor:"FYRA tretar. Vi ses på andra sidan.",
+    hands:[ [["3","♠"],["3","♥"],["3","♦"]], [["7","♣"],["7","♦"],["7","♥"]], [["J","♠"],["J","♦"],["J","♣"]], [["4","♠"],["4","♥"],["4","♦"]] ] },
+
+  { emoji:"🫠", flavor:"Tre fluchsar. Handen räcker knappt till.",
+    hands:[ [["A","♣"],["2","♣"],["3","♣"],["4","♣"]], [["6","♦"],["7","♦"],["8","♦"],["9","♦"]], [["J","♠"],["Q","♠"],["K","♠"],["A","♠"]] ] },
+
+  { emoji:"💀", flavor:"TRE fyrtal. Det är inte en vits.",
+    hands:[ [["5","♠"],["5","♥"],["5","♦"],["5","♣"]], [["9","♠"],["9","♥"],["9","♦"],["9","♣"]], [["K","♠"],["K","♥"],["K","♦"],["K","♣"]] ] },
+
+  { emoji:"🎭", flavor:"FEM fluchsar. Den som hittade på det här skrattar fortfarande.",
+    hands:[ [["A","♥"],["2","♥"],["3","♥"]], [["5","♣"],["6","♣"],["7","♣"]], [["9","♠"],["10","♠"],["J","♠"]], [["3","♦"],["4","♦"],["5","♦"]], [["7","♥"],["8","♥"],["9","♥"]] ] },
+
+  { emoji:"☠️", flavor:"Fem tretar. Det är inte okej. Det är aldrig okej.",
+    hands:[ [["2","♠"],["2","♥"],["2","♦"]], [["5","♣"],["5","♦"],["5","♥"]], [["8","♠"],["8","♦"],["8","♣"]], [["J","♣"],["J","♥"],["J","♦"]], [["A","♠"],["A","♥"],["A","♣"]] ] },
+
+  { emoji:"🔥", flavor:"Femtal + lång flusch + ett par som INTE får byggas på. Självklart.",
+    hands:[ [["K","♠"],["K","♥"],["K","♦"],["K","♣"],["★","★"]], [["3","♦"],["4","♦"],["5","♦"],["6","♦"],["7","♦"]], [["10","♠"],["10","♥"]] ],
+    extra:[null, null, "🚫 inga tillägg"] },
+
+  { emoji:"🪦", flavor:"SISTA OMGÅNGEN. Allt ut. Inga kort kvar på handen.",
+    hands:[ [["6","♠"],["6","♥"],["6","♦"]], [["9","♣"],["9","♠"],["9","♥"]], [["2","♣"],["3","♣"],["4","♣"],["5","♣"],["6","♣"]], [["8","♦"],["9","♦"],["10","♦"],["J","♦"],["Q","♦"]] ],
+    footer:"⚠️ INGA KORT FÅR LIGGA KVAR PÅ HANDEN" }
+];
+
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let authToken    = null;
 let savedPlayers = lload("gin_players", []);
@@ -551,6 +602,47 @@ function removeSetupPlayer(name) {
   renderHome();
 }
 
+function renderTurnGoal(round) {
+  const goal = TURN_GOALS[round - 1];
+  if (!goal) return "";
+  const diffColor = round <= 4 ? "#3a86ff" : round <= 8 ? "#ffbe0b" : round <= 12 ? "#fb5607" : "#e84855";
+
+  function miniCard(value, suit) {
+    const isJoker = suit === "★";
+    const isRed   = suit === "♥" || suit === "♦";
+    const fgColor  = isJoker ? "#7b2fff" : isRed ? "#cc2233" : "#0d0d20";
+    return `<div style="width:24px;height:34px;background:#fff;border-radius:3px;display:inline-flex;flex-direction:column;justify-content:space-between;padding:2px 2px 3px;box-shadow:0 1px 4px rgba(0,0,0,0.45);vertical-align:middle">
+      <div style="font-size:8px;line-height:1;color:${fgColor};font-weight:bold;font-family:monospace">${value}</div>
+      <div style="font-size:11px;line-height:1;color:${fgColor};text-align:center">${suit}</div>
+    </div>`;
+  }
+
+  let handsHtml = `<div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px;justify-content:center;margin-top:10px">`;
+  goal.hands.forEach((hand, hi) => {
+    const note = goal.extra && goal.extra[hi];
+    handsHtml += `<div style="display:flex;flex-direction:column;align-items:center;gap:4px">`;
+    handsHtml += `<div style="display:flex;gap:3px;align-items:center">`;
+    hand.forEach(([value, suit]) => { handsHtml += miniCard(value, suit); });
+    handsHtml += `</div>`;
+    if (note) handsHtml += `<div style="font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:1px">${note}</div>`;
+    handsHtml += `</div>`;
+    if (hi < goal.hands.length - 1)
+      handsHtml += `<div style="font-size:18px;color:rgba(255,255,255,0.35);align-self:center;line-height:1">+</div>`;
+  });
+  handsHtml += `</div>`;
+
+  const footerHtml = goal.footer
+    ? `<div style="margin-top:12px;font-size:11px;color:#e84855;letter-spacing:2px;font-weight:bold">${goal.footer}</div>`
+    : "";
+
+  return `<div class="card" style="padding:16px 20px;margin-bottom:20px;text-align:center;border-color:${diffColor}55;background:${diffColor}0d">
+    <div style="font-size:10px;letter-spacing:3px;color:${diffColor};margin-bottom:8px">OMGÅNGENS MÅL</div>
+    <div style="margin-bottom:2px">${goal.emoji} <span style="font-size:13px;color:rgba(255,255,255,0.55);font-style:italic">${goal.flavor}</span></div>
+    ${handsHtml}
+    ${footerHtml}
+  </div>`;
+}
+
 function renderGame() {
   if (!currentGame || currentGame.finished) {
     renderFinished(); return;
@@ -647,6 +739,7 @@ function renderGame() {
       <div style="font-size:14px;color:rgba(255,255,255,0.35)">av ${TOTAL_ROUNDS}</div>
       <div style="display:flex;gap:4px;justify-content:center;margin-top:16px;flex-wrap:wrap">${bars}</div>
     </div>
+    ${renderTurnGoal(currentGame.currentRound)}
     ${scoreCards}
     <div class="card" style="padding:24px;margin-bottom:20px">
       <div style="font-size:12px;letter-spacing:3px;color:rgba(255,255,255,0.4);margin-bottom:18px">REGISTRERA OMGÅNG ${currentGame.currentRound}</div>
