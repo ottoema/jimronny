@@ -211,84 +211,23 @@ const TURN_GOALS = [
     footer:"⚠️ INGET SLÄNG!" }
 ];
 
-// ─── GÖTEBORGSVITSAR ──────────────────────────────────────────────────────────
-// 3 jokes per round, randomly shown in the game view.
-const TURN_JOKES = [
-  /* 1 */ [
-    "Vad sa treern till de andra korten? 'Vi ses på klubben!' — Klöver, alltså.",
-    "Varför spelar göteborgare alltid treta? Tredje gången gillt — och man gillar att ha rätt.",
-    "Vad heter en göteborgare med tre ess? Lugn. Extremt lugn."
-  ],
-  /* 2 */ [
-    "Vad sa spelaren till rörmokaren? 'Jag fick flusch!' — 'Det kostar 1 800 kronor', sa rörmokaren.",
-    "Varför är en flusch som en göteborgsk morgon? Allt ska vara i rätt ordning, annars fungerar ingenting.",
-    "Vad kallar man fem kort i samma färg? En flusch! Vad kallar man en göteborgare i Stockholm? Också en flusch."
-  ],
-  /* 3 */ [
-    "Vad sa spelaren med två firtal? 'Nu är jag varm på spisen!' — Fast det var korten som brann.",
-    "Varför gillar göteborgare firtal? Fyra är alltid bättre än tre — fråga bara Blåvitt.",
-    "Vad kallar man fyra kungar och fyra damer? Kungligt bröllop! Eller bara ett bra blad."
-  ],
-  /* 4 */ [
-    "Vad sa den ena fluschen till den andra? 'Vi är av samma skrot och korn!' — Och färg, förstås.",
-    "Varför behöver göteborgaren två fluchsar? En till badrummet och en till köket — det är standard.",
-    "Vad heter göteborgaren som alltid vinner på fluchsar? Rörläggare-Ronny. Han fixar allt."
-  ],
-  /* 5 */ [
-    "Vad sa spelaren med tre kombinationer? 'Jag är på semester!' — Det var tisdag.",
-    "Varför är omgång fem som en göteborgsk morgon? Man behöver tre saker: kaffe, kaffe och en flusch.",
-    "Vad kallar man tre kombinationer i en hand? Lagom. Det är alltid lagom."
-  ],
-  /* 6 */ [
-    "Vad sa spelaren med firtal och lång flusch? 'Jag jobbar lite på semestern också.' — Precis som alla andra.",
-    "Varför är omgång sex som Liseberg i juli? Lång kö, fullt upp, och alla skriker.",
-    "Vad kallar man ett firtal och fem i rad? En vanlig fredag i Göteborg, ungefär."
-  ],
-  /* 7 */ [
-    "Vad sa jokern? 'Jag är med överallt!' — Som den göteborgssläkting man alltid glömmer bjuda på.",
-    "Varför är jokern som en göteborgsk vinter? Ingen förstår riktigt vad den gör där — men den finns.",
-    "Vad kallar man fem lika kort? En familj. Det krävs alltid en joker för att det ska funka."
-  ],
-  /* 8 */ [
-    "Vad sa spelaren med dubbel lång flusch? 'Nu har jag verkligen flödat på!' — Och rörmokaren nickade.",
-    "Varför gillar göteborgare dubbel lång flusch? Det låter som att ha två badrum. Det är status.",
-    "Vad kallar man tio kort i fin ordning? Semester! Fast man sitter vid kortbordet."
-  ],
-  /* 9 */ [
-    "Vad sa spelaren med fyra tretar? '...Jag förstår ingenting. Men jag har allt.'",
-    "Varför är fyra tretar som en måndag i Göteborg? Man vet att det gäller att samla ihop alla bitar.",
-    "Vad kallar man fyra tretar? Fulltecknat. Som p-huset vid Nordstan på julhandeln."
-  ],
-  /* 10 */ [
-    "Vad sa spelaren med tre fluchsar? 'Jag har rört om ordentligt!' — Rörmokaren var väldigt stolt.",
-    "Varför behöver göteborgaren tre fluchsar? En till badrummet, en till köket och en extra — man vet aldrig.",
-    "Vad kallar man tre fluchsar? En VVS-firma i miniformat. Eller ett drömblad."
-  ],
-  /* 11 */ [
-    "Vad sa spelaren med tre firtal? 'Tre spisflammar på en gång — det är konst!'",
-    "Varför är tre firtal som Göteborgs trafik? Allt verkar gå i fyra riktningar men man kommer ingen vart.",
-    "Vad kallar man tre gånger fyra lika kort? Övermäktigt. Precis som menyn på Feskekôrkan."
-  ],
-  /* 12 */ [
-    "Vad sa spelaren med fem fluchsar? 'Jag är oövervinnelig!' — Och sen förlorade han ändå.",
-    "Varför klarar bara göteborgare fem fluchsar? Vi är vana vid att hantera allt — fem ungar, tre jobb och en halvfärdig pool.",
-    "Vad kallar man den som klarar fem fluchsar? Legend. Eller Ronny. Det är alltid en Ronny."
-  ],
-  /* 13 */ [
-    "Vad sa spelaren med fem tretar? '...Jag behöver en stund.' — Och tog en månad.",
-    "Varför är fem tretar som Göteborgsvarvet? Man vet inte varför man anmälde sig, men nu sitter man i det.",
-    "Vad kallar man fem gånger tre lika kort? Orimligt. Fast det är ju hela grejen med spelet."
-  ],
-  /* 14 */ [
-    "Vad sa paret som inte fick byggas på? 'Inga tillägg!' — Precis som restaurangkön på lördagskväll.",
-    "Varför är omgång fjorton som Göteborgs kollektivtrafik? Det är fullt, och nu är det stängt — inga tillägg!",
-    "Vad kallar man ett femtal, en lång flusch och ett par med förbud? En dag med göteborgsk byråkrati."
-  ],
-  /* 15 */ [
-    "Vad sa göteborgaren när han la sina sista kort? 'Nu är det slut!' — Och beställde mer kaffe.",
-    "Varför är sista omgången som midsommar i Göteborg? Allt ska ut — och det ska inte finnas ett enda kort kvar i hand.",
-    "Vad kallar man det när man inte har några kort kvar? Fri som en fågel! Eller bankrutt. Beror på hur det gick."
-  ]
+// ─── OMGÅNGSBESKRIVNINGAR ─────────────────────────────────────────────────────
+const TURN_DESCRIPTIONS = [
+  "2st tretal",
+  "1st straight flusch på minst 4 kort",
+  "2st fyrtal",
+  "2st straight flusch på minst 4 kort",
+  "2st tretal, 1st straight flusch på minst 4 kort",
+  "1st fyrtal, 1st straight flusch på minst 5 kort",
+  "2st femtal",
+  "2st straight flusch på minst 5 kort",
+  "4st tretal",
+  "3st straight flusch på minst 4 kort",
+  "3st fyrtal",
+  "5st straight flusch på minst 3 kort",
+  "5st tretal",
+  "1st femtal, 1st straight flusch på minst 5 kort, 1st par som inte får byggas på",
+  "2st tretal, resten straight flusch och inga kort på bordet",
 ];
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
@@ -741,7 +680,7 @@ function renderTurnGoal(round) {
 
   return `<div class="card" style="padding:16px 20px;margin-bottom:20px;text-align:center;border-color:${diffColor}55;background:${diffColor}0d">
     <div style="font-size:10px;letter-spacing:3px;color:${diffColor};margin-bottom:8px">OMGÅNGENS MÅL</div>
-    <div style="margin-bottom:2px">${goal.emoji} <span style="font-size:13px;color:rgba(255,255,255,0.55);font-style:italic">${TURN_JOKES[round-1][Math.floor(Math.random()*3)]}</span></div>
+    <div style="margin-bottom:2px">${goal.emoji} <span style="font-size:13px;color:rgba(255,255,255,0.55);font-style:italic">${TURN_DESCRIPTIONS[round-1]}</span></div>
     ${handsHtml}
     ${footerHtml}
   </div>`;
