@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JimRonny 🃏</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f;
+      --fg: #f0ede8;
+      --muted: rgba(255,255,255,0.4);
+      --card-bg: rgba(255,255,255,0.04);
+      --card-border: rgba(255,255,255,0.08);
+      --red: #e84855;
+      --blue: #3a86ff;
+      --green: #06d6a0;
+      --yellow: #ffbe0b;
+    }
+    body { background: var(--bg); color: var(--fg); font-family: 'Georgia', 'Times New Roman', serif; min-height: 100vh; }
+    body::before {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background: radial-gradient(ellipse at 20% 20%, #1a0a2e 0%, transparent 50%),
+                  radial-gradient(ellipse at 80% 80%, #0d1a0a 0%, transparent 50%);
+    }
+    #app { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 16px 60px; }
+
+    /* NOTIFICATION */
+    #notification {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      z-index: 1000; padding: 12px 28px; border-radius: 4px;
+      font-weight: bold; font-size: 14px; font-family: inherit;
+      box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+      animation: slideDown 0.3s ease; display: none;
+    }
+
+    /* HEADER */
+    header { padding: 32px 0 24px; text-align: center; border-bottom: 1px solid var(--card-border); margin-bottom: 28px; }
+    .subtitle { font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    h1 { font-size: clamp(28px,6vw,48px); font-weight: normal; letter-spacing: -1px; }
+    .tagline { font-size: 13px; color: rgba(255,255,255,0.35); margin-top: 6px; letter-spacing: 2px; }
+    #auth-bar { margin-top: 16px; display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+
+    /* NAV */
+    nav { display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; justify-content: center; }
+    nav button { padding: 8px 18px; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.7); font-size: 13px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border-radius: 4px; font-family: inherit; transition: all 0.2s; }
+    nav button:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.4); }
+    nav button.active { background: rgba(255,255,255,0.12); color: #fff; border-color: rgba(255,255,255,0.5); }
+    nav button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* CARDS */
+    .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 8px; animation: fadeIn 0.4s ease; }
+
+    /* BUTTONS */
+    .btn { cursor: pointer; border: none; border-radius: 4px; font-family: inherit; transition: all 0.2s; }
+    .btn:hover { filter: brightness(1.2); transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+
+    /* INPUTS */
+    input[type=text], input[type=number] {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 4px; color: var(--fg); font-family: inherit;
+      padding: 8px 12px; font-size: 15px; outline: none;
+    }
+    input:focus { border-color: rgba(255,255,255,0.4); }
+
+    /* CHIPS */
+    .chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+
+    /* SPINNER */
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+
+    /* SYNC DOT */
+    .sync-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+    /* ROUND PROGRESS */
+    .round-bar { width: 28px; height: 6px; border-radius: 3px; display: inline-block; }
+
+    /* SCORE TABLE */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { padding: 6px 10px; font-weight: normal; }
+    td { padding: 6px 10px; }
+
+    /* VIEWS */
+    .view { display: none; animation: fadeIn 0.4s ease; }
+    .view.active { display: block; }
+
+    /* GOOGLE SIGNIN BTN */
+    .google-btn {
+      padding: 8px 20px; background: rgba(66,133,244,0.15); border: 1px solid rgba(66,133,244,0.4);
+      color: #4285f4; font-size: 13px; cursor: pointer; border-radius: 4px;
+      font-family: inherit; display: flex; align-items: center; gap: 8px; transition: all 0.2s;
+    }
+    .google-btn:hover { background: rgba(66,133,244,0.25); }
+
+    @keyframes slideDown { from { opacity:0; transform: translate(-50%,-10px); } to { opacity:1; transform: translate(-50%,0); } }
+    @keyframes fadeIn { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: translateY(0); } }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+
+    @media (max-width: 600px) {
+      .player-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    }
+  </style>
+</head>
+<body>
+<div id="notification"></div>
+<div id="app">
+  <header>
+    <div class="subtitle">KORTSPEL · POÄNGTAVLA</div>
+    <h1>🃏 JimRonny</h1>
+    <div class="tagline">15 OMGÅNGAR · 3 KÖP PER OMGÅNG</div>
+    <div id="auth-bar"></div>
+  </header>
+
+  <nav>
+    <button id="nav-home" class="active" onclick="showView('home')">Hem</button>
+    <button id="nav-game" disabled onclick="showView('game')">Pågående match</button>
+    <button id="nav-stats" onclick="showView('stats')">Statistik</button>
+    <button id="nav-players" onclick="showView('players')">Spelare</button>
+  </nav>
+
+  <div id="view-home" class="view active"></div>
+  <div id="view-game" class="view"></div>
+  <div id="view-stats" class="view"></div>
+  <div id="view-players" class="view"></div>
+</div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const CLIENT_ID      = "196118672846-ou2s55la38u8gku9r9mvgld6m99ms7rl.apps.googleusercontent.com";
+const SPREADSHEET_ID = "110T-ajfYcKBmzdyCUOFZ2pnIRaujyPZ_I6dmYuZY0CQ";
+const SCOPES         = "https://www.googleapis.com/auth/spreadsheets";
+const REDIRECT_URI   = "https://ottoema.github.io/jimronny/";
+
+const TOTAL_ROUNDS = 15;
+const MAX_BUYS = 3;
+const PLAYER_COLORS = ["#e84855","#3a86ff","#06d6a0","#ffbe0b","#fb5607","#8338ec","#ff006e","#3ddc84"];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let authToken    = null;
+let savedPlayers = lload("gin_players", []);
+let currentGame  = lload("gin_current_game", null);
+let allGames     = lload("gin_all_games", []);
+let setupPlayers = [];
+let roundInputs  = {};
+let goesOutIdx   = null;
+let currentView  = "home";
+let syncStatus   = "idle";
+
+// ─── LOCAL STORAGE ────────────────────────────────────────────────────────────
+function lsave(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} }
+function lload(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e) { return d; } }
+
+// ─── NOTIFICATIONS ────────────────────────────────────────────────────────────
+let notifTimer = null;
+function notify(msg, type = "info") {
+  const el = document.getElementById("notification");
+  el.textContent = msg;
+  el.style.background = type === "success" ? "#06d6a0" : type === "warn" ? "#ffbe0b" : "#3a86ff";
+  el.style.color = "#0a0a0f";
+  el.style.display = "block";
+  if (notifTimer) clearTimeout(notifTimer);
+  notifTimer = setTimeout(() => { el.style.display = "none"; }, 3000);
+}
+
+// ─── OAUTH ────────────────────────────────────────────────────────────────────
+function signIn() {
+  const params = new URLSearchParams({
+    client_id: CLIENT_ID,
+    redirect_uri: REDIRECT_URI,
+    response_type: "token",
+    scope: SCOPES,
+    prompt: "select_account"
+  });
+  window.location.href = "https://accounts.google.com/o/oauth2/v2/auth?" + params;
+}
+
+function signOut() {
+  authToken = null;
+  lsave("gin_token_expiry", null);
+  renderAuthBar();
+  notify("Utloggad", "info");
+}
+
+function handleOAuthCallback() {
+  const hash = window.location.hash;
+  if (!hash.includes("access_token")) return false;
+  const params = new URLSearchParams(hash.slice(1));
+  const token = params.get("access_token");
+  const expiresIn = parseInt(params.get("expires_in") || "3600");
+  if (token) {
+    authToken = token;
+    lsave("gin_token_expiry", Date.now() + expiresIn * 1000);
+    window.history.replaceState({}, "", window.location.pathname);
+    return true;
+  }
+  return false;
+}
+
+// ─── SHEETS API ───────────────────────────────────────────────────────────────
+async function sheetsGet(range) {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(range)}`;
+  const r = await fetch(url, { headers: { Authorization: `Bearer ${authToken}` } });
+  if (!r.ok) throw new Error(await r.text());
+  return (await r.json()).values || [];
+}
+async function sheetsAppend(range, values) {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(range)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`;
+  const r = await fetch(url, { method:"POST", headers:{ Authorization:`Bearer ${authToken}`, "Content-Type":"application/json" }, body:JSON.stringify({ values }) });
+  if (!r.ok) throw new Error(await r.text());
+}
+async function sheetsClear(range) {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(range)}:clear`;
+  const r = await fetch(url, { method:"POST", headers:{ Authorization:`Bearer ${authToken}` } });
+  if (!r.ok) throw new Error(await r.text());
+}
+async function sheetsUpdate(range, values) {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=RAW`;
+  const r = await fetch(url, { method:"PUT", headers:{ Authorization:`Bearer ${authToken}`, "Content-Type":"application/json" }, body:JSON.stringify({ values }) });
+  if (!r.ok) throw new Error(await r.text());
+}
+
+async function initSheets() {
+  const r = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}`, { headers:{ Authorization:`Bearer ${authToken}` } });
+  const data = await r.json();
+  const existing = (data.sheets||[]).map(s=>s.properties.title);
+  const needed = [
+    { title:"Players",     headers:["id","name","wins","gamesPlayed"] },
+    { title:"Games",       headers:["id","date","playerNames","playerScores","playerBuys","winnerId","winnerName"] },
+    { title:"Rounds",      headers:["gameId","round","playerName","score","buys"] },
+    { title:"CurrentGame", headers:["key","value"] },
+  ];
+  const requests = needed.filter(s=>!existing.includes(s.title)).map(s=>({ addSheet:{ properties:{ title:s.title } } }));
+  if (requests.length > 0) {
+    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`, {
+      method:"POST", headers:{ Authorization:`Bearer ${authToken}`, "Content-Type":"application/json" },
+      body: JSON.stringify({ requests })
+    });
+  }
+  for (const s of needed) {
+    try {
+      const rows = await sheetsGet(`${s.title}!A1:Z1`);
+      if (rows.length===0) await sheetsUpdate(`${s.title}!A1`, [s.headers]);
+    } catch(e) {
+      try { await sheetsUpdate(`${s.title}!A1`, [s.headers]); } catch(e2) {}
+    }
+  }
+}
+
+async function loadFromSheets() {
+  setSyncStatus("syncing");
+  try {
+    const playerRows = await sheetsGet("Players!A2:D1000");
+    if (playerRows.length > 0) {
+      savedPlayers = playerRows.map(r => ({ id:r[0], name:r[1], wins:parseInt(r[2])||0, gamesPlayed:parseInt(r[3])||0 }));
+      lsave("gin_players", savedPlayers);
+    }
+    const gameRows = await sheetsGet("Games!A2:G1000");
+    if (gameRows.length > 0) {
+      allGames = gameRows.map(r => {
+        const names  = r[2] ? r[2].split("|") : [];
+        const scores = r[3] ? r[3].split("|").map(s=>s.split(",").map(Number)) : [];
+        const buys   = r[4] ? r[4].split("|").map(b=>b.split(",").map(Number)) : [];
+        return { id:r[0], date:r[1], finished:true,
+          players: names.map((name,i) => ({ name, id:name+r[0], scores:scores[i]||[], buys:buys[i]||[] })) };
+      });
+      lsave("gin_all_games", allGames);
+    }
+    try {
+      const cgRows = await sheetsGet("CurrentGame!A2:B2");
+      if (cgRows.length > 0 && cgRows[0][0]==="game" && cgRows[0][1]) {
+        const ongoing = JSON.parse(cgRows[0][1]);
+        if (ongoing && !ongoing.finished) {
+          currentGame = ongoing;
+          lsave("gin_current_game", currentGame);
+          notify("Pågående match återupptagen ✓", "success");
+        }
+      }
+    } catch(e) {}
+    setSyncStatus("synced");
+    render();
+  } catch(e) {
+    setSyncStatus("error");
+    notify("Sheets-fel: " + e.message, "warn");
+  }
+}
+
+async function saveCurrentGame(game) {
+  if (!authToken) return;
+  try {
+    await sheetsClear("CurrentGame!A2:B100");
+    if (game) await sheetsUpdate("CurrentGame!A2:B2", [["game", JSON.stringify(game)]]);
+  } catch(e) { console.warn("saveCurrentGame failed", e); }
+}
+
+async function saveFinishedGame(game, updatedPlayers) {
+  if (!authToken) return;
+  setSyncStatus("syncing"); renderAuthBar();
+  try {
+    const winner = [...game.players].sort((a,b)=>totalScore(a)-totalScore(b))[0];
+    await sheetsAppend("Games!A:G", [[
+      game.id, game.date,
+      game.players.map(p=>p.name).join("|"),
+      game.players.map(p=>p.scores.join(",")).join("|"),
+      game.players.map(p=>p.buys.join(",")).join("|"),
+      winner?.id||"", winner?.name||""
+    ]]);
+    const roundRows = [];
+    game.players.forEach(p => p.scores.forEach((score,i) => roundRows.push([game.id,i+1,p.name,score,p.buys[i]||0])));
+    if (roundRows.length > 0) await sheetsAppend("Rounds!A:E", roundRows);
+    await sheetsClear("Players!A2:D1000");
+    if (updatedPlayers.length > 0)
+      await sheetsAppend("Players!A:D", updatedPlayers.map(p=>[p.id,p.name,p.wins,p.gamesPlayed]));
+    await saveCurrentGame(null);
+    setSyncStatus("synced"); renderAuthBar();
+  } catch(e) {
+    setSyncStatus("error"); renderAuthBar();
+    notify("Kunne inte spara till Sheets: " + e.message, "warn");
+  }
+}
+
+// ─── GAME LOGIC ───────────────────────────────────────────────────────────────
+function totalScore(p) { return p.scores.reduce((a,b)=>a+b,0); }
+function totalBuys(p)  { return p.buys.reduce((a,b)=>a+b,0); }
+function getLeader()   { return currentGame ? [...currentGame.players].sort((a,b)=>totalScore(a)-totalScore(b))[0] : null; }
+
+function startGame() {
+  if (setupPlayers.length < 2) { notify("Minst 2 spelare krävs!", "warn"); return; }
+  const game = { id:String(Date.now()), date:new Date().toLocaleDateString("sv-SE"),
+    players:setupPlayers.map(p=>({...p,scores:[],buys:[]})), currentRound:1, finished:false };
+  setupPlayers.forEach(sp => {
+    if (!savedPlayers.find(s=>s.name===sp.name))
+      savedPlayers.push({name:sp.name, id:String(sp.id), wins:0, gamesPlayed:0});
+  });
+  lsave("gin_players", savedPlayers);
+  currentGame = game;
+  lsave("gin_current_game", currentGame);
+  setupPlayers = []; roundInputs = {}; goesOutIdx = null;
+  saveCurrentGame(game);
+  showView("game");
+}
+
+function addBuy(idx) {
+  const p = currentGame.players[idx];
+  const rb = p.buys[currentGame.currentRound-1]||0;
+  if (rb>=MAX_BUYS) { notify(`${p.name} har redan använt alla köp!`, "warn"); return; }
+  const nb = [...p.buys]; nb[currentGame.currentRound-1] = rb+1;
+  currentGame.players[idx] = {...p, buys:nb};
+  lsave("gin_current_game", currentGame);
+  renderGame();
+}
+
+function removeBuy(idx) {
+  const p = currentGame.players[idx];
+  const rb = p.buys[currentGame.currentRound-1]||0;
+  if (rb<=0) return;
+  const nb = [...p.buys]; nb[currentGame.currentRound-1] = rb-1;
+  currentGame.players[idx] = {...p, buys:nb};
+  lsave("gin_current_game", currentGame);
+  notify(`Köp ångrad för ${p.name}`, "info");
+  renderGame();
+}
+
+function setGoesOut(idx) {
+  goesOutIdx = idx;
+  renderGame();
+}
+
+function submitRound() {
+  if (goesOutIdx===null) { notify("Välj vem som gick ut!", "warn"); return; }
+  const allFilled = currentGame.players.every((_,i) =>
+    i===goesOutIdx || (roundInputs[i]!==undefined && roundInputs[i]!==""));
+  if (!allFilled) { notify("Fyll i poäng för alla spelare!", "warn"); return; }
+
+  currentGame.players = currentGame.players.map((p,i) => ({
+    ...p, scores:[...p.scores, i===goesOutIdx ? 0 : parseInt(roundInputs[i])||0]
+  }));
+
+  if (currentGame.currentRound >= TOTAL_ROUNDS) {
+    currentGame.finished = true;
+    const winner = [...currentGame.players].sort((a,b)=>totalScore(a)-totalScore(b))[0];
+    savedPlayers = savedPlayers.map(sp => {
+      const played = currentGame.players.find(p=>p.name===sp.name);
+      return played ? {...sp, wins:sp.wins+(sp.name===winner.name?1:0), gamesPlayed:sp.gamesPlayed+1} : sp;
+    });
+    lsave("gin_players", savedPlayers);
+    allGames.push({...currentGame});
+    lsave("gin_all_games", allGames);
+    notify(`Spelet slut! ${winner.name} vinner! 🏆`, "success");
+    saveFinishedGame(currentGame, savedPlayers);
+  } else {
+    currentGame.currentRound++;
+    saveCurrentGame(currentGame);
+  }
+
+  lsave("gin_current_game", currentGame);
+  roundInputs = {}; goesOutIdx = null;
+  render();
+}
+
+function getStats() {
+  return savedPlayers.map(p => {
+    const pg = allGames.filter(g=>g.players.find(gp=>gp.name===p.name));
+    return { ...p,
+      totalBuys: pg.reduce((s,g)=>{ const gp=g.players.find(gp=>gp.name===p.name); return s+(gp?totalBuys(gp):0); }, 0),
+      avgScore:  pg.length===0 ? 0 : Math.round(pg.reduce((s,g)=>{ const gp=g.players.find(gp=>gp.name===p.name); return s+(gp?totalScore(gp):0); },0)/pg.length)
+    };
+  }).sort((a,b)=>b.wins-a.wins);
+}
+
+// ─── SYNC STATUS ──────────────────────────────────────────────────────────────
+function setSyncStatus(s) { syncStatus = s; }
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function showView(v) {
+  currentView = v;
+  document.querySelectorAll(".view").forEach(el => el.classList.remove("active"));
+  document.querySelectorAll("nav button").forEach(el => el.classList.remove("active"));
+  document.getElementById("view-" + v).classList.add("active");
+  document.getElementById("nav-" + v).classList.add("active");
+  render();
+}
+
+function render() {
+  renderAuthBar();
+  updateNavState();
+  if (currentView==="home")    renderHome();
+  if (currentView==="game")    renderGame();
+  if (currentView==="stats")   renderStats();
+  if (currentView==="players") renderPlayers();
+}
+
+function updateNavState() {
+  const gameBtn = document.getElementById("nav-game");
+  gameBtn.disabled = !currentGame || currentGame.finished;
+}
+
+function renderAuthBar() {
+  const bar = document.getElementById("auth-bar");
+  if (!authToken) {
+    bar.innerHTML = `
+      <button class="google-btn" onclick="signIn()">
+        <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Logga in med Google
+      </button>
+      <span style="font-size:12px;color:rgba(255,255,255,0.25)">Logga in för att synka med Google Sheets</span>`;
+  } else {
+    const dotColor = syncStatus==="syncing" ? "#ffbe0b" : syncStatus==="error" ? "#e84855" : "#06d6a0";
+    const syncText = syncStatus==="syncing" ? "Synkar…" : syncStatus==="error" ? "Synkfel" : "Google Sheets synkad ✓";
+    bar.innerHTML = `
+      <span class="sync-dot" style="background:${dotColor}"></span>
+      <span style="font-size:13px;color:rgba(255,255,255,0.5)">${syncText}</span>
+      <button class="btn" onclick="loadFromSheets()" style="padding:4px 12px;font-size:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6)">↻ Hämta data</button>
+      <button class="btn" onclick="signOut()" style="padding:4px 12px;font-size:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4)">Logga ut</button>`;
+  }
+}
+
+function renderHome() {
+  const leader = getLeader();
+  let html = "";
+
+  if (currentGame && !currentGame.finished) {
+    const li = currentGame.players.findIndex(p=>p.name===leader?.name);
+    html += `<div class="card" style="padding:24px;margin-bottom:24px;border-color:rgba(232,72,85,0.3);background:rgba(232,72,85,0.06)">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-size:11px;letter-spacing:3px;color:#e84855;margin-bottom:4px">PÅGÅENDE MATCH</div>
+          <div style="font-size:22px">Omgång ${currentGame.currentRound} / ${TOTAL_ROUNDS}</div>
+          ${leader ? `<div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:4px">Leder: <span style="color:${PLAYER_COLORS[li]}">${leader.name}</span> (${totalScore(leader)} p)</div>` : ""}
+        </div>
+        <button class="btn" onclick="showView('game')" style="padding:10px 24px;background:#e84855;color:#fff;font-size:14px">Fortsätt →</button>
+      </div>
+    </div>`;
+  }
+
+  if (currentGame && currentGame.finished) {
+    const w = [...currentGame.players].sort((a,b)=>totalScore(a)-totalScore(b))[0];
+    html += `<div class="card" style="padding:24px;margin-bottom:24px;border-color:rgba(6,214,160,0.3);background:rgba(6,214,160,0.06);text-align:center">
+      <div style="font-size:11px;letter-spacing:3px;color:#06d6a0;margin-bottom:8px">SENASTE MATCH AVSLUTAD</div>
+      <div style="font-size:28px;margin-bottom:8px">👑 ${w.name} vann!</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.4)">${currentGame.date}</div>
+    </div>`;
+  }
+
+  html += `<div class="card" style="padding:32px">
+    <h2 style="margin:0 0 24px;font-size:20px;font-weight:normal;letter-spacing:1px">Starta ny match</h2>
+    <div style="margin-bottom:20px">
+      <div style="font-size:12px;letter-spacing:2px;color:rgba(255,255,255,0.4);margin-bottom:10px">LÄGG TILL SPELARE</div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="new-player-input" placeholder="Spelarens namn…" style="flex:1" onkeydown="if(event.key==='Enter')addPlayerFromInput()">
+        <button class="btn" onclick="addPlayerFromInput()" style="padding:8px 20px;background:#3a86ff;color:#fff;white-space:nowrap">+ Lägg till</button>
+      </div>
+    </div>`;
+
+  if (savedPlayers.length > 0) {
+    html += `<div style="margin-bottom:20px">
+      <div style="font-size:12px;letter-spacing:2px;color:rgba(255,255,255,0.4);margin-bottom:10px">SPARADE SPELARE</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">`;
+    savedPlayers.forEach(sp => {
+      const already = setupPlayers.find(p=>p.name===sp.name);
+      html += `<div class="chip" onclick="addSavedPlayer('${sp.name}')"
+        style="background:${already?"rgba(6,214,160,0.2)":"rgba(255,255,255,0.06)"};border:1px solid ${already?"#06d6a0":"rgba(255,255,255,0.15)"};color:${already?"#06d6a0":"#f0ede8"}">
+        ${already?"✓ ":"+ "}${sp.name}${sp.wins>0?`<span style="opacity:0.5;font-size:11px">(${sp.wins}🏆)</span>`:""}
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  if (setupPlayers.length > 0) {
+    html += `<div style="margin-bottom:24px">
+      <div style="font-size:12px;letter-spacing:2px;color:rgba(255,255,255,0.4);margin-bottom:10px">VALDA (${setupPlayers.length})</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">`;
+    setupPlayers.forEach((p,i) => {
+      html += `<div class="chip" style="background:${PLAYER_COLORS[i]}22;border:1px solid ${PLAYER_COLORS[i]}55;color:${PLAYER_COLORS[i]}">
+        ${p.name}<span style="opacity:0.7;cursor:pointer;margin-left:4px" onclick="removeSetupPlayer('${p.name}')">✕</span>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  html += `<button class="btn" onclick="startGame()"
+    style="padding:14px 36px;background:${setupPlayers.length>=2?"#e84855":"rgba(255,255,255,0.1)"};color:#fff;font-size:16px;letter-spacing:1px;width:100%;cursor:${setupPlayers.length<2?"not-allowed":"pointer"}">
+    🃏 Starta match
+  </button></div>`;
+
+  document.getElementById("view-home").innerHTML = html;
+}
+
+function addPlayerFromInput() {
+  const input = document.getElementById("new-player-input");
+  const name = input?.value?.trim();
+  if (!name) return;
+  if (setupPlayers.find(p=>p.name.toLowerCase()===name.toLowerCase())) { notify("Spelaren finns redan!", "warn"); return; }
+  setupPlayers.push({ name, id: String(Date.now()+Math.random()) });
+  if (input) input.value = "";
+  renderHome();
+}
+
+function addSavedPlayer(name) {
+  if (setupPlayers.find(p=>p.name===name)) return;
+  const sp = savedPlayers.find(p=>p.name===name);
+  if (sp) setupPlayers.push({ name:sp.name, id:sp.id });
+  renderHome();
+}
+
+function removeSetupPlayer(name) {
+  setupPlayers = setupPlayers.filter(p=>p.name!==name);
+  renderHome();
+}
+
+function renderGame() {
+  if (!currentGame || currentGame.finished) {
+    renderFinished(); return;
+  }
+  const el = document.getElementById("view-game");
+
+  // Progress bars
+  let bars = "";
+  for (let i=0;i<TOTAL_ROUNDS;i++) {
+    const bg = i<currentGame.currentRound-1?"#06d6a0":i===currentGame.currentRound-1?"#e84855":"rgba(255,255,255,0.1)";
+    bars += `<div class="round-bar" style="background:${bg}"></div>`;
+  }
+
+  // Live scores
+  const sorted = [...currentGame.players].map((p,i)=>({p,i,t:totalScore(p)})).sort((a,b)=>a.t-b.t);
+  let scoreCards = `<div class="player-grid" style="display:grid;grid-template-columns:repeat(${Math.min(currentGame.players.length,4)},1fr);gap:12px;margin-bottom:28px">`;
+  sorted.forEach(({p,i,t},rank) => {
+    scoreCards += `<div class="card" style="padding:16px 12px;text-align:center;border-color:${rank===0?PLAYER_COLORS[i]+"55":"rgba(255,255,255,0.08)"};background:${rank===0?PLAYER_COLORS[i]+"11":"rgba(255,255,255,0.03)"}">
+      ${rank===0?`<div style="font-size:10px;color:${PLAYER_COLORS[i]};letter-spacing:2px;margin-bottom:4px">LEDER</div>`:""}
+      <div style="font-size:13px;color:${PLAYER_COLORS[i]};margin-bottom:4px">${p.name}</div>
+      <div style="font-size:28px;font-weight:bold">${t}</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px">🛒 ${totalBuys(p)} köp</div>
+    </div>`;
+  });
+  scoreCards += "</div>";
+
+  // Goes out selector
+  let goesOutBtns = "";
+  currentGame.players.forEach((p,i) => {
+    const sel = goesOutIdx===i;
+    goesOutBtns += `<button class="btn chip" onclick="setGoesOut(${i})"
+      style="background:${sel?PLAYER_COLORS[i]+"33":"rgba(255,255,255,0.06)"};border:2px solid ${sel?PLAYER_COLORS[i]:"rgba(255,255,255,0.15)"};color:${sel?PLAYER_COLORS[i]:"#f0ede8"};padding:8px 16px">
+      ${sel?"✓ ":""}${p.name}
+    </button>`;
+  });
+
+  // Player rows
+  let playerRows = "";
+  currentGame.players.forEach((p,i) => {
+    const rb = p.buys[currentGame.currentRound-1]||0;
+    const isOut = goesOutIdx===i;
+    let dots = "";
+    for(let b=0;b<MAX_BUYS;b++) {
+      dots += `<div style="width:14px;height:14px;border-radius:50%;background:${b<rb?PLAYER_COLORS[i]:"rgba(255,255,255,0.1)"};border:1px solid ${b<rb?PLAYER_COLORS[i]:"rgba(255,255,255,0.2)"}"></div>`;
+    }
+    playerRows += `<div style="display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:12px 16px;border-radius:6px;background:${isOut?PLAYER_COLORS[i]+"11":"rgba(255,255,255,0.02)"};border:1px solid ${isOut?PLAYER_COLORS[i]+"44":"rgba(255,255,255,0.06)"}">
+      <div>
+        <div style="font-size:13px;color:${PLAYER_COLORS[i]};margin-bottom:4px">${p.name}</div>
+        ${isOut
+          ? `<div style="font-size:22px;color:#06d6a0">0 poäng ✓</div>`
+          : `<input type="number" min="0" placeholder="Poäng…" value="${roundInputs[i]??""}" oninput="roundInputs[${i}]=this.value" style="max-width:120px;font-size:18px">`
+        }
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:2px;margin-bottom:6px">KÖP</div>
+        <div style="display:flex;gap:4px">${dots}</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn" onclick="addBuy(${i})" ${rb>=MAX_BUYS?"disabled":""}
+          style="padding:6px 12px;font-size:13px;white-space:nowrap;background:${rb>=MAX_BUYS?"rgba(255,255,255,0.05)":PLAYER_COLORS[i]+"22"};border:1px solid ${rb>=MAX_BUYS?"rgba(255,255,255,0.1)":PLAYER_COLORS[i]+"66"};color:${rb>=MAX_BUYS?"rgba(255,255,255,0.3)":PLAYER_COLORS[i]};cursor:${rb>=MAX_BUYS?"not-allowed":"pointer"}">+ Köp</button>
+        <button class="btn" onclick="removeBuy(${i})" ${rb<=0?"disabled":""}
+          style="padding:6px 10px;font-size:15px;background:${rb<=0?"rgba(255,255,255,0.03)":"rgba(255,255,255,0.07)"};border:1px solid ${rb<=0?"rgba(255,255,255,0.06)":"rgba(255,255,255,0.2)"};color:${rb<=0?"rgba(255,255,255,0.15)":"rgba(255,255,255,0.55)"};cursor:${rb<=0?"not-allowed":"pointer"}" title="Ångra köp">↩</button>
+      </div>
+    </div>`;
+  });
+
+  // History table
+  let historyTable = "";
+  if (currentGame.players[0].scores.length > 0) {
+    let headers = `<th style="text-align:left;color:rgba(255,255,255,0.4);font-size:11px">OMG</th>`;
+    currentGame.players.forEach((p,i) => { headers += `<th style="color:${PLAYER_COLORS[i]};text-align:center">${p.name}</th>`; });
+    let rows = "";
+    currentGame.players[0].scores.forEach((_,round) => {
+      let cells = `<td style="color:rgba(255,255,255,0.3)">${round+1}</td>`;
+      currentGame.players.forEach((p,i) => {
+        const s = p.scores[round];
+        const b = p.buys[round]||0;
+        cells += `<td style="text-align:center;color:${s===0?"#06d6a0":"#f0ede8"};font-weight:${s===0?"bold":"normal"}">${s===0?"0 ✓":s}${b>0?`<span style="font-size:10px;color:${PLAYER_COLORS[i]};margin-left:4px">+${b}🛒</span>`:""}</td>`;
+      });
+      rows += `<tr style="border-top:1px solid rgba(255,255,255,0.05)">${cells}</tr>`;
+    });
+    let totRow = `<td style="font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.4)">TOT</td>`;
+    currentGame.players.forEach((p,i) => { totRow += `<td style="text-align:center;color:${PLAYER_COLORS[i]};font-weight:bold;font-size:16px">${totalScore(p)}</td>`; });
+    historyTable = `<div class="card" style="padding:20px;overflow-x:auto;margin-top:20px">
+      <div style="font-size:12px;letter-spacing:3px;color:rgba(255,255,255,0.4);margin-bottom:16px">POÄNGHISTORIK</div>
+      <table><thead><tr>${headers}</tr></thead><tbody>${rows}<tr style="border-top:2px solid rgba(255,255,255,0.15)">${totRow}</tr></tbody></table>
+    </div>`;
+  }
+
+  el.innerHTML = `
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="font-size:11px;letter-spacing:4px;color:rgba(255,255,255,0.4)">OMGÅNG</div>
+      <div style="font-size:52px;line-height:1;margin:4px 0">${currentGame.currentRound}</div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.35)">av ${TOTAL_ROUNDS}</div>
+      <div style="display:flex;gap:4px;justify-content:center;margin-top:16px;flex-wrap:wrap">${bars}</div>
+    </div>
+    ${scoreCards}
+    <div class="card" style="padding:24px;margin-bottom:20px">
+      <div style="font-size:12px;letter-spacing:3px;color:rgba(255,255,255,0.4);margin-bottom:18px">REGISTRERA OMGÅNG ${currentGame.currentRound}</div>
+      <div style="margin-bottom:20px">
+        <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:10px">Vem gick ut? (får 0 poäng)</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">${goesOutBtns}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">${playerRows}</div>
+      <button class="btn" onclick="submitRound()" style="margin-top:24px;width:100%;padding:14px;background:#e84855;color:#fff;font-size:16px;letter-spacing:1px">
+        Registrera omgång ${currentGame.currentRound} →
+      </button>
+    </div>
+    ${historyTable}`;
+}
+
+function renderFinished() {
+  if (!currentGame) return;
+  const sorted = [...currentGame.players].sort((a,b)=>totalScore(a)-totalScore(b));
+  let rows = "";
+  sorted.forEach((p,rank) => {
+    const i = currentGame.players.findIndex(x=>x.name===p.name);
+    rows += `<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-radius:6px;background:${rank===0?PLAYER_COLORS[i]+"22":"rgba(255,255,255,0.04)"};border:1px solid ${rank===0?PLAYER_COLORS[i]+"55":"rgba(255,255,255,0.08)"}">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:18px">${rank===0?"👑":`${rank+1}.`}</span>
+        <span style="color:${PLAYER_COLORS[i]}">${p.name}</span>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:22px;font-weight:bold">${totalScore(p)}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.35)">${totalBuys(p)} köp</div>
+      </div>
+    </div>`;
+  });
+  document.getElementById("view-game").innerHTML = `
+    <div style="text-align:center;animation:fadeIn 0.4s ease">
+      <div style="font-size:64px;margin-bottom:16px">🏆</div>
+      <h2 style="font-size:32px;margin:0 0 8px;font-weight:normal">${sorted[0].name} vinner!</h2>
+      <div style="font-size:14px;color:rgba(255,255,255,0.4);margin-bottom:32px">Matchen avslutad · ${currentGame.date}</div>
+      <div style="display:flex;flex-direction:column;gap:10px;max-width:400px;margin:0 auto 32px">${rows}</div>
+      <button class="btn" onclick="currentGame=null;lsave('gin_current_game',null);showView('home')" style="padding:12px 32px;background:#e84855;color:#fff;font-size:16px">Ny match</button>
+    </div>`;
+}
+
+function renderStats() {
+  const stats = getStats().filter(s=>s.gamesPlayed>0);
+  let html = `<h2 style="font-size:22px;font-weight:normal;margin-bottom:28px;letter-spacing:1px">📊 Statistik</h2>`;
+
+  if (allGames.length===0) {
+    html += `<div style="text-align:center;color:rgba(255,255,255,0.3);padding:60px">Inga avslutade matcher ännu</div>`;
+  } else {
+    let lbRows = "";
+    stats.forEach((s,i) => {
+      const idx = savedPlayers.findIndex(p=>p.name===s.name);
+      const color = PLAYER_COLORS[idx%PLAYER_COLORS.length];
+      const medal = i===0?"👑":i===1?"🥈":i===2?"🥉":`${i+1}.`;
+      const wr = Math.round(s.wins/s.gamesPlayed*100);
+      lbRows += `<div style="display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:12px;padding:12px 16px;border-radius:6px;background:${i===0?color+"11":"rgba(255,255,255,0.02)"};border:1px solid ${i===0?color+"33":"rgba(255,255,255,0.06)"}">
+        <div style="font-size:18px;text-align:center">${medal}</div>
+        <div>
+          <div style="color:${color};margin-bottom:3px">${s.name}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.35)">${s.gamesPlayed} matcher · ⌀ ${s.avgScore} p · 🛒 ${s.totalBuys} köp</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:22px;color:${color}">${s.wins} 🏆</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.35)">${wr}% winrate</div>
+        </div>
+      </div>`;
+    });
+    html += `<div class="card" style="padding:24px;margin-bottom:20px">
+      <div style="font-size:12px;letter-spacing:3px;color:rgba(255,255,255,0.4);margin-bottom:16px">SAMMANLAGT LEADERBOARD</div>
+      <div style="display:flex;flex-direction:column;gap:8px">${lbRows}</div>
+    </div>`;
+
+    let gameRows = "";
+    [...allGames].reverse().forEach((g,gi) => {
+      const sorted = [...g.players].sort((a,b)=>totalScore(a)-totalScore(b));
+      let players = sorted.map(p => {
+        const idx = g.players.findIndex(x=>x.name===p.name);
+        return `<span style="color:${PLAYER_COLORS[idx%PLAYER_COLORS.length]}">${p.name}</span><span style="color:rgba(255,255,255,0.5);margin-left:6px">${totalScore(p)} p</span>`;
+      }).join(`<span style="color:rgba(255,255,255,0.2);margin:0 6px">·</span>`);
+      gameRows += `<div style="padding:14px 16px;border-radius:6px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:12px;color:rgba(255,255,255,0.4)">Match ${allGames.length-gi} · ${g.date}</div>
+          <div style="font-size:13px">👑 ${sorted[0].name}</div>
+        </div>
+        <div style="font-size:12px;display:flex;flex-wrap:wrap;gap:6px">${players}</div>
+      </div>`;
+    });
+    html += `<div class="card" style="padding:24px">
+      <div style="font-size:12px;letter-spacing:3px;color:rgba(255,255,255,0.4);margin-bottom:16px">MATCHHISTORIK</div>
+      <div style="display:flex;flex-direction:column;gap:10px">${gameRows}</div>
+    </div>`;
+  }
+  document.getElementById("view-stats").innerHTML = html;
+}
+
+function renderPlayers() {
+  const stats = getStats();
+  let html = `<h2 style="font-size:22px;font-weight:normal;margin-bottom:28px;letter-spacing:1px">👥 Sparade spelare</h2>`;
+  if (savedPlayers.length===0) {
+    html += `<div style="text-align:center;color:rgba(255,255,255,0.3);padding:60px">Inga sparade spelare ännu</div>`;
+  } else {
+    html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px">`;
+    savedPlayers.forEach((p,i) => {
+      const color = PLAYER_COLORS[i%PLAYER_COLORS.length];
+      const s = stats.find(x=>x.name===p.name)||{};
+      const wr = p.gamesPlayed>0 ? Math.round(p.wins/p.gamesPlayed*100) : 0;
+      const emoji = p.wins>=5?"👑":p.wins>=3?"🏆":p.wins>=1?"⭐":"🃏";
+      html += `<div class="card" style="padding:20px;border-color:${color}33;background:${color}08">
+        <div style="font-size:32px;margin-bottom:8px">${emoji}</div>
+        <div style="font-size:18px;color:${color};margin-bottom:12px">${p.name}</div>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:rgba(255,255,255,0.5)">
+          <div>🏆 ${p.wins} vinster</div>
+          <div>🎮 ${p.gamesPlayed} matcher</div>
+          <div>📈 ${wr}% winrate</div>
+          ${s.avgScore!==undefined?`<div>⌀ ${s.avgScore} p/match</div>`:""}
+          ${s.totalBuys!==undefined?`<div>🛒 ${s.totalBuys} köp totalt</div>`:""}
+        </div>
+        <button class="btn" onclick="deletePlayer('${p.name}')"
+          style="margin-top:14px;width:100%;padding:6px;font-size:12px;background:rgba(255,80,80,0.1);border:1px solid rgba(255,80,80,0.2);color:rgba(255,100,100,0.7)">Ta bort</button>
+      </div>`;
+    });
+    html += "</div>";
+  }
+  document.getElementById("view-players").innerHTML = html;
+}
+
+function deletePlayer(name) {
+  if (!confirm(`Ta bort ${name}?`)) return;
+  savedPlayers = savedPlayers.filter(p=>p.name!==name);
+  lsave("gin_players", savedPlayers);
+  renderPlayers();
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+const wasOAuth = handleOAuthCallback();
+if (wasOAuth && authToken) {
+  renderAuthBar();
+  initSheets()
+    .then(() => loadFromSheets())
+    .catch(e => { notify("Sheets-fel: " + e.message, "warn"); });
+} else {
+  render();
+}
+</script>
+</body>
+</html>
