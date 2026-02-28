@@ -103,6 +103,25 @@
     @media (max-width: 600px) {
       .player-grid { grid-template-columns: repeat(2, 1fr) !important; }
     }
+
+    /* MOBILE OPTIMIZATIONS */
+    button, input, .chip { -webkit-tap-highlight-color: transparent; }
+
+    @media (hover: none) {
+      .btn:hover { filter: none; transform: none; }
+    }
+
+    @supports (padding: max(0px)) {
+      #app { padding-bottom: max(60px, env(safe-area-inset-bottom)); }
+    }
+
+    @media (max-width: 480px) {
+      nav button { padding: 10px 12px; font-size: 11px; min-height: 44px; }
+      .btn { min-height: 44px; }
+      .chip { padding: 8px 14px; min-height: 44px; }
+      input[type=text], input[type=number] { font-size: 16px !important; }
+      header { padding: 20px 0 16px; margin-bottom: 16px; }
+    }
   </style>
 </head>
 <body>
@@ -120,12 +139,14 @@
     <button id="nav-game" disabled onclick="showView('game')">Pågående match</button>
     <button id="nav-stats" onclick="showView('stats')">Statistik</button>
     <button id="nav-players" onclick="showView('players')">Spelare</button>
+    <button id="nav-rounds" onclick="showView('rounds')">Omgångar</button>
   </nav>
 
   <div id="view-home" class="view active"></div>
   <div id="view-game" class="view"></div>
   <div id="view-stats" class="view"></div>
   <div id="view-players" class="view"></div>
+  <div id="view-rounds" class="view"></div>
 </div>
 
 <script>
@@ -187,7 +208,87 @@ const TURN_GOALS = [
 
   { emoji:"🪦", flavor:"SISTA OMGÅNGEN. Allt ut. Inga kort kvar på handen.",
     hands:[ [["6","♠"],["6","♥"],["6","♦"]], [["9","♣"],["9","♠"],["9","♥"]], [["2","♣"],["3","♣"],["4","♣"],["5","♣"],["6","♣"]], [["8","♦"],["9","♦"],["10","♦"],["J","♦"],["Q","♦"]] ],
-    footer:"⚠️ INGA KORT FÅR LIGGA KVAR PÅ HANDEN" }
+    footer:"⚠️ INGET SLÄNG!" }
+];
+
+// ─── GÖTEBORGSVITSAR ──────────────────────────────────────────────────────────
+// 3 jokes per round, randomly shown in the game view.
+const TURN_JOKES = [
+  /* 1 */ [
+    "Vad sa treern till de andra korten? 'Vi ses på klubben!' — Klöver, alltså.",
+    "Varför spelar göteborgare alltid treta? Tredje gången gillt — och man gillar att ha rätt.",
+    "Vad heter en göteborgare med tre ess? Lugn. Extremt lugn."
+  ],
+  /* 2 */ [
+    "Vad sa spelaren till rörmokaren? 'Jag fick flusch!' — 'Det kostar 1 800 kronor', sa rörmokaren.",
+    "Varför är en flusch som en göteborgsk morgon? Allt ska vara i rätt ordning, annars fungerar ingenting.",
+    "Vad kallar man fem kort i samma färg? En flusch! Vad kallar man en göteborgare i Stockholm? Också en flusch."
+  ],
+  /* 3 */ [
+    "Vad sa spelaren med två firtal? 'Nu är jag varm på spisen!' — Fast det var korten som brann.",
+    "Varför gillar göteborgare firtal? Fyra är alltid bättre än tre — fråga bara Blåvitt.",
+    "Vad kallar man fyra kungar och fyra damer? Kungligt bröllop! Eller bara ett bra blad."
+  ],
+  /* 4 */ [
+    "Vad sa den ena fluschen till den andra? 'Vi är av samma skrot och korn!' — Och färg, förstås.",
+    "Varför behöver göteborgaren två fluchsar? En till badrummet och en till köket — det är standard.",
+    "Vad heter göteborgaren som alltid vinner på fluchsar? Rörläggare-Ronny. Han fixar allt."
+  ],
+  /* 5 */ [
+    "Vad sa spelaren med tre kombinationer? 'Jag är på semester!' — Det var tisdag.",
+    "Varför är omgång fem som en göteborgsk morgon? Man behöver tre saker: kaffe, kaffe och en flusch.",
+    "Vad kallar man tre kombinationer i en hand? Lagom. Det är alltid lagom."
+  ],
+  /* 6 */ [
+    "Vad sa spelaren med firtal och lång flusch? 'Jag jobbar lite på semestern också.' — Precis som alla andra.",
+    "Varför är omgång sex som Liseberg i juli? Lång kö, fullt upp, och alla skriker.",
+    "Vad kallar man ett firtal och fem i rad? En vanlig fredag i Göteborg, ungefär."
+  ],
+  /* 7 */ [
+    "Vad sa jokern? 'Jag är med överallt!' — Som den göteborgssläkting man alltid glömmer bjuda på.",
+    "Varför är jokern som en göteborgsk vinter? Ingen förstår riktigt vad den gör där — men den finns.",
+    "Vad kallar man fem lika kort? En familj. Det krävs alltid en joker för att det ska funka."
+  ],
+  /* 8 */ [
+    "Vad sa spelaren med dubbel lång flusch? 'Nu har jag verkligen flödat på!' — Och rörmokaren nickade.",
+    "Varför gillar göteborgare dubbel lång flusch? Det låter som att ha två badrum. Det är status.",
+    "Vad kallar man tio kort i fin ordning? Semester! Fast man sitter vid kortbordet."
+  ],
+  /* 9 */ [
+    "Vad sa spelaren med fyra tretar? '...Jag förstår ingenting. Men jag har allt.'",
+    "Varför är fyra tretar som en måndag i Göteborg? Man vet att det gäller att samla ihop alla bitar.",
+    "Vad kallar man fyra tretar? Fulltecknat. Som p-huset vid Nordstan på julhandeln."
+  ],
+  /* 10 */ [
+    "Vad sa spelaren med tre fluchsar? 'Jag har rört om ordentligt!' — Rörmokaren var väldigt stolt.",
+    "Varför behöver göteborgaren tre fluchsar? En till badrummet, en till köket och en extra — man vet aldrig.",
+    "Vad kallar man tre fluchsar? En VVS-firma i miniformat. Eller ett drömblad."
+  ],
+  /* 11 */ [
+    "Vad sa spelaren med tre firtal? 'Tre spisflammar på en gång — det är konst!'",
+    "Varför är tre firtal som Göteborgs trafik? Allt verkar gå i fyra riktningar men man kommer ingen vart.",
+    "Vad kallar man tre gånger fyra lika kort? Övermäktigt. Precis som menyn på Feskekôrkan."
+  ],
+  /* 12 */ [
+    "Vad sa spelaren med fem fluchsar? 'Jag är oövervinnelig!' — Och sen förlorade han ändå.",
+    "Varför klarar bara göteborgare fem fluchsar? Vi är vana vid att hantera allt — fem ungar, tre jobb och en halvfärdig pool.",
+    "Vad kallar man den som klarar fem fluchsar? Legend. Eller Ronny. Det är alltid en Ronny."
+  ],
+  /* 13 */ [
+    "Vad sa spelaren med fem tretar? '...Jag behöver en stund.' — Och tog en månad.",
+    "Varför är fem tretar som Göteborgsvarvet? Man vet inte varför man anmälde sig, men nu sitter man i det.",
+    "Vad kallar man fem gånger tre lika kort? Orimligt. Fast det är ju hela grejen med spelet."
+  ],
+  /* 14 */ [
+    "Vad sa paret som inte fick byggas på? 'Inga tillägg!' — Precis som restaurangkön på lördagskväll.",
+    "Varför är omgång fjorton som Göteborgs kollektivtrafik? Det är fullt, och nu är det stängt — inga tillägg!",
+    "Vad kallar man ett femtal, en lång flusch och ett par med förbud? En dag med göteborgsk byråkrati."
+  ],
+  /* 15 */ [
+    "Vad sa göteborgaren när han la sina sista kort? 'Nu är det slut!' — Och beställde mer kaffe.",
+    "Varför är sista omgången som midsommar i Göteborg? Allt ska ut — och det ska inte finnas ett enda kort kvar i hand.",
+    "Vad kallar man det när man inte har några kort kvar? Fri som en fågel! Eller bankrutt. Beror på hur det gick."
+  ]
 ];
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
@@ -429,6 +530,8 @@ function submitRound() {
   currentGame.players = currentGame.players.map((p,i) => ({
     ...p, scores:[...p.scores, i===goesOutIdx ? 0 : parseInt(roundInputs[i])||0]
   }));
+  if (!currentGame.roundWinners) currentGame.roundWinners = [];
+  currentGame.roundWinners.push(goesOutIdx);
 
   if (currentGame.currentRound >= TOTAL_ROUNDS) {
     currentGame.finished = true;
@@ -482,6 +585,7 @@ function render() {
   if (currentView==="game")    renderGame();
   if (currentView==="stats")   renderStats();
   if (currentView==="players") renderPlayers();
+  if (currentView==="rounds")  renderRounds();
 }
 
 function updateNavState() {
@@ -637,7 +741,7 @@ function renderTurnGoal(round) {
 
   return `<div class="card" style="padding:16px 20px;margin-bottom:20px;text-align:center;border-color:${diffColor}55;background:${diffColor}0d">
     <div style="font-size:10px;letter-spacing:3px;color:${diffColor};margin-bottom:8px">OMGÅNGENS MÅL</div>
-    <div style="margin-bottom:2px">${goal.emoji} <span style="font-size:13px;color:rgba(255,255,255,0.55);font-style:italic">${goal.flavor}</span></div>
+    <div style="margin-bottom:2px">${goal.emoji} <span style="font-size:13px;color:rgba(255,255,255,0.55);font-style:italic">${TURN_JOKES[round-1][Math.floor(Math.random()*3)]}</span></div>
     ${handsHtml}
     ${footerHtml}
   </div>`;
@@ -693,7 +797,7 @@ function renderGame() {
         <div style="font-size:13px;color:${PLAYER_COLORS[i]};margin-bottom:4px">${p.name}</div>
         ${isOut
           ? `<div style="font-size:22px;color:#06d6a0">0 poäng ✓</div>`
-          : `<input type="number" min="0" placeholder="Poäng…" value="${roundInputs[i]??""}" oninput="roundInputs[${i}]=this.value" style="max-width:120px;font-size:18px">`
+          : `<input type="number" min="0" placeholder="Poäng…" value="${roundInputs[i]??""}" oninput="roundInputs[${i}]=this.value" style="width:100%;font-size:18px">`
         }
       </div>
       <div style="text-align:center">
@@ -841,7 +945,7 @@ function renderPlayers() {
   if (savedPlayers.length===0) {
     html += `<div style="text-align:center;color:rgba(255,255,255,0.3);padding:60px">Inga sparade spelare ännu</div>`;
   } else {
-    html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px">`;
+    html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px">`;
     savedPlayers.forEach((p,i) => {
       const color = PLAYER_COLORS[i%PLAYER_COLORS.length];
       const s = stats.find(x=>x.name===p.name)||{};
@@ -864,6 +968,88 @@ function renderPlayers() {
     html += "</div>";
   }
   document.getElementById("view-players").innerHTML = html;
+}
+
+function renderRounds() {
+  const game = currentGame && !currentGame.finished ? currentGame : null;
+  const completedRounds = game ? (game.roundWinners || []) : [];
+  const currentRound = game ? game.currentRound : null;
+
+  function miniCard(value, suit) {
+    const isJoker = suit === "★";
+    const isRed   = suit === "♥" || suit === "♦";
+    const fgColor  = isJoker ? "#7b2fff" : isRed ? "#cc2233" : "#0d0d20";
+    return `<div style="width:20px;height:29px;background:#fff;border-radius:2px;display:inline-flex;flex-direction:column;justify-content:space-between;padding:2px 2px 2px;box-shadow:0 1px 3px rgba(0,0,0,0.4);vertical-align:middle;flex-shrink:0">
+      <div style="font-size:7px;line-height:1;color:${fgColor};font-weight:bold;font-family:monospace">${value}</div>
+      <div style="font-size:9px;line-height:1;color:${fgColor};text-align:center">${suit}</div>
+    </div>`;
+  }
+
+  let html = `<h2 style="font-size:22px;font-weight:normal;margin-bottom:8px;letter-spacing:1px">🃏 Omgångar</h2>`;
+  if (game) {
+    html += `<div style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:28px;letter-spacing:1px">Pågående match · omgång ${currentRound} av ${TOTAL_ROUNDS}</div>`;
+  } else {
+    html += `<div style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:28px;letter-spacing:1px">Alla ${TOTAL_ROUNDS} omgångar och deras mål</div>`;
+  }
+
+  html += `<div style="display:flex;flex-direction:column;gap:10px">`;
+
+  TURN_GOALS.forEach((goal, idx) => {
+    const roundNum = idx + 1;
+    const isCurrent = currentRound === roundNum;
+    const isCompleted = completedRounds.length >= roundNum;
+    const isFuture = !isCurrent && !isCompleted;
+
+    const diffColor = roundNum <= 4 ? "#3a86ff" : roundNum <= 8 ? "#ffbe0b" : roundNum <= 12 ? "#fb5607" : "#e84855";
+
+    let statusBadge = "";
+    if (isCurrent) {
+      statusBadge = `<div style="font-size:10px;letter-spacing:2px;color:#e84855;background:rgba(232,72,85,0.15);border:1px solid rgba(232,72,85,0.35);padding:2px 8px;border-radius:3px;white-space:nowrap">NUVARANDE</div>`;
+    } else if (isCompleted) {
+      const winnerIdx = completedRounds[idx];
+      const winnerName = game && game.players[winnerIdx] ? game.players[winnerIdx].name : null;
+      const winnerColor = game && winnerIdx !== undefined ? PLAYER_COLORS[winnerIdx] : "#06d6a0";
+      const winnerLabel = winnerName
+        ? `<span style="color:${winnerColor}">${winnerName}</span>`
+        : `<span style="color:#06d6a0">✓</span>`;
+      statusBadge = `<div style="font-size:11px;color:rgba(255,255,255,0.5)">Mästare: ${winnerLabel}</div>`;
+    }
+
+    // Build compact hands display
+    let handsHtml = `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px">`;
+    goal.hands.forEach((hand, hi) => {
+      const note = goal.extra && goal.extra[hi];
+      handsHtml += `<div style="display:flex;flex-direction:column;align-items:center;gap:2px">`;
+      handsHtml += `<div style="display:flex;gap:2px;align-items:center">`;
+      hand.forEach(([value, suit]) => { handsHtml += miniCard(value, suit); });
+      handsHtml += `</div>`;
+      if (note) handsHtml += `<div style="font-size:9px;color:rgba(255,255,255,0.4)">${note}</div>`;
+      handsHtml += `</div>`;
+      if (hi < goal.hands.length - 1)
+        handsHtml += `<div style="font-size:14px;color:rgba(255,255,255,0.3);line-height:1">+</div>`;
+    });
+    handsHtml += `</div>`;
+    if (goal.footer)
+      handsHtml += `<div style="margin-top:6px;font-size:10px;color:#e84855;letter-spacing:1px">${goal.footer}</div>`;
+
+    const opacity = isFuture && game ? "opacity:0.45;" : "";
+    const borderColor = isCurrent ? "#e8485588" : isCompleted ? "#06d6a044" : `${diffColor}33`;
+    const bgColor = isCurrent ? "rgba(232,72,85,0.07)" : isCompleted ? "rgba(6,214,160,0.05)" : `${diffColor}08`;
+
+    html += `<div class="card" style="padding:14px 18px;${opacity}border-color:${borderColor};background:${bgColor}">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px;min-width:90px">
+          <div style="font-size:11px;color:${diffColor};letter-spacing:2px;white-space:nowrap">OMG ${roundNum}</div>
+          <div style="font-size:16px;line-height:1">${goal.emoji}</div>
+        </div>
+        <div style="flex:1;min-width:0">${handsHtml}</div>
+        <div style="text-align:right">${statusBadge}</div>
+      </div>
+    </div>`;
+  });
+
+  html += `</div>`;
+  document.getElementById("view-rounds").innerHTML = html;
 }
 
 function deletePlayer(name) {
