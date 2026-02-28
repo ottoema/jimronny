@@ -204,7 +204,7 @@ const TURN_GOALS = [
 
   { emoji:"🔥", flavor:"Femtal + lång flusch + ett par som INTE får byggas på. Självklart.",
     hands:[ [["K","♠"],["K","♥"],["K","♦"],["K","♣"],["★","★"]], [["3","♦"],["4","♦"],["5","♦"],["6","♦"],["7","♦"]], [["10","♠"],["10","♥"]] ],
-    extra:[null, null, "🚫 inga tillägg"] },
+    extra:[null, null, "🚫 får ej byggas på"] },
 
   { emoji:"🪦", flavor:"SISTA OMGÅNGEN. Allt ut. Inga kort kvar på handen.",
     hands:[ [["6","♠"],["6","♥"],["6","♦"]], [["9","♣"],["9","♠"],["9","♥"]], [["2","♣"],["3","♣"],["4","♣"],["5","♣"],["6","♣"]], [["8","♦"],["9","♦"],["10","♦"],["J","♦"],["Q","♦"]] ],
@@ -968,8 +968,9 @@ function renderRounds() {
         handsHtml += `<div style="font-size:14px;color:rgba(255,255,255,0.3);line-height:1">+</div>`;
     });
     handsHtml += `</div>`;
+    handsHtml += `<div style="margin-top:6px;font-size:12px;color:rgba(255,255,255,0.6)">${TURN_DESCRIPTIONS[idx]}</div>`;
     if (goal.footer)
-      handsHtml += `<div style="margin-top:6px;font-size:10px;color:#e84855;letter-spacing:1px">${goal.footer}</div>`;
+      handsHtml += `<div style="margin-top:4px;font-size:10px;color:#e84855;letter-spacing:1px">${goal.footer}</div>`;
 
     const opacity = isFuture && game ? "opacity:0.45;" : "";
     const borderColor = isCurrent ? "#e8485588" : isCompleted ? "#06d6a044" : `${diffColor}33`;
