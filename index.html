@@ -960,30 +960,145 @@ function renderStats() {
   if (allGames.length===0) {
     html += `<div style="text-align:center;color:var(--muted);padding:60px 20px">Inga avslutade matcher ännu</div>`;
   } else {
+
+    // ── Per-player extra stats ──────────────────────────────────────────────
+    const extraStats = {};
+    savedPlayers.forEach(p => {
+      const pg = allGames.filter(g => g.players.find(gp => gp.name === p.name));
+      const allScores = pg.flatMap(g => { const gp = g.players.find(x => x.name === p.name); return gp ? gp.scores : []; });
+      const nonZero = allScores.filter(s => s > 0);
+      const gameTotals = pg.map(g => { const gp = g.players.find(x => x.name === p.name); return gp ? totalScore(gp) : 0; });
+      extraStats[p.name] = {
+        highestRound: nonZero.length ? Math.max(...nonZero) : 0,
+        highestTotal: gameTotals.length ? Math.max(...gameTotals) : 0,
+        zeroRounds:   allScores.filter(s => s === 0).length,
+      };
+    });
+
+    // ── All-time leaderboard ────────────────────────────────────────────────
     let lbRows = "";
     stats.forEach((s,i) => {
       const idx = savedPlayers.findIndex(p=>p.name===s.name);
       const color = PLAYER_COLORS[idx%PLAYER_COLORS.length];
       const medal = i===0?"👑":i===1?"🥈":i===2?"🥉":`${i+1}.`;
       const wr = Math.round(s.wins/s.gamesPlayed*100);
-      lbRows += `<div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--divider)">
-        <div style="font-size:16px;width:24px;text-align:center;flex-shrink:0">${medal}</div>
-        <div style="flex:1">
-          <div style="color:${color};margin-bottom:3px">${s.name}</div>
-          <div style="font-size:12px;color:var(--muted)">${s.gamesPlayed} matcher · ⌀ ${s.avgScore} p · ${s.totalBuys} köp</div>
+      const ex = extraStats[s.name]||{};
+      lbRows += `<div style="padding:16px 0;border-bottom:1px solid var(--divider)">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:15px;width:22px;flex-shrink:0;text-align:center">${medal}</div>
+          <div style="flex:1">
+            <div style="color:${color};margin-bottom:3px">${s.name}</div>
+            <div style="font-size:12px;color:var(--muted)">${s.gamesPlayed} matcher · ${wr}% wins · ${s.totalBuys} köp</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-family:Georgia,serif;font-size:22px;color:${color}">${s.wins}</div>
+            <div style="font-size:11px;color:var(--muted)">⌀ ${s.avgScore} p</div>
+          </div>
         </div>
-        <div style="text-align:right">
-          <div style="font-family:Georgia,serif;font-size:24px;color:${color}">${s.wins}</div>
-          <div style="font-size:11px;color:var(--muted)">${wr}% wins</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px;margin-left:34px">
+          <div style="font-size:11px;color:var(--muted)"><div style="font-family:Georgia,serif;font-size:15px;color:var(--fg);margin-bottom:2px">${ex.zeroRounds||0}</div>utgångar</div>
+          <div style="font-size:11px;color:var(--muted)"><div style="font-family:Georgia,serif;font-size:15px;color:var(--fg);margin-bottom:2px">${ex.highestRound||'—'}</div>värsta omg.</div>
+          <div style="font-size:11px;color:var(--muted)"><div style="font-family:Georgia,serif;font-size:15px;color:var(--fg);margin-bottom:2px">${ex.highestTotal||'—'}</div>värsta match</div>
         </div>
       </div>`;
     });
     html += `<div style="border-top:1px solid var(--divider);padding:28px 0 8px">
-      <div style="font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:4px">LEADERBOARD</div>
+      <div style="font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:4px">ALLA TIDER</div>
       <div>${lbRows}</div>
     </div>`;
 
-    // Date visualization
+    // ── Top 5 single rounds ─────────────────────────────────────────────────
+    const roundEntries = [];
+    allGames.forEach(g => {
+      g.players.forEach((p,pi) => {
+        p.scores.forEach((s,ri) => {
+          if (s > 0) roundEntries.push({ name:p.name, score:s, round:ri+1, date:g.date, pi });
+        });
+      });
+    });
+    roundEntries.sort((a,b) => b.score - a.score);
+    const top5 = roundEntries.slice(0,5);
+    if (top5.length > 0) {
+      let top5Rows = top5.map((e,i) => {
+        const idx = savedPlayers.findIndex(p => p.name === e.name);
+        const color = PLAYER_COLORS[(idx>=0?idx:e.pi)%PLAYER_COLORS.length];
+        return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--divider)">
+          <div style="width:18px;font-size:11px;color:var(--muted);flex-shrink:0">${i+1}.</div>
+          <div style="flex:1;color:${color}">${e.name}</div>
+          <div style="font-size:11px;color:var(--muted);margin-right:10px">omg. ${e.round} · ${e.date}</div>
+          <div style="font-family:Georgia,serif;font-size:20px;color:${color}">${e.score}</div>
+        </div>`;
+      }).join("");
+      html += `<div style="border-top:1px solid var(--divider);padding:28px 0 8px">
+        <div style="font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:4px">HÖGST POÄNG I EN OMGÅNG (TOPP 5)</div>
+        <div>${top5Rows}</div>
+      </div>`;
+    }
+
+    // ── Most 0p rounds (going out) ──────────────────────────────────────────
+    const zeroRank = stats.map(s => ({
+      name: s.name,
+      idx: savedPlayers.findIndex(p=>p.name===s.name),
+      count: extraStats[s.name]?.zeroRounds||0,
+    })).sort((a,b) => b.count - a.count);
+    const maxZero = zeroRank[0]?.count||1;
+    let zeroRows = zeroRank.map((z,i) => {
+      const color = PLAYER_COLORS[(z.idx>=0?z.idx:i)%PLAYER_COLORS.length];
+      const barPct = Math.round(z.count/maxZero*100);
+      return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--divider)">
+        <div style="flex:1">
+          <div style="font-size:14px;color:${color};margin-bottom:5px">${z.name}</div>
+          <div style="height:2px;background:var(--divider);border-radius:1px"><div style="height:2px;width:${barPct}%;background:${color};border-radius:1px"></div></div>
+        </div>
+        <div style="text-align:right;min-width:48px">
+          <div style="font-family:Georgia,serif;font-size:20px;color:${color}">${z.count}</div>
+          <div style="font-size:10px;color:var(--muted)">utgångar</div>
+        </div>
+      </div>`;
+    }).join("");
+    html += `<div style="border-top:1px solid var(--divider);padding:28px 0 8px">
+      <div style="font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:4px">FLEST UTGÅNGAR (0P-RUNDOR)</div>
+      <div>${zeroRows}</div>
+    </div>`;
+
+    // ── Stats by player group ───────────────────────────────────────────────
+    const groups = {};
+    allGames.forEach(g => {
+      const key = [...g.players].map(p=>p.name).sort().join("|");
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(g);
+    });
+    let groupHtml = Object.entries(groups)
+      .sort((a,b) => b[1].length - a[1].length)
+      .map(([key, games]) => {
+        const names = key.split("|");
+        const groupStats = names.map(name => {
+          const wins = games.filter(g => [...g.players].sort((a,b)=>totalScore(a)-totalScore(b))[0].name===name).length;
+          const scores = games.map(g => { const gp=g.players.find(p=>p.name===name); return gp?totalScore(gp):null; }).filter(s=>s!==null);
+          const avg = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : 0;
+          const idx = savedPlayers.findIndex(p=>p.name===name);
+          return { name, wins, avg, idx };
+        }).sort((a,b)=>b.wins-a.wins);
+        const rows = groupStats.map(gs => {
+          const color = PLAYER_COLORS[(gs.idx>=0?gs.idx:0)%PLAYER_COLORS.length];
+          return `<div style="display:flex;align-items:center;padding:8px 0;border-bottom:1px solid var(--divider)">
+            <div style="flex:1;font-size:14px;color:${color}">${gs.name}</div>
+            <div style="font-size:12px;color:var(--muted);margin-right:16px">⌀ ${gs.avg} p</div>
+            <div style="font-family:Georgia,serif;font-size:18px;color:${color}">${gs.wins} <span style="font-size:11px;font-family:inherit;color:var(--muted)">vinster</span></div>
+          </div>`;
+        }).join("");
+        return `<div style="padding:20px 0;border-bottom:1px solid var(--divider)">
+          <div style="font-size:14px;color:var(--fg);margin-bottom:2px">${names.join(" & ")}</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:12px">${games.length} matcher</div>
+          <div>${rows}</div>
+        </div>`;
+      }).join("");
+    html += `<div style="border-top:1px solid var(--divider);padding:28px 0 8px">
+      <div style="font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:4px">PER SPELARSÄLLSKAP</div>
+      <div>${groupHtml}</div>
+    </div>`;
+
+    // ── Play dates ──────────────────────────────────────────────────────────
     const dateCounts = {};
     allGames.forEach(g => { if (g.date) dateCounts[g.date] = (dateCounts[g.date]||0)+1; });
     const sortedDates = Object.keys(dateCounts).sort();
@@ -992,7 +1107,7 @@ function renderStats() {
       const dots = Array(count).fill(`<div style="width:9px;height:9px;border-radius:50%;background:#7b8fa8;opacity:0.85"></div>`).join("");
       return `<div style="display:flex;flex-direction:column;align-items:center;gap:5px">
         <div style="display:flex;gap:3px">${dots}</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.4);white-space:nowrap">${d}</div>
+        <div style="font-size:11px;color:var(--muted);white-space:nowrap">${d}</div>
       </div>`;
     }).join("");
     html += `<div style="border-top:1px solid var(--divider);padding:28px 0">
@@ -1000,20 +1115,21 @@ function renderStats() {
       <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">${dateChips}</div>
     </div>`;
 
+    // ── Match history ───────────────────────────────────────────────────────
     let gameRows = "";
     [...allGames].reverse().forEach((g,gi) => {
       const sorted = [...g.players].sort((a,b)=>totalScore(a)-totalScore(b));
       let players = sorted.map(p => {
         const idx = g.players.findIndex(x=>x.name===p.name);
-        return `<span style="color:${PLAYER_COLORS[idx%PLAYER_COLORS.length]}">${p.name}</span><span style="color:rgba(255,255,255,0.5);margin-left:6px">${totalScore(p)} p</span>`;
-      }).join(`<span style="color:rgba(255,255,255,0.2);margin:0 6px">·</span>`);
+        return `<span style="color:${PLAYER_COLORS[idx%PLAYER_COLORS.length]}">${p.name}</span><span style="color:var(--muted);margin-left:6px">${totalScore(p)} p</span>`;
+      }).join(`<span style="color:var(--divider);margin:0 6px">·</span>`);
       gameRows += `<div style="padding:14px 0;border-bottom:1px solid var(--divider)">
         <div style="display:flex;justify-content:space-between;margin-bottom:8px">
           <div style="font-size:11px;color:var(--muted)">${g.date} · Match ${allGames.length-gi}</div>
           <div style="font-size:12px;color:var(--muted)">👑 ${sorted[0].name}</div>
         </div>
         <div style="font-size:13px;display:flex;flex-wrap:wrap;gap:6px">${players}</div>
-        ${g.note ? `<div style="margin-top:8px;font-size:12px;color:var(--muted);font-style:italic">📝 ${g.note}</div>` : ""}
+        ${g.note?`<div style="margin-top:8px;font-size:12px;color:var(--muted);font-style:italic">📝 ${g.note}</div>`:""}
       </div>`;
     });
     html += `<div style="border-top:1px solid var(--divider);padding:28px 0 0">
