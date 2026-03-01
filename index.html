@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Jim Ronny 🃏</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🃏</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23f4f0ea'/><text y='.9em' font-size='90'>🃏</text></svg>">
+  <meta name="apple-mobile-web-app-title" content="Jim Ronny">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -37,7 +40,7 @@
     #auth-bar { margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
 
     /* NAV */
-    nav { display: flex; border-bottom: 1px solid var(--divider); margin-bottom: 32px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    nav { display: flex; border-bottom: 2px solid rgba(26,23,20,0.1); margin-bottom: 32px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; box-shadow: 0 3px 10px rgba(26,23,20,0.07); }
     nav::-webkit-scrollbar { display: none; }
     nav button { padding: 14px 14px; background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--muted); font-family: inherit; font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; white-space: nowrap; margin-bottom: -1px; transition: color 0.2s, border-color 0.2s; }
     nav button:hover { color: rgba(26,23,20,0.75); }
@@ -90,6 +93,51 @@
     }
     .google-btn:hover { background: rgba(66,133,244,0.1); }
 
+    #standings-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 499;
+      background: rgba(0,0,0,0.3);
+    }
+    #standings-sheet {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 500;
+      background: var(--bg);
+      border-radius: 20px 20px 0 0;
+      max-height: 80vh;
+      overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform 0.28s ease;
+      box-shadow: 0 -4px 32px rgba(0,0,0,0.14);
+    }
+    #standings-sheet.open {
+      transform: translateY(0);
+    }
+    #chart-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 600;
+      background: rgba(0,0,0,0.3);
+    }
+    #chart-overlay {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 601;
+      background: var(--bg);
+      border-radius: 20px 20px 0 0;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform 0.28s ease;
+      box-shadow: 0 -4px 32px rgba(0,0,0,0.14);
+    }
+    #chart-overlay.open {
+      transform: translateY(0);
+    }
+
     @keyframes slideDown { from { opacity:0; transform: translate(-50%,-8px); } to { opacity:1; transform: translate(-50%,0); } }
     @keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -121,9 +169,7 @@
 <div id="notification"></div>
 <div id="app">
   <header>
-    <div class="subtitle">KORTSPEL · POÄNGTAVLA</div>
     <h1>🃏 Jim Ronny</h1>
-    <div class="tagline">15 OMGÅNGAR · 3 KÖP PER OMGÅNG</div>
     <div id="auth-bar"></div>
   </header>
 
@@ -221,11 +267,13 @@ const TURN_DESCRIPTIONS = [
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let authToken        = null;
+let wakeLockSentinel = null;
 let savedPlayers     = lload("gin_players", []);
 let ongoingGames     = lload("gin_ongoing_games", []);
 let activeGameId     = lload("gin_active_game_id", null);
 let currentGame      = null; // set at init via setActiveGame()
 let lastFinishedGame = null;
+let historyExpanded  = false;
 let allGames         = lload("gin_all_games", []);
 let setupPlayers     = [];
 let roundInputs      = {};
@@ -243,6 +291,15 @@ function setActiveGame(id) {
   lsave("gin_active_game_id", activeGameId);
   currentGame = ongoingGames.find(g => g.id === activeGameId) || null;
 }
+
+// ─── WAKE LOCK ────────────────────────────────────────────────────────────────
+async function acquireWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  try { wakeLockSentinel = await navigator.wakeLock.request('screen'); } catch(e) {}
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && currentView === 'game') acquireWakeLock();
+});
 
 // ─── NOTIFICATIONS ────────────────────────────────────────────────────────────
 let notifTimer = null;
@@ -427,7 +484,7 @@ async function saveFinishedGame(game, updatedPlayers) {
 
 // ─── GAME LOGIC ───────────────────────────────────────────────────────────────
 function totalScore(p) { return p.scores.reduce((a,b)=>a+b,0); }
-function totalBuys(p)  { return p.buys.reduce((a,b)=>a+b,0); }
+function totalBuys(p)  { return (p.buys||[]).reduce((a,b)=>a+(b||0),0); }
 function getLeader()   { return currentGame ? [...currentGame.players].sort((a,b)=>totalScore(a)-totalScore(b))[0] : null; }
 
 function startGame() {
@@ -522,6 +579,7 @@ function submitRound() {
     allGames.push({...currentGame});
     lsave("gin_all_games", allGames);
     notify(`Spelet slut! ${winner.name} vinner! 🏆`, "success");
+    currentGame.finishedDate = new Date().toLocaleDateString("sv-SE");
     lastFinishedGame = {...currentGame};
     ongoingGames = ongoingGames.filter(g => g.id !== currentGame.id);
     lsave("gin_ongoing_games", ongoingGames);
@@ -534,7 +592,11 @@ function submitRound() {
   }
 
   roundInputs = {}; goesOutIdx = null;
-  render();
+  if (lastFinishedGame) {
+    render();
+  } else {
+    openStandingsSheet(true);
+  }
 }
 
 function getStats() {
@@ -552,7 +614,8 @@ function setSyncStatus(s) { syncStatus = s; }
 
 // ─── RENDER ───────────────────────────────────────────────────────────────────
 function showView(v) {
-  if (v === "game") lastFinishedGame = null;
+  if (v === "game") { lastFinishedGame = null; acquireWakeLock(); }
+  else if (wakeLockSentinel) { wakeLockSentinel.release().catch(()=>{}); wakeLockSentinel = null; }
   currentView = v;
   document.querySelectorAll(".view").forEach(el => el.classList.remove("active"));
   document.querySelectorAll("nav button").forEach(el => el.classList.remove("active"));
@@ -783,7 +846,7 @@ function renderTurnGoal(round) {
   </div>`;
 }
 
-function renderScoreChart() {
+function renderScoreChart(tall = false) {
   const completedRounds = currentGame.players[0]?.scores.length || 0;
   if (completedRounds === 0) return "";
 
@@ -795,7 +858,7 @@ function renderScoreChart() {
   const allVals = cumulative.flat();
   const maxVal = Math.max(...allVals, 1);
 
-  const W = 600, H = 200;
+  const W = 600, H = tall ? 340 : 220;
   const padL = 42, padR = 72, padT = 16, padB = 28;
   const cW = W - padL - padR;
   const cH = H - padT - padB;
@@ -865,21 +928,6 @@ function renderGame() {
       </div>`
     ).join("");
 
-  // Live scores — vertical list
-  const sorted = [...currentGame.players].map((p,i)=>({p,i,t:totalScore(p)})).sort((a,b)=>a.t-b.t);
-  let scoreCards = `<div style="border-top:1px solid var(--divider);margin-bottom:8px">`;
-  sorted.forEach(({p,i,t},rank) => {
-    scoreCards += `<div style="display:flex;align-items:center;padding:14px 0;border-bottom:1px solid var(--divider)">
-      <div style="flex:1">
-        <span style="font-size:18px;color:${PLAYER_COLORS[i]}">${p.name}</span>
-        ${rank===0?`<span style="font-size:12px;letter-spacing:2px;color:${PLAYER_COLORS[i]};opacity:0.6;margin-left:10px">LEDER</span>`:""}
-        <div style="font-size:13px;color:var(--muted);margin-top:3px">${totalBuys(p)} köp</div>
-      </div>
-      <div style="font-family:Georgia,serif;font-size:36px;color:${rank===0?PLAYER_COLORS[i]:"rgba(26,23,20,0.82)"}">${t}</div>
-    </div>`;
-  });
-  scoreCards += `</div>`;
-
   // "Gick ut" picker — single chip row above player list
   const winnerChosen = goesOutIdx !== null;
   let pickerHtml = `<div style="padding:16px 0 8px">
@@ -907,7 +955,7 @@ function renderGame() {
     for(let b=0;b<MAX_BUYS;b++) {
       const filled = b < rb;
       const action = filled ? `removeBuy(${i})` : `addBuy(${i})`;
-      const disabled = !filled && rb >= MAX_BUYS;
+      const disabled = winnerChosen || (!filled && rb >= MAX_BUYS);
       buyDots += `<button onclick="${action}" ${disabled?"disabled":""} style="width:40px;height:40px;border-radius:50%;border:none;padding:0;display:flex;align-items:center;justify-content:center;background:transparent;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;flex-shrink:0">
         <div style="width:16px;height:16px;border-radius:50%;background:${filled?PLAYER_COLORS[i]:"rgba(26,23,20,0.14)"}"></div>
       </button>`;
@@ -950,32 +998,6 @@ function renderGame() {
     </div>`;
   });
 
-  // History table
-  let historyTable = "";
-  if (currentGame.players[0].scores.length > 0) {
-    let headers = `<th style="text-align:left;color:rgba(26,23,20,0.45);font-size:13px">OMG</th>`;
-    currentGame.players.forEach((p,i) => { headers += `<th style="color:${PLAYER_COLORS[i]};text-align:center">${p.name}</th>`; });
-    let rows = "";
-    currentGame.players[0].scores.forEach((_,round) => {
-      const winnerIdx = currentGame.roundWinners ? currentGame.roundWinners[round] : -1;
-      let cells = `<td style="color:rgba(26,23,20,0.38)">${round+1}</td>`;
-      currentGame.players.forEach((p,i) => {
-        const s = p.scores[round];
-        const b = p.buys[round]||0;
-        const isWinner = winnerIdx >= 0 ? i === winnerIdx : s === 0;
-        cells += `<td style="text-align:center;color:${isWinner?PLAYER_COLORS[i]:"#1a1714"};font-weight:${isWinner?"bold":"normal"}">${isWinner?`<span title="Gick ut">—</span>`:s}${b>0?`<span style="font-size:12px;color:${PLAYER_COLORS[i]};margin-left:4px">+${b}🛒</span>`:""}</td>`;
-      });
-      rows += `<tr style="border-top:1px solid rgba(26,23,20,0.06)">${cells}</tr>`;
-    });
-    let totRow = `<td style="font-size:13px;letter-spacing:2px;color:rgba(26,23,20,0.45)">TOT</td>`;
-    currentGame.players.forEach((p,i) => { totRow += `<td style="text-align:center;color:${PLAYER_COLORS[i]};font-weight:bold;font-size:18px">${totalScore(p)}</td>`; });
-    historyTable = `<div style="border-top:1px solid var(--divider);padding:28px 0;overflow-x:auto">
-      <div style="font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:20px">POÄNGHISTORIK</div>
-      <table><thead><tr>${headers}</tr></thead><tbody>${rows}<tr style="border-top:1px solid rgba(26,23,20,0.12)">${totRow}</tr></tbody></table>
-    </div>`;
-    historyTable += renderScoreChart();
-  }
-
   let switcherHtml = "";
   if (ongoingGames.length > 1) {
     let switchBtns = "";
@@ -991,15 +1013,15 @@ function renderGame() {
   const dealerColor = PLAYER_COLORS[dealerIdx];
 
   el.innerHTML = `${switcherHtml}
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 0 16px;border-bottom:1px solid var(--divider)">
+    <div id="round-header" style="display:flex;align-items:center;justify-content:space-between;padding:20px 0 16px;border-bottom:1px solid var(--divider)">
       <div>
         <div style="font-size:12px;letter-spacing:3px;color:var(--muted)">OMGÅNG</div>
         <div style="font-family:Georgia,serif;font-size:46px;line-height:1;margin:2px 0">${currentGame.currentRound} <span style="font-size:20px;color:var(--muted)">/ ${TOTAL_ROUNDS}</span></div>
         <div style="font-size:14px;color:var(--muted);margin-top:4px">Blanda &amp; dela: <span style="color:${dealerColor}">${dealer.name}</span></div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+      <div onclick="openStandingsSheet()" style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;cursor:pointer">
         ${miniStandings}
-        <div style="font-size:12px;color:var(--dim);margin-top:4px">${currentGame.date}</div>
+        <div style="font-size:11px;color:var(--dim);margin-top:6px;letter-spacing:1px">STÄLLNING ›</div>
       </div>
     </div>
     ${renderTurnGoal(currentGame.currentRound)}
@@ -1010,41 +1032,52 @@ function renderGame() {
         style="margin-top:16px;width:100%;padding:18px;background:${winnerChosen?"#c9622f":"rgba(26,23,20,0.07)"};border:none;color:#fff;font-size:18px;letter-spacing:1px;border-radius:12px;font-weight:600;opacity:${winnerChosen?1:0.4}">
         Registrera omgång ${currentGame.currentRound} →
       </button>
-    </div>
-    ${scoreCards}
-    ${historyTable}`;
+    </div>`;
 }
 
 function renderFinished() {
   const game = lastFinishedGame || (currentGame?.finished ? currentGame : null);
   if (!game) { showView("home"); return; }
   const sorted = [...game.players].sort((a,b)=>totalScore(a)-totalScore(b));
+  const winner = sorted[0];
+  const winnerIdx = game.players.findIndex(x=>x.name===winner.name);
+  const winnerColor = PLAYER_COLORS[winnerIdx];
+  const margin = sorted[1] ? totalScore(sorted[1]) - totalScore(winner) : 0;
   let rows = "";
   sorted.forEach((p,rank) => {
     const i = game.players.findIndex(x=>x.name===p.name);
-    rows += `<div style="display:flex;align-items:center;padding:14px 0;border-bottom:1px solid var(--divider)">
-      <div style="width:28px;font-size:18px;flex-shrink:0">${rank===0?"👑":`${rank+1}.`}</div>
-      <div style="flex:1;color:${PLAYER_COLORS[i]}">${p.name}</div>
+    rows += `<div style="display:flex;align-items:center;padding:12px 0;border-bottom:1px solid var(--divider)">
+      <div style="width:24px;font-size:15px;flex-shrink:0;color:var(--muted)">${rank+1}.</div>
+      <div style="flex:1;color:${PLAYER_COLORS[i]};font-size:18px">${p.name}</div>
       <div style="text-align:right">
-        <div style="font-family:Georgia,serif;font-size:26px">${totalScore(p)}</div>
-        <div style="font-size:13px;color:var(--muted)">${totalBuys(p)} köp</div>
+        <div style="font-family:Georgia,serif;font-size:24px;color:${PLAYER_COLORS[i]}">${totalScore(p)}</div>
+        <div style="font-size:12px;color:var(--muted)">${totalBuys(p)} köp</div>
       </div>
     </div>`;
   });
   document.getElementById("view-game").innerHTML = `
-    <div style="animation:fadeIn 0.3s ease;padding-top:40px">
-      <div style="text-align:center;margin-bottom:36px">
-        <div style="font-size:60px;margin-bottom:16px">🏆</div>
-        <h2 style="font-family:Georgia,serif;font-size:32px;font-weight:normal;margin-bottom:6px">${sorted[0].name} vinner!</h2>
-        <div style="font-size:15px;color:var(--muted)">${game.date}</div>
+    <div style="animation:fadeIn 0.3s ease">
+      <div style="text-align:center;padding:48px 0 28px;border-bottom:1px solid var(--divider)">
+        <div style="font-size:48px;margin-bottom:14px">🏆</div>
+        <div style="font-family:Georgia,serif;font-size:34px;color:${winnerColor};margin-bottom:6px">${winner.name}</div>
+        <div style="font-size:14px;color:var(--muted)">${game.date}${margin>0?` · vann med ${margin} p`:""}</div>
       </div>
-      <div style="border-top:1px solid var(--divider)">${rows}</div>
-      <div style="border-top:1px solid var(--divider);padding:24px 0">
-        <div style="font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:12px">NOTAT</div>
-        <textarea id="game-note-input" placeholder="Lägg till ett notat…" style="width:100%;min-height:80px;background:transparent;border:none;border-bottom:1px solid rgba(26,23,20,0.2);color:var(--fg);font-family:inherit;padding:8px 0;font-size:16px;outline:none;resize:vertical">${game.note||""}</textarea>
-        <button class="btn" onclick="saveGameNote(document.getElementById('game-note-input').value)" style="margin-top:14px;width:100%;padding:12px;border-color:rgba(61,107,69,0.35);color:#3d6b45;font-size:16px;border-radius:8px">Spara notat</button>
+      <div>${rows}</div>
+      <div style="padding:24px 0;border-bottom:1px solid var(--divider)">
+        <textarea id="game-note-input" placeholder="Skriv ett notat om matchen…"
+          style="width:100%;min-height:72px;background:transparent;border:none;border-bottom:1px solid rgba(26,23,20,0.2);
+                 color:var(--fg);font-family:inherit;padding:8px 0;font-size:16px;outline:none;resize:vertical">${game.note||""}</textarea>
+        <button class="btn" onclick="saveGameNote(document.getElementById('game-note-input').value)"
+          style="margin-top:12px;padding:10px 20px;border-color:rgba(61,107,69,0.35);color:#3d6b45;font-size:15px;border-radius:8px">
+          Spara notat
+        </button>
       </div>
-      <button class="btn" onclick="lastFinishedGame=null;showView('home')" style="width:100%;padding:15px;background:#c9622f;border:none;color:#fff;font-size:17px;font-weight:600;border-radius:10px">Ny match</button>
+      <div style="padding:24px 0">
+        <button class="btn" onclick="lastFinishedGame=null;showView('home')"
+          style="width:100%;padding:16px;background:#c9622f;border:none;color:#fff;font-size:17px;font-weight:600;border-radius:10px">
+          Ny match
+        </button>
+      </div>
     </div>`;
 }
 
@@ -1083,7 +1116,7 @@ function renderStats() {
           <div style="font-size:17px;width:22px;flex-shrink:0;text-align:center">${medal}</div>
           <div style="flex:1">
             <div style="color:${color};margin-bottom:3px">${s.name}</div>
-            <div style="font-size:14px;color:var(--muted)">${s.gamesPlayed} matcher · ${wr}% wins · ${s.totalBuys} köp</div>
+            <div style="font-size:14px;color:var(--muted)">${s.gamesPlayed} matcher · ${wr}% vinster · ${s.totalBuys} köp</div>
           </div>
           <div style="text-align:right">
             <div style="font-family:Georgia,serif;font-size:24px;color:${color}">${s.wins}</div>
@@ -1152,7 +1185,7 @@ function renderStats() {
       </div>`;
     }).join("");
     html += `<div style="border-top:1px solid var(--divider);padding:28px 0 8px">
-      <div style="font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:4px">FLEST UTGÅNGAR (0P-RUNDOR)</div>
+      <div style="font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:4px">FLEST UTGÅNGAR</div>
       <div>${zeroRows}</div>
     </div>`;
 
@@ -1210,26 +1243,84 @@ function renderStats() {
       <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">${dateChips}</div>
     </div>`;
 
-    // ── Match history ───────────────────────────────────────────────────────
-    let gameRows = "";
-    [...allGames].reverse().forEach((g,gi) => {
-      const sorted = [...g.players].sort((a,b)=>totalScore(a)-totalScore(b));
-      let players = sorted.map(p => {
-        const idx = g.players.findIndex(x=>x.name===p.name);
-        return `<span style="color:${PLAYER_COLORS[idx%PLAYER_COLORS.length]}">${p.name}</span><span style="color:var(--muted);margin-left:6px">${totalScore(p)} p</span>`;
-      }).join(`<span style="color:var(--divider);margin:0 6px">·</span>`);
-      gameRows += `<div style="padding:14px 0;border-bottom:1px solid var(--divider)">
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-          <div style="font-size:13px;color:var(--muted)">${g.date} · Match ${allGames.length-gi}</div>
-          <div style="font-size:14px;color:var(--muted)">👑 ${sorted[0].name}</div>
-        </div>
-        <div style="font-size:15px;display:flex;flex-wrap:wrap;gap:6px">${players}</div>
-        ${g.note?`<div style="margin-top:8px;font-size:14px;color:var(--muted);font-style:italic">📝 ${g.note}</div>`:""}
-      </div>`;
+    // ── Weekday distribution ─────────────────────────────────────────────────
+    const sweDay = ["Söndag","Måndag","Tisdag","Onsdag","Torsdag","Fredag","Lördag"];
+    const dayOrder = [1,2,3,4,5,6,0];
+    const startedByDay = Array(7).fill(0), finishedByDay = Array(7).fill(0);
+    allGames.forEach(g => {
+      if (g.date) startedByDay[new Date(g.date+"T12:00:00").getDay()]++;
+      const fd = g.finishedDate || g.date;
+      if (fd) finishedByDay[new Date(fd+"T12:00:00").getDay()]++;
     });
+    const maxS = Math.max(...startedByDay, 1), maxF = Math.max(...finishedByDay, 1);
+    const wdRows = dayOrder.map(d => {
+      const s = startedByDay[d], f = finishedByDay[d];
+      return `<div style="display:grid;grid-template-columns:36px 1fr 1fr;gap:4px 12px;align-items:center;padding:4px 0">
+        <div style="font-size:13px;color:var(--muted)">${sweDay[d].substring(0,3)}</div>
+        <div style="position:relative;height:8px;background:var(--divider);border-radius:4px">
+          <div style="position:absolute;inset:0;width:${Math.round(s/maxS*100)}%;background:#2c5f8a;border-radius:4px"></div>
+          ${s>0?`<span style="position:absolute;left:calc(${Math.round(s/maxS*100)}% + 4px);top:-2px;font-size:11px;color:#2c5f8a;white-space:nowrap">${s}</span>`:""}
+        </div>
+        <div style="position:relative;height:8px;background:var(--divider);border-radius:4px">
+          <div style="position:absolute;inset:0;width:${Math.round(f/maxF*100)}%;background:#3d6b45;border-radius:4px"></div>
+          ${f>0?`<span style="position:absolute;left:calc(${Math.round(f/maxF*100)}% + 4px);top:-2px;font-size:11px;color:#3d6b45;white-space:nowrap">${f}</span>`:""}
+        </div>
+      </div>`;
+    }).join("");
+    html += `<div style="border-top:1px solid var(--divider);padding:28px 0">
+      <div style="font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:14px">SPELVECKODAG</div>
+      <div style="display:flex;gap:20px;margin-bottom:12px">
+        <div style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px"><div style="width:14px;height:8px;background:#2c5f8a;border-radius:2px"></div>Startad</div>
+        <div style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px"><div style="width:14px;height:8px;background:#3d6b45;border-radius:2px"></div>Avslutad</div>
+      </div>
+      <div style="padding-right:32px">${wdRows}</div>
+    </div>`;
+
+    // ── Match history ───────────────────────────────────────────────────────
+    const reversedGames = [...allGames].reverse();
+    const HIST_PREVIEW = 5;
+    const mkGameRow = g => {
+      const sorted = [...g.players].sort((a,b)=>totalScore(a)-totalScore(b));
+      const wi = g.players.findIndex(x=>x.name===sorted[0].name);
+      const wc = PLAYER_COLORS[wi%PLAYER_COLORS.length];
+      const scores = sorted.map(p => {
+        const idx = g.players.findIndex(x=>x.name===p.name);
+        return `<span style="color:${PLAYER_COLORS[idx%PLAYER_COLORS.length]}">${p.name} ${totalScore(p)}</span>`;
+      }).join(`<span style="color:var(--divider);margin:0 5px">·</span>`);
+      return `<div style="padding:14px 0;border-bottom:1px solid var(--divider)">
+        <div style="font-size:20px;color:${wc};margin-bottom:3px">👑 ${sorted[0].name}</div>
+        <div style="font-size:13px;color:var(--muted)">${g.date}</div>
+        ${g.note?`<div style="font-size:15px;color:var(--fg);font-style:italic;padding:5px 0">📝 ${g.note}</div>`:""}
+        <div style="font-size:13px;color:var(--muted);margin-top:3px">${scores}</div>
+      </div>`;
+    };
+    let gameRows = "";
+    if (historyExpanded) {
+      const ymGroups = {};
+      reversedGames.forEach(g => {
+        const ym = (g.date||"").substring(0,7) || "?";
+        if (!ymGroups[ym]) ymGroups[ym] = [];
+        ymGroups[ym].push(g);
+      });
+      Object.entries(ymGroups).forEach(([ym, gs]) => {
+        const label = ym.length===7
+          ? new Date(ym+"-15").toLocaleString("sv-SE",{year:"numeric",month:"long"})
+          : "Okänt datum";
+        gameRows += `<div style="font-size:11px;letter-spacing:2px;color:var(--muted);padding:16px 0 2px;text-transform:uppercase">${label}</div>`;
+        gs.forEach(g => { gameRows += mkGameRow(g); });
+      });
+    } else {
+      reversedGames.slice(0, HIST_PREVIEW).forEach(g => { gameRows += mkGameRow(g); });
+    }
+    const expandBtn = allGames.length > HIST_PREVIEW
+      ? historyExpanded
+        ? `<button class="btn" onclick="historyExpanded=false;renderStats()" style="width:100%;padding:12px;margin-top:6px;font-size:15px;color:var(--muted)">Visa färre ▴</button>`
+        : `<button class="btn" onclick="historyExpanded=true;renderStats()" style="width:100%;padding:12px;margin-top:6px;font-size:15px;color:var(--muted)">Visa alla ${allGames.length} matcher ▾</button>`
+      : "";
     html += `<div style="border-top:1px solid var(--divider);padding:28px 0 0">
       <div style="font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:4px">MATCHHISTORIK</div>
       <div>${gameRows}</div>
+      ${expandBtn}
     </div>`;
   }
   html += `<div style="border-top:2px solid var(--divider);margin-top:32px;padding-top:4px">`;
@@ -1396,6 +1487,126 @@ if (wasOAuth && authToken) {
   }
   render();
 }
+
+function openStandingsSheet(afterSubmit = false) {
+  const sorted = [...currentGame.players]
+    .map((p,i) => ({p, i, t: totalScore(p)}))
+    .sort((a,b) => a.t - b.t);
+  const completedRounds = currentGame.players[0]?.scores.length || 0;
+  let html = afterSubmit
+    ? `<div style="text-align:center;padding:28px 24px 20px;border-bottom:1px solid var(--divider)">
+        <div style="font-size:36px;color:#3d6b45;margin-bottom:10px">✓</div>
+        <div style="font-family:Georgia,serif;font-size:28px;margin-bottom:4px">Omgång ${completedRounds} klar</div>
+        <div style="font-size:13px;color:var(--muted)">${completedRounds} / ${TOTAL_ROUNDS} omgångar avklarade</div>
+       </div>`
+    : `<div style="padding:20px 24px 4px;display:flex;align-items:baseline;justify-content:space-between">
+        <div style="font-size:12px;letter-spacing:3px;color:var(--muted)">STÄLLNING</div>
+        <div style="font-size:13px;color:var(--dim)">${completedRounds} / ${TOTAL_ROUNDS} omgångar</div>
+       </div>`;
+  sorted.forEach(({p,i,t},rank) => {
+    const lastScore = p.scores.length > 0 ? p.scores[p.scores.length - 1] : null;
+    html += `<div style="display:flex;align-items:center;padding:16px 24px;border-top:1px solid var(--divider)">
+      <div style="flex:1">
+        <span style="font-size:20px;color:${PLAYER_COLORS[i]}">${p.name}</span>
+        ${rank===0?`<span style="font-size:11px;letter-spacing:2px;color:${PLAYER_COLORS[i]};opacity:0.7;margin-left:10px">LEDER</span>`:""}
+        <div style="font-size:13px;color:var(--muted);margin-top:3px">${totalBuys(p)} köp</div>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:10px">
+        ${lastScore !== null ? `<span style="font-size:20px;color:var(--muted)">+${lastScore}</span>` : ""}
+        <div style="font-family:Georgia,serif;font-size:40px;color:${rank===0?PLAYER_COLORS[i]:"rgba(26,23,20,0.82)"}">${t}</div>
+      </div>
+    </div>`;
+  });
+  if (completedRounds > 0) {
+    let headers = `<th style="text-align:left;color:rgba(26,23,20,0.45);font-size:13px">OMG</th>`;
+    currentGame.players.forEach((p,i) => { headers += `<th style="color:${PLAYER_COLORS[i]};text-align:center">${p.name}</th>`; });
+    let rows = "";
+    currentGame.players[0].scores.forEach((_,round) => {
+      const winnerIdx = currentGame.roundWinners ? currentGame.roundWinners[round] : -1;
+      const cumTotals = currentGame.players.map(p => p.scores.slice(0, round + 1).reduce((a,b) => a+b, 0));
+      const minCum = Math.min(...cumTotals);
+      let cells = `<td style="color:rgba(26,23,20,0.38)">${round+1}</td>`;
+      currentGame.players.forEach((p,i) => {
+        const s = p.scores[round];
+        const b = p.buys[round]||0;
+        const isWinner = winnerIdx >= 0 ? i === winnerIdx : s === 0;
+        const isLeader = cumTotals[i] === minCum;
+        cells += `<td style="text-align:center;color:${isWinner?PLAYER_COLORS[i]:"#1a1714"};font-weight:${isWinner?"bold":"normal"};text-decoration:${isLeader?"underline":"none"};text-underline-offset:3px">${isWinner?`<span title="Gick ut">—</span>`:s}${b>0?`<span style="font-size:12px;color:${PLAYER_COLORS[i]};margin-left:4px">+${b}</span>`:""}</td>`;
+      });
+      rows += `<tr style="border-top:1px solid rgba(26,23,20,0.06)">${cells}</tr>`;
+    });
+    const totals = currentGame.players.map(p => totalScore(p));
+    const minTot = Math.min(...totals);
+    let totRow = `<td style="font-size:13px;letter-spacing:2px;color:rgba(26,23,20,0.45)">TOT</td>`;
+    currentGame.players.forEach((p,i) => { totRow += `<td style="text-align:center;color:${PLAYER_COLORS[i]};font-weight:bold;font-size:18px;text-decoration:${totals[i]===minTot?"underline":"none"};text-underline-offset:3px">${totalScore(p)}</td>`; });
+    html += `<div style="border-top:1px solid var(--divider);padding:20px 24px;overflow-x:auto">
+      <div style="font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:20px">POÄNGHISTORIK</div>
+      <table><thead><tr>${headers}</tr></thead><tbody>${rows}<tr style="border-top:1px solid rgba(26,23,20,0.12)">${totRow}</tr></tbody></table>
+    </div>`;
+    html += `<div onclick="openChartOverlay()" style="padding:0 24px;cursor:pointer">
+      ${renderScoreChart()}
+      <div style="text-align:center;font-size:11px;color:var(--dim);letter-spacing:1px;padding-bottom:8px">TRYCK FÖR ATT FÖRSTORA ›</div>
+    </div>`;
+  }
+
+  html += `<div style="padding:20px 24px 32px">
+    <button class="btn" onclick="closeStandingsSheet()"
+      style="width:100%;padding:18px;background:#c9622f;border:none;color:#fff;
+             font-size:18px;font-weight:600;border-radius:12px">
+      Fortsätt →
+    </button>
+  </div>`;
+
+  const sheetEl = document.getElementById("standings-sheet");
+  sheetEl.innerHTML = `<div style="padding:12px 0 4px;text-align:center">
+    <div style="width:40px;height:4px;background:rgba(26,23,20,0.2);border-radius:2px;display:inline-block"></div>
+  </div>` + html;
+  sheetEl.scrollTop = 0;
+  sheetEl.classList.add("open");
+  document.getElementById("standings-backdrop").style.display = "block";
+  document.body.style.overflow = "hidden";
+  let _ty0 = 0;
+  sheetEl.ontouchstart = e => { _ty0 = e.touches[0].clientY; };
+  sheetEl.ontouchend = e => { if (e.changedTouches[0].clientY - _ty0 > 70) closeStandingsSheet(); };
+}
+
+function openChartOverlay() {
+  document.getElementById("chart-overlay-content").innerHTML = renderScoreChart(true);
+  const el = document.getElementById("chart-overlay");
+  el.scrollTop = 0;
+  el.classList.add("open");
+  document.getElementById("chart-backdrop").style.display = "block";
+  let _ty0 = 0;
+  el.ontouchstart = e => { _ty0 = e.touches[0].clientY; };
+  el.ontouchend = e => { if (e.changedTouches[0].clientY - _ty0 > 70) closeChartOverlay(); };
+}
+
+function closeChartOverlay() {
+  document.getElementById("chart-overlay").classList.remove("open");
+  document.getElementById("chart-backdrop").style.display = "none";
+}
+
+function closeStandingsSheet() {
+  document.getElementById("standings-sheet").classList.remove("open");
+  document.getElementById("standings-backdrop").style.display = "none";
+  document.body.style.overflow = "";
+  render();
+  requestAnimationFrame(() => {
+    const el = document.getElementById("round-header");
+    if (el) el.scrollIntoView({behavior: "smooth", block: "start"});
+  });
+}
 </script>
+<div id="standings-backdrop" onclick="closeStandingsSheet()"></div>
+<div id="standings-sheet"></div>
+<div id="chart-backdrop" onclick="closeChartOverlay()"></div>
+<div id="chart-overlay">
+  <div style="padding:12px 0 4px;text-align:center">
+    <div style="width:40px;height:4px;background:rgba(26,23,20,0.2);border-radius:2px;display:inline-block"></div>
+  </div>
+  <div style="padding:4px 24px 40px">
+    <div id="chart-overlay-content"></div>
+  </div>
+</div>
 </body>
 </html>
