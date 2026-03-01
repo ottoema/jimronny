@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JimRonny 🃏</title>
+  <title>Jim Ronny 🃏</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -108,7 +108,7 @@
     }
 
     @media (max-width: 480px) {
-      nav button { padding: 12px 10px; font-size: 10px; min-height: 44px; }
+      nav button { padding: 12px 8px; font-size: 10px; letter-spacing: 0.5px; min-height: 44px; flex: 1; justify-content: center; }
       .btn { min-height: 44px; }
       .chip { min-height: 44px; }
       input[type=text], input[type=number] { font-size: 16px !important; }
@@ -129,7 +129,7 @@
 
   <nav>
     <button id="nav-home" class="active" onclick="showView('home')">Hem</button>
-    <button id="nav-game" disabled onclick="showView('game')">Pågående match</button>
+    <button id="nav-game" disabled onclick="showView('game')">Match</button>
     <button id="nav-stats" onclick="showView('stats')">Statistik</button>
     <button id="nav-players" onclick="showView('players')">Spelare</button>
     <button id="nav-rounds" onclick="showView('rounds')">Omgångar</button>
