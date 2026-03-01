@@ -533,8 +533,35 @@ function submitRound() {
     saveOngoingGamesToSheets();
   }
 
+  const prevRound = currentGame.currentRound - 1; // round that was just submitted (before increment)
   roundInputs = {}; goesOutIdx = null;
-  render();
+
+  if (currentGame.finished) {
+    render();
+  } else {
+    const container = document.getElementById("view-game");
+    // Replace the active round input section with a compact completed-round card
+    const roundInputEl = document.getElementById("round-input-section");
+    if (roundInputEl) {
+      const summaryEl = document.createElement("div");
+      summaryEl.innerHTML = buildCompletedRoundCardHtml(prevRound);
+      roundInputEl.replaceWith(summaryEl);
+    }
+    // Append standings below
+    const standingsEl = document.createElement("div");
+    standingsEl.innerHTML = buildCurrentStandingsHtml();
+    container.appendChild(standingsEl);
+    // Append next round input below standings
+    const nextInputEl = document.createElement("div");
+    nextInputEl.id = "round-input-section";
+    nextInputEl.innerHTML = buildCurrentRoundInputHtml();
+    container.appendChild(nextInputEl);
+    renderAuthBar();
+    updateNavState();
+    setTimeout(() => {
+      standingsEl.scrollIntoView({behavior:"smooth", block:"start"});
+    }, 50);
+  }
 }
 
 function getStats() {
@@ -848,28 +875,14 @@ function renderScoreChart() {
   </div>`;
 }
 
-function renderGame() {
-  if (lastFinishedGame || !currentGame || currentGame.finished) {
-    renderFinished(); return;
-  }
-  const el = document.getElementById("view-game");
+// ─── GAME VIEW HELPERS ────────────────────────────────────────────────────────
 
-  // Mini standings for header
-  const miniStandings = [...currentGame.players]
-    .map((p, i) => ({ p, i, t: totalScore(p) }))
-    .sort((a, b) => a.t - b.t)
-    .map(({ p, i, t }) =>
-      `<div style="display:flex;align-items:baseline;gap:6px;justify-content:flex-end">
-        <span style="font-size:13px;color:${PLAYER_COLORS[i]};font-weight:600">${p.name}</span>
-        <span style="font-family:Georgia,serif;font-size:17px;color:${PLAYER_COLORS[i]}">${t}</span>
-      </div>`
-    ).join("");
-
-  // Live scores — vertical list
+function buildCurrentStandingsHtml() {
   const sorted = [...currentGame.players].map((p,i)=>({p,i,t:totalScore(p)})).sort((a,b)=>a.t-b.t);
-  let scoreCards = `<div style="border-top:1px solid var(--divider);margin-bottom:8px">`;
+  let html = `<div style="padding:20px 0 8px">
+    <div style="font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:8px">STÄLLNING</div>`;
   sorted.forEach(({p,i,t},rank) => {
-    scoreCards += `<div style="display:flex;align-items:center;padding:14px 0;border-bottom:1px solid var(--divider)">
+    html += `<div style="display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--divider)">
       <div style="flex:1">
         <span style="font-size:18px;color:${PLAYER_COLORS[i]}">${p.name}</span>
         ${rank===0?`<span style="font-size:12px;letter-spacing:2px;color:${PLAYER_COLORS[i]};opacity:0.6;margin-left:10px">LEDER</span>`:""}
@@ -878,10 +891,33 @@ function renderGame() {
       <div style="font-family:Georgia,serif;font-size:36px;color:${rank===0?PLAYER_COLORS[i]:"rgba(26,23,20,0.82)"}">${t}</div>
     </div>`;
   });
-  scoreCards += `</div>`;
+  html += `</div>`;
+  return html;
+}
 
-  // "Gick ut" picker — single chip row above player list
+function buildCompletedRoundCardHtml(roundNum) {
+  const roundIdx = roundNum - 1;
+  const winnerIdx = (currentGame.roundWinners || [])[roundIdx];
+  const parts = currentGame.players.map((p, i) => {
+    const score = p.scores[roundIdx];
+    const buys = p.buys[roundIdx] || 0;
+    const isWinner = i === winnerIdx;
+    const buysStr = buys > 0 ? ` +${buys}🛒` : "";
+    const scoreStr = isWinner ? "gick ut" : score + "p" + buysStr;
+    return `<span style="color:${PLAYER_COLORS[i]}">${p.name}</span> <span style="color:var(--muted)">${scoreStr}</span>`;
+  });
+  return `<div style="border-top:1px solid var(--divider);padding:12px 0 8px;opacity:0.65">
+    <div style="font-size:11px;letter-spacing:2px;color:var(--dim);margin-bottom:4px">OMGÅNG ${roundNum}</div>
+    <div style="font-size:14px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">${parts.join('<span style="color:var(--dim);margin:0 2px">·</span>')}</div>
+  </div>`;
+}
+
+function buildCurrentRoundInputHtml() {
   const winnerChosen = goesOutIdx !== null;
+  const dealerIdx = (currentGame.currentRound - 1) % currentGame.players.length;
+  const dealer = currentGame.players[dealerIdx];
+  const dealerColor = PLAYER_COLORS[dealerIdx];
+
   let pickerHtml = `<div style="padding:16px 0 8px">
     <div style="font-size:12px;letter-spacing:2px;color:var(--muted);margin-bottom:10px">VEM GICK UT?</div>
     <div style="display:flex;flex-wrap:wrap;gap:8px">`;
@@ -897,7 +933,6 @@ function renderGame() {
   });
   pickerHtml += `</div></div>`;
 
-  // Player rows — always two-line structure (no layout shift when winner changes)
   let playerRows = "";
   currentGame.players.forEach((p,i) => {
     const rb = p.buys[currentGame.currentRound-1]||0;
@@ -950,9 +985,42 @@ function renderGame() {
     </div>`;
   });
 
-  // History table
+  return `<div style="border-top:1px solid var(--divider);padding:20px 0 4px">
+    <div style="font-size:12px;letter-spacing:3px;color:var(--muted)">OMGÅNG ${currentGame.currentRound} / ${TOTAL_ROUNDS}</div>
+    <div style="font-size:14px;color:var(--muted);margin-top:4px">Blanda: <span style="color:${dealerColor}">${dealer.name}</span></div>
+  </div>
+  ${renderTurnGoal(currentGame.currentRound)}
+  <div style="padding:4px 0 0">
+    ${pickerHtml}
+    <div>${playerRows}</div>
+    <button class="btn" onclick="submitRound()" ${!winnerChosen?"disabled":""}
+      style="margin-top:16px;width:100%;padding:18px;background:${winnerChosen?"#c9622f":"rgba(26,23,20,0.07)"};border:none;color:#fff;font-size:18px;letter-spacing:1px;border-radius:12px;font-weight:600;opacity:${winnerChosen?1:0.4}">
+      Registrera omgång ${currentGame.currentRound} →
+    </button>
+  </div>`;
+}
+
+function renderGame() {
+  if (lastFinishedGame || !currentGame || currentGame.finished) {
+    renderFinished(); return;
+  }
+  const el = document.getElementById("view-game");
+  const completedRounds = currentGame.players[0]?.scores.length || 0;
+  const dealerIdx = (currentGame.currentRound - 1) % currentGame.players.length;
+  const dealerColor = PLAYER_COLORS[dealerIdx];
+
+  let switcherHtml = "";
+  if (ongoingGames.length > 1) {
+    let switchBtns = "";
+    ongoingGames.forEach(g => {
+      const isA = g.id === activeGameId;
+      switchBtns += `<button class="btn" onclick="switchToGame('${g.id}')" style="padding:6px 14px;font-size:14px;color:${isA?"#c9622f":"rgba(26,23,20,0.55)"};border-color:${isA?"rgba(201,98,47,0.4)":"rgba(26,23,20,0.12)"}">${g.players.map(p=>p.name).join(" & ")}</button>`;
+    });
+    switcherHtml = `<div style="padding:14px 0;border-bottom:1px solid var(--divider);margin-bottom:28px"><div style="font-size:12px;letter-spacing:2px;color:var(--muted);margin-bottom:10px">BYT MATCH</div><div style="display:flex;flex-wrap:wrap;gap:8px">${switchBtns}</div></div>`;
+  }
+
   let historyTable = "";
-  if (currentGame.players[0].scores.length > 0) {
+  if (completedRounds > 0) {
     let headers = `<th style="text-align:left;color:rgba(26,23,20,0.45);font-size:13px">OMG</th>`;
     currentGame.players.forEach((p,i) => { headers += `<th style="color:${PLAYER_COLORS[i]};text-align:center">${p.name}</th>`; });
     let rows = "";
@@ -976,42 +1044,18 @@ function renderGame() {
     historyTable += renderScoreChart();
   }
 
-  let switcherHtml = "";
-  if (ongoingGames.length > 1) {
-    let switchBtns = "";
-    ongoingGames.forEach(g => {
-      const isA = g.id === activeGameId;
-      switchBtns += `<button class="btn" onclick="switchToGame('${g.id}')" style="padding:6px 14px;font-size:14px;color:${isA?"#c9622f":"rgba(26,23,20,0.55)"};border-color:${isA?"rgba(201,98,47,0.4)":"rgba(26,23,20,0.12)"}">${g.players.map(p=>p.name).join(" & ")}</button>`;
-    });
-    switcherHtml = `<div style="padding:14px 0;border-bottom:1px solid var(--divider);margin-bottom:28px"><div style="font-size:12px;letter-spacing:2px;color:var(--muted);margin-bottom:10px">BYT MATCH</div><div style="display:flex;flex-wrap:wrap;gap:8px">${switchBtns}</div></div>`;
-  }
-
-  const dealerIdx = (currentGame.currentRound - 1) % currentGame.players.length;
-  const dealer = currentGame.players[dealerIdx];
-  const dealerColor = PLAYER_COLORS[dealerIdx];
-
   el.innerHTML = `${switcherHtml}
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 0 16px;border-bottom:1px solid var(--divider)">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;padding:20px 0 16px;border-bottom:1px solid var(--divider)">
       <div>
         <div style="font-size:12px;letter-spacing:3px;color:var(--muted)">OMGÅNG</div>
         <div style="font-family:Georgia,serif;font-size:46px;line-height:1;margin:2px 0">${currentGame.currentRound} <span style="font-size:20px;color:var(--muted)">/ ${TOTAL_ROUNDS}</span></div>
-        <div style="font-size:14px;color:var(--muted);margin-top:4px">Blanda &amp; dela: <span style="color:${dealerColor}">${dealer.name}</span></div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
-        ${miniStandings}
+      <div style="text-align:right">
+        <div style="font-size:14px;color:var(--muted)">Blanda: <span style="color:${dealerColor}">${currentGame.players[dealerIdx].name}</span></div>
         <div style="font-size:12px;color:var(--dim);margin-top:4px">${currentGame.date}</div>
       </div>
     </div>
-    ${renderTurnGoal(currentGame.currentRound)}
-    <div style="padding:4px 0 0">
-      ${pickerHtml}
-      <div>${playerRows}</div>
-      <button class="btn" onclick="submitRound()" ${!winnerChosen?"disabled":""}
-        style="margin-top:16px;width:100%;padding:18px;background:${winnerChosen?"#c9622f":"rgba(26,23,20,0.07)"};border:none;color:#fff;font-size:18px;letter-spacing:1px;border-radius:12px;font-weight:600;opacity:${winnerChosen?1:0.4}">
-        Registrera omgång ${currentGame.currentRound} →
-      </button>
-    </div>
-    ${scoreCards}
+    <div id="round-input-section">${buildCurrentRoundInputHtml()}</div>
     ${historyTable}`;
 }
 
