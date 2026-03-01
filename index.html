@@ -9,118 +9,111 @@
     :root {
       --bg: #0a0a0f;
       --fg: #f0ede8;
-      --muted: rgba(255,255,255,0.4);
-      --card-bg: rgba(255,255,255,0.04);
-      --card-border: rgba(255,255,255,0.08);
+      --muted: rgba(255,255,255,0.38);
+      --dim: rgba(255,255,255,0.16);
+      --divider: rgba(255,255,255,0.08);
       --red: #e84855;
       --blue: #3a86ff;
       --green: #06d6a0;
       --yellow: #ffbe0b;
     }
-    body { background: var(--bg); color: var(--fg); font-family: 'Georgia', 'Times New Roman', serif; min-height: 100vh; }
-    body::before {
-      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-      background: radial-gradient(ellipse at 20% 20%, #1a0a2e 0%, transparent 50%),
-                  radial-gradient(ellipse at 80% 80%, #0d1a0a 0%, transparent 50%);
-    }
-    #app { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 16px 60px; }
+    body { background: var(--bg); color: var(--fg); font-family: system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif; min-height: 100vh; }
+    #app { max-width: 680px; margin: 0 auto; padding: 0 20px 80px; }
 
     /* NOTIFICATION */
     #notification {
-      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-      z-index: 1000; padding: 12px 28px; border-radius: 4px;
-      font-weight: bold; font-size: 14px; font-family: inherit;
-      box-shadow: 0 4px 30px rgba(0,0,0,0.5);
-      animation: slideDown 0.3s ease; display: none;
+      position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+      z-index: 1000; padding: 10px 24px; border-radius: 6px;
+      font-weight: 600; font-size: 14px; font-family: inherit;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+      animation: slideDown 0.25s ease; display: none;
     }
 
     /* HEADER */
-    header { padding: 32px 0 24px; text-align: center; border-bottom: 1px solid var(--card-border); margin-bottom: 28px; }
-    .subtitle { font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
-    h1 { font-size: clamp(28px,6vw,48px); font-weight: normal; letter-spacing: -1px; }
-    .tagline { font-size: 13px; color: rgba(255,255,255,0.35); margin-top: 6px; letter-spacing: 2px; }
-    #auth-bar { margin-top: 16px; display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+    header { padding: 40px 0 22px; text-align: center; border-bottom: 1px solid var(--divider); margin-bottom: 0; }
+    .subtitle { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    h1 { font-family: Georgia, serif; font-size: clamp(26px,6vw,42px); font-weight: normal; letter-spacing: -1px; }
+    .tagline { font-size: 12px; color: rgba(255,255,255,0.28); margin-top: 4px; letter-spacing: 2px; }
+    #auth-bar { margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
 
     /* NAV */
-    nav { display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; justify-content: center; }
-    nav button { padding: 8px 18px; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.7); font-size: 13px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border-radius: 4px; font-family: inherit; transition: all 0.2s; }
-    nav button:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.4); }
-    nav button.active { background: rgba(255,255,255,0.12); color: #fff; border-color: rgba(255,255,255,0.5); }
-    nav button:disabled { opacity: 0.3; cursor: not-allowed; }
+    nav { display: flex; border-bottom: 1px solid var(--divider); margin-bottom: 32px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    nav::-webkit-scrollbar { display: none; }
+    nav button { padding: 14px 14px; background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--muted); font-family: inherit; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; white-space: nowrap; margin-bottom: -1px; transition: color 0.2s, border-color 0.2s; }
+    nav button:hover { color: rgba(255,255,255,0.75); }
+    nav button.active { color: #fff; border-bottom-color: #fff; }
+    nav button:disabled { opacity: 0.22; cursor: not-allowed; }
 
-    /* CARDS */
-    .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 8px; animation: fadeIn 0.4s ease; }
+    /* CARDS / SECTIONS */
+    .card { border-top: 1px solid var(--divider); padding: 28px 0; background: transparent; border-radius: 0; animation: fadeIn 0.3s ease; }
+    /* Boxed panel for content that needs visual containment */
+    .panel { background: rgba(255,255,255,0.03); border: 1px solid var(--divider); border-radius: 10px; animation: fadeIn 0.3s ease; }
 
     /* BUTTONS */
-    .btn { cursor: pointer; border: none; border-radius: 4px; font-family: inherit; transition: all 0.2s; }
-    .btn:hover { filter: brightness(1.2); transform: translateY(-1px); }
-    .btn:active { transform: translateY(0); }
+    .btn { cursor: pointer; background: transparent; border: 1px solid var(--divider); border-radius: 8px; font-family: inherit; color: var(--fg); font-size: 14px; transition: opacity 0.15s, transform 0.1s; }
+    .btn:active { opacity: 0.6; transform: scale(0.97); }
+    .btn:disabled { opacity: 0.2; cursor: not-allowed; }
 
     /* INPUTS */
     input[type=text], input[type=number] {
-      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 4px; color: var(--fg); font-family: inherit;
-      padding: 8px 12px; font-size: 15px; outline: none;
+      background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.16);
+      border-radius: 0; color: var(--fg); font-family: inherit;
+      padding: 8px 0; font-size: 22px; outline: none; width: 100%;
+      -webkit-appearance: none;
     }
-    input:focus { border-color: rgba(255,255,255,0.4); }
+    input:focus { border-bottom-color: rgba(255,255,255,0.5); }
+    ::placeholder { color: rgba(255,255,255,0.18); }
 
     /* CHIPS */
-    .chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 100px; font-size: 13px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--divider); background: transparent; font-family: inherit; color: var(--fg); }
 
     /* SPINNER */
-    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+    .spinner { display: inline-block; width: 13px; height: 13px; border: 1.5px solid rgba(255,255,255,0.15); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
 
     /* SYNC DOT */
-    .sync-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-
-    /* ROUND PROGRESS */
-    .round-bar { width: 28px; height: 6px; border-radius: 3px; display: inline-block; }
+    .sync-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
 
     /* SCORE TABLE */
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th { padding: 6px 10px; font-weight: normal; }
-    td { padding: 6px 10px; }
+    th { padding: 6px 10px; font-weight: normal; font-size: 11px; color: var(--muted); }
+    td { padding: 9px 10px; }
 
     /* VIEWS */
-    .view { display: none; animation: fadeIn 0.4s ease; }
+    .view { display: none; animation: fadeIn 0.3s ease; }
     .view.active { display: block; }
 
     /* GOOGLE SIGNIN BTN */
     .google-btn {
-      padding: 8px 20px; background: rgba(66,133,244,0.15); border: 1px solid rgba(66,133,244,0.4);
-      color: #4285f4; font-size: 13px; cursor: pointer; border-radius: 4px;
-      font-family: inherit; display: flex; align-items: center; gap: 8px; transition: all 0.2s;
+      padding: 8px 18px; background: transparent; border: 1px solid rgba(66,133,244,0.35);
+      color: #4285f4; font-size: 13px; cursor: pointer; border-radius: 8px;
+      font-family: inherit; display: flex; align-items: center; gap: 8px; transition: background 0.15s;
     }
-    .google-btn:hover { background: rgba(66,133,244,0.25); }
+    .google-btn:hover { background: rgba(66,133,244,0.1); }
 
-    @keyframes slideDown { from { opacity:0; transform: translate(-50%,-10px); } to { opacity:1; transform: translate(-50%,0); } }
-    @keyframes fadeIn { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: translateY(0); } }
+    @keyframes slideDown { from { opacity:0; transform: translate(-50%,-8px); } to { opacity:1; transform: translate(-50%,0); } }
+    @keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
 
-    @media (max-width: 600px) {
-      .player-grid { grid-template-columns: repeat(2, 1fr) !important; }
-    }
-
-    /* MOBILE OPTIMIZATIONS */
     button, input, .chip { -webkit-tap-highlight-color: transparent; }
 
     @media (hover: none) {
-      .btn:hover { filter: none; transform: none; }
+      .btn:active { opacity: 0.6; transform: scale(0.97); }
     }
 
     @supports (padding: max(0px)) {
-      #app { padding-bottom: max(60px, env(safe-area-inset-bottom)); }
+      #app { padding-bottom: max(80px, env(safe-area-inset-bottom)); }
     }
 
     @media (max-width: 480px) {
-      nav button { padding: 10px 12px; font-size: 11px; min-height: 44px; }
+      nav button { padding: 12px 10px; font-size: 10px; min-height: 44px; }
       .btn { min-height: 44px; }
-      .chip { padding: 8px 14px; min-height: 44px; }
+      .chip { min-height: 44px; }
       input[type=text], input[type=number] { font-size: 16px !important; }
-      header { padding: 20px 0 16px; margin-bottom: 16px; }
+      header { padding: 24px 0 18px; }
+      #app { padding: 0 16px 80px; }
     }
   </style>
 </head>
@@ -587,8 +580,8 @@ function renderAuthBar() {
     bar.innerHTML = `
       <span class="sync-dot" style="background:${dotColor}"></span>
       <span style="font-size:13px;color:rgba(255,255,255,0.5)">${syncText}</span>
-      <button class="btn" onclick="loadFromSheets()" style="padding:4px 12px;font-size:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6)">↻ Hämta data</button>
-      <button class="btn" onclick="signOut()" style="padding:4px 12px;font-size:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4)">Logga ut</button>`;
+      <button class="btn" onclick="loadFromSheets()" style="padding:4px 12px;font-size:12px;color:rgba(255,255,255,0.55)">↻ Hämta</button>
+      <button class="btn" onclick="signOut()" style="padding:4px 12px;font-size:12px;color:rgba(255,255,255,0.35)">Logga ut</button>`;
   }
 }
 
@@ -599,51 +592,50 @@ function renderHome() {
     const isActive = g.id === activeGameId;
     const gLeader = [...g.players].sort((a,b)=>totalScore(a)-totalScore(b))[0];
     const li = g.players.findIndex(p=>p.name===gLeader?.name);
-    html += `<div class="card" style="padding:24px;margin-bottom:24px;border-color:rgba(232,72,85,${isActive?0.5:0.2});background:rgba(232,72,85,${isActive?0.08:0.03})">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-        <div>
-          <div style="font-size:11px;letter-spacing:3px;color:#e84855;margin-bottom:4px">PÅGÅENDE MATCH${isActive?" · AKTIV":""}</div>
-          <div style="font-size:22px">Omgång ${g.currentRound} / ${TOTAL_ROUNDS}</div>
-          <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:4px">Spelare: ${g.players.map(p=>p.name).join(", ")}</div>
-          ${gLeader ? `<div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:2px">Leder: <span style="color:${PLAYER_COLORS[li]}">${gLeader.name}</span> (${totalScore(gLeader)} p)</div>` : ""}
-          <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:4px">📅 ${g.date}</div>
-        </div>
-        <button class="btn" onclick="switchToGame('${g.id}')" style="padding:10px 24px;background:#e84855;color:#fff;font-size:14px">Spela →</button>
+    html += `<div style="border-top:1px solid var(--divider);padding:20px 0;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:10px;letter-spacing:3px;color:#e84855;margin-bottom:6px">PÅGÅENDE MATCH${isActive?" · AKTIV":""}</div>
+        <div style="font-size:20px;font-family:Georgia,serif">Omgång ${g.currentRound} <span style="font-size:14px;color:var(--muted)">/ ${TOTAL_ROUNDS}</span></div>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px">${g.players.map(p=>p.name).join(", ")}</div>
+        ${gLeader ? `<div style="font-size:13px;color:var(--muted);margin-top:2px">Leder: <span style="color:${PLAYER_COLORS[li]}">${gLeader.name}</span> · ${totalScore(gLeader)} p</div>` : ""}
+        <div style="font-size:11px;color:var(--dim);margin-top:4px">${g.date}</div>
       </div>
+      <button class="btn" onclick="switchToGame('${g.id}')" style="padding:10px 22px;background:#e84855;border:none;color:#fff;font-size:14px;font-weight:600;border-radius:8px;white-space:nowrap">Spela →</button>
     </div>`;
   });
 
-  html += `<div class="card" style="padding:32px">
-    <h2 style="margin:0 0 24px;font-size:20px;font-weight:normal;letter-spacing:1px">Starta ny match</h2>
-    <div style="margin-bottom:20px">
-      <div style="font-size:12px;letter-spacing:2px;color:rgba(255,255,255,0.4);margin-bottom:10px">LÄGG TILL SPELARE</div>
-      <div style="display:flex;gap:8px">
-        <input type="text" id="new-player-input" placeholder="Spelarens namn…" style="flex:1" onkeydown="if(event.key==='Enter')addPlayerFromInput()">
-        <button class="btn" onclick="addPlayerFromInput()" style="padding:8px 20px;background:#3a86ff;color:#fff;white-space:nowrap">+ Lägg till</button>
-      </div>
-    </div>`;
+  html += `<div style="padding-top:${ongoingGames.length>0?"8px":"0"}">
+    <div style="border-top:1px solid var(--divider);padding:28px 0 20px">
+      <h2 style="font-size:18px;font-weight:normal;letter-spacing:0.5px;margin-bottom:24px">Starta ny match</h2>
+      <div style="margin-bottom:24px">
+        <div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:14px">LÄGG TILL SPELARE</div>
+        <div style="display:flex;gap:10px;align-items:flex-end">
+          <input type="text" id="new-player-input" placeholder="Namn…" style="flex:1" onkeydown="if(event.key==='Enter')addPlayerFromInput()">
+          <button class="btn" onclick="addPlayerFromInput()" style="padding:8px 18px;white-space:nowrap;border-color:rgba(255,255,255,0.2);margin-bottom:1px">+ Lägg till</button>
+        </div>
+      </div>`;
 
   if (savedPlayers.length > 0) {
-    html += `<div style="margin-bottom:20px">
-      <div style="font-size:12px;letter-spacing:2px;color:rgba(255,255,255,0.4);margin-bottom:10px">SPARADE SPELARE</div>
+    html += `<div style="margin-bottom:24px">
+      <div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:12px">SPARADE SPELARE</div>
       <div style="display:flex;flex-wrap:wrap;gap:8px">`;
     savedPlayers.forEach(sp => {
       const already = setupPlayers.find(p=>p.name===sp.name);
-      html += `<div class="chip" onclick="addSavedPlayer('${sp.name}')"
-        style="background:${already?"rgba(6,214,160,0.2)":"rgba(255,255,255,0.06)"};border:1px solid ${already?"#06d6a0":"rgba(255,255,255,0.15)"};color:${already?"#06d6a0":"#f0ede8"}">
-        ${already?"✓ ":"+ "}${sp.name}${sp.wins>0?`<span style="opacity:0.5;font-size:11px">(${sp.wins}🏆)</span>`:""}
-      </div>`;
+      html += `<button class="chip" onclick="addSavedPlayer('${sp.name}')"
+        style="color:${already?"#06d6a0":"rgba(255,255,255,0.7)"};border-color:${already?"rgba(6,214,160,0.45)":"rgba(255,255,255,0.12)"};background:${already?"rgba(6,214,160,0.1)":"transparent"}">
+        ${already?"✓ ":""}${sp.name}${sp.wins>0?`<span style="opacity:0.45;font-size:11px;margin-left:2px">${sp.wins}🏆</span>`:""}
+      </button>`;
     });
     html += `</div></div>`;
   }
 
   if (setupPlayers.length > 0) {
     html += `<div style="margin-bottom:24px">
-      <div style="font-size:12px;letter-spacing:2px;color:rgba(255,255,255,0.4);margin-bottom:10px">VALDA (${setupPlayers.length})</div>
+      <div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:12px">VALDA (${setupPlayers.length})</div>
       <div style="display:flex;flex-wrap:wrap;gap:8px">`;
     setupPlayers.forEach((p,i) => {
-      html += `<div class="chip" style="background:${PLAYER_COLORS[i]}22;border:1px solid ${PLAYER_COLORS[i]}55;color:${PLAYER_COLORS[i]}">
-        ${p.name}<span style="opacity:0.7;cursor:pointer;margin-left:4px" onclick="removeSetupPlayer('${p.name}')">✕</span>
+      html += `<div class="chip" style="color:${PLAYER_COLORS[i]};border-color:${PLAYER_COLORS[i]}55;background:${PLAYER_COLORS[i]}12">
+        ${p.name}<span style="opacity:0.6;cursor:pointer;margin-left:6px;font-size:12px" onclick="removeSetupPlayer('${p.name}')">✕</span>
       </div>`;
     });
     html += `</div></div>`;
@@ -655,12 +647,12 @@ function renderHome() {
     return s.size === setupNames.size && [...setupNames].every(n => s.has(n));
   });
   if (isDuplicate) {
-    html += `<div style="padding:10px 14px;background:rgba(255,190,11,0.1);border:1px solid rgba(255,190,11,0.35);border-radius:4px;color:#ffbe0b;font-size:13px;margin-bottom:12px">⚠️ En match med dessa spelare pågår redan!</div>`;
+    html += `<div style="padding:10px 14px;background:rgba(255,190,11,0.08);border:1px solid rgba(255,190,11,0.3);border-radius:6px;color:#ffbe0b;font-size:13px;margin-bottom:16px">⚠️ En match med dessa spelare pågår redan!</div>`;
   }
   html += `<button class="btn" onclick="startGame()" ${isDuplicate||setupPlayers.length<2?"disabled":""}
-    style="padding:14px 36px;background:${setupPlayers.length>=2&&!isDuplicate?"#e84855":"rgba(255,255,255,0.1)"};color:#fff;font-size:16px;letter-spacing:1px;width:100%;cursor:${setupPlayers.length<2||isDuplicate?"not-allowed":"pointer"}">
-    🃏 Starta match
-  </button></div>`;
+    style="padding:15px;background:${setupPlayers.length>=2&&!isDuplicate?"#e84855":"rgba(255,255,255,0.06)"};border:none;color:#fff;font-size:15px;font-weight:600;width:100%;border-radius:10px">
+    Starta match
+  </button></div></div>`;
 
   document.getElementById("view-home").innerHTML = html;
 }
@@ -725,9 +717,9 @@ function renderTurnGoal(round) {
     ? `<div style="margin-top:12px;font-size:11px;color:#e84855;letter-spacing:2px;font-weight:bold">${goal.footer}</div>`
     : "";
 
-  return `<div class="card" style="padding:16px 20px;margin-bottom:20px;text-align:center;border-color:${diffColor}55;background:${diffColor}0d">
+  return `<div class="panel" style="padding:16px 20px;margin-bottom:4px;text-align:center;border-color:${diffColor}33;background:${diffColor}09">
     <div style="font-size:10px;letter-spacing:3px;color:${diffColor};margin-bottom:8px">OMGÅNGENS MÅL</div>
-    <div style="margin-bottom:2px">${goal.emoji} <span style="font-size:13px;color:rgba(255,255,255,0.55);font-style:italic">${TURN_DESCRIPTIONS[round-1]}</span></div>
+    <div style="margin-bottom:2px">${goal.emoji} <span style="font-size:13px;color:rgba(255,255,255,0.5);font-style:italic">${TURN_DESCRIPTIONS[round-1]}</span></div>
     ${handsHtml}
     ${footerHtml}
   </div>`;
@@ -792,8 +784,8 @@ function renderScoreChart() {
 
   svg += `</svg>`;
 
-  return `<div class="card" style="padding:20px;margin-top:20px;overflow:hidden">
-    <div style="font-size:12px;letter-spacing:3px;color:rgba(255,255,255,0.4);margin-bottom:14px">POÄNGUTVECKLING</div>
+  return `<div style="border-top:1px solid var(--divider);padding:28px 0;overflow:hidden">
+    <div style="font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:18px">POÄNGUTVECKLING</div>
     ${svg}
   </div>`;
 }
@@ -804,33 +796,36 @@ function renderGame() {
   }
   const el = document.getElementById("view-game");
 
-  // Progress bars
+  // Progress dots
   let bars = "";
   for (let i=0;i<TOTAL_ROUNDS;i++) {
-    const bg = i<currentGame.currentRound-1?"#06d6a0":i===currentGame.currentRound-1?"#e84855":"rgba(255,255,255,0.1)";
-    bars += `<div class="round-bar" style="background:${bg}"></div>`;
+    const done = i < currentGame.currentRound - 1;
+    const cur  = i === currentGame.currentRound - 1;
+    bars += `<div style="width:${cur?"10px":"7px"};height:${cur?"10px":"7px"};border-radius:50%;background:${done?"#06d6a0":cur?"#e84855":"rgba(255,255,255,0.12)"};transition:all 0.2s;flex-shrink:0"></div>`;
   }
 
-  // Live scores
+  // Live scores — vertical list
   const sorted = [...currentGame.players].map((p,i)=>({p,i,t:totalScore(p)})).sort((a,b)=>a.t-b.t);
-  let scoreCards = `<div class="player-grid" style="display:grid;grid-template-columns:repeat(${Math.min(currentGame.players.length,4)},1fr);gap:12px;margin-bottom:28px">`;
+  let scoreCards = `<div style="border-top:1px solid var(--divider);margin-bottom:8px">`;
   sorted.forEach(({p,i,t},rank) => {
-    scoreCards += `<div class="card" style="padding:16px 12px;text-align:center;border-color:${rank===0?PLAYER_COLORS[i]+"55":"rgba(255,255,255,0.08)"};background:${rank===0?PLAYER_COLORS[i]+"11":"rgba(255,255,255,0.03)"}">
-      ${rank===0?`<div style="font-size:10px;color:${PLAYER_COLORS[i]};letter-spacing:2px;margin-bottom:4px">LEDER</div>`:""}
-      <div style="font-size:13px;color:${PLAYER_COLORS[i]};margin-bottom:4px">${p.name}</div>
-      <div style="font-size:28px;font-weight:bold">${t}</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px">🛒 ${totalBuys(p)} köp</div>
+    scoreCards += `<div style="display:flex;align-items:center;padding:14px 0;border-bottom:1px solid var(--divider)">
+      <div style="flex:1">
+        <span style="font-size:16px;color:${PLAYER_COLORS[i]}">${p.name}</span>
+        ${rank===0?`<span style="font-size:10px;letter-spacing:2px;color:${PLAYER_COLORS[i]};opacity:0.6;margin-left:10px">LEDER</span>`:""}
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">${totalBuys(p)} köp</div>
+      </div>
+      <div style="font-family:Georgia,serif;font-size:32px;color:${rank===0?PLAYER_COLORS[i]:"rgba(255,255,255,0.85)"}">${t}</div>
     </div>`;
   });
-  scoreCards += "</div>";
+  scoreCards += `</div>`;
 
   // Goes out selector
   let goesOutBtns = "";
   currentGame.players.forEach((p,i) => {
     const sel = goesOutIdx===i;
-    goesOutBtns += `<button class="btn chip" onclick="setGoesOut(${i})"
-      style="background:${sel?PLAYER_COLORS[i]+"33":"rgba(255,255,255,0.06)"};border:2px solid ${sel?PLAYER_COLORS[i]:"rgba(255,255,255,0.15)"};color:${sel?PLAYER_COLORS[i]:"#f0ede8"};padding:8px 16px">
-      ${sel?"✓ ":""}${p.name}
+    goesOutBtns += `<button class="chip" onclick="setGoesOut(${i})"
+      style="color:${sel?PLAYER_COLORS[i]:"rgba(255,255,255,0.55)"};border-color:${sel?PLAYER_COLORS[i]:"rgba(255,255,255,0.12)"};background:${sel?PLAYER_COLORS[i]+"18":"transparent"}">
+      ${sel?`<span style="font-size:11px">✓</span> `:""}${p.name}
     </button>`;
   });
 
@@ -839,27 +834,28 @@ function renderGame() {
   currentGame.players.forEach((p,i) => {
     const rb = p.buys[currentGame.currentRound-1]||0;
     const isOut = goesOutIdx===i;
-    let dots = "";
+    let buyDots = "";
     for(let b=0;b<MAX_BUYS;b++) {
-      dots += `<div style="width:14px;height:14px;border-radius:50%;background:${b<rb?PLAYER_COLORS[i]:"rgba(255,255,255,0.1)"};border:1px solid ${b<rb?PLAYER_COLORS[i]:"rgba(255,255,255,0.2)"}"></div>`;
+      buyDots += `<div style="width:9px;height:9px;border-radius:50%;background:${b<rb?PLAYER_COLORS[i]:"rgba(255,255,255,0.12)"}"></div>`;
     }
-    playerRows += `<div style="display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:12px 16px;border-radius:6px;background:${isOut?PLAYER_COLORS[i]+"11":"rgba(255,255,255,0.02)"};border:1px solid ${isOut?PLAYER_COLORS[i]+"44":"rgba(255,255,255,0.06)"}">
-      <div>
-        <div style="font-size:13px;color:${PLAYER_COLORS[i]};margin-bottom:4px">${p.name}</div>
-        ${isOut
-          ? `<div style="font-size:22px;color:#06d6a0">0 poäng ✓</div>`
-          : `<input type="number" min="5" step="5" placeholder="Poäng…" value="${roundInputs[i]??""}" oninput="roundInputs[${i}]=this.value" style="width:100%;font-size:18px">`
-        }
-      </div>
-      <div style="text-align:center">
-        <div style="font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:2px;margin-bottom:6px">KÖP</div>
-        <div style="display:flex;gap:4px">${dots}</div>
-      </div>
-      <div style="display:flex;gap:6px">
-        <button class="btn" onclick="addBuy(${i})" ${rb>=MAX_BUYS?"disabled":""}
-          style="padding:6px 12px;font-size:13px;white-space:nowrap;background:${rb>=MAX_BUYS?"rgba(255,255,255,0.05)":PLAYER_COLORS[i]+"22"};border:1px solid ${rb>=MAX_BUYS?"rgba(255,255,255,0.1)":PLAYER_COLORS[i]+"66"};color:${rb>=MAX_BUYS?"rgba(255,255,255,0.3)":PLAYER_COLORS[i]};cursor:${rb>=MAX_BUYS?"not-allowed":"pointer"}">+ Köp</button>
-        <button class="btn" onclick="removeBuy(${i})" ${rb<=0?"disabled":""}
-          style="padding:6px 10px;font-size:15px;background:${rb<=0?"rgba(255,255,255,0.03)":"rgba(255,255,255,0.07)"};border:1px solid ${rb<=0?"rgba(255,255,255,0.06)":"rgba(255,255,255,0.2)"};color:${rb<=0?"rgba(255,255,255,0.15)":"rgba(255,255,255,0.55)"};cursor:${rb<=0?"not-allowed":"pointer"}" title="Ångra köp">↩</button>
+    playerRows += `<div style="padding:18px 0;border-bottom:1px solid var(--divider)">
+      <div style="font-size:13px;color:${PLAYER_COLORS[i]};letter-spacing:0.5px;margin-bottom:10px">${p.name}</div>
+      <div style="display:flex;align-items:flex-end;gap:16px">
+        <div style="flex:1">
+          ${isOut
+            ? `<div style="font-family:Georgia,serif;font-size:28px;color:#06d6a0">0 <span style="font-size:16px">✓</span></div>`
+            : `<input type="number" min="5" step="5" placeholder="Poäng…" value="${roundInputs[i]??""}" oninput="roundInputs[${i}]=this.value" style="font-family:Georgia,serif">`
+          }
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;padding-bottom:6px">
+          <div style="display:flex;gap:5px;align-items:center">${buyDots}</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn" onclick="addBuy(${i})" ${rb>=MAX_BUYS?"disabled":""}
+              style="padding:6px 14px;font-size:13px;white-space:nowrap;color:${rb>=MAX_BUYS?"rgba(255,255,255,0.2)":PLAYER_COLORS[i]};border-color:${rb>=MAX_BUYS?"rgba(255,255,255,0.08)":PLAYER_COLORS[i]+"55"}">+ Köp</button>
+            <button class="btn" onclick="removeBuy(${i})" ${rb<=0?"disabled":""}
+              style="padding:6px 12px;font-size:15px" title="Ångra köp">↩</button>
+          </div>
+        </div>
       </div>
     </div>`;
   });
@@ -883,9 +879,9 @@ function renderGame() {
     });
     let totRow = `<td style="font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.4)">TOT</td>`;
     currentGame.players.forEach((p,i) => { totRow += `<td style="text-align:center;color:${PLAYER_COLORS[i]};font-weight:bold;font-size:16px">${totalScore(p)}</td>`; });
-    historyTable = `<div class="card" style="padding:20px;overflow-x:auto;margin-top:20px">
-      <div style="font-size:12px;letter-spacing:3px;color:rgba(255,255,255,0.4);margin-bottom:16px">POÄNGHISTORIK</div>
-      <table><thead><tr>${headers}</tr></thead><tbody>${rows}<tr style="border-top:2px solid rgba(255,255,255,0.15)">${totRow}</tr></tbody></table>
+    historyTable = `<div style="border-top:1px solid var(--divider);padding:28px 0;overflow-x:auto">
+      <div style="font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:20px">POÄNGHISTORIK</div>
+      <table><thead><tr>${headers}</tr></thead><tbody>${rows}<tr style="border-top:1px solid rgba(255,255,255,0.12)">${totRow}</tr></tbody></table>
     </div>`;
     historyTable += renderScoreChart();
   }
@@ -895,29 +891,29 @@ function renderGame() {
     let switchBtns = "";
     ongoingGames.forEach(g => {
       const isA = g.id === activeGameId;
-      switchBtns += `<button class="btn" onclick="switchToGame('${g.id}')" style="padding:6px 12px;font-size:12px;background:${isA?"rgba(232,72,85,0.2)":"rgba(255,255,255,0.06)"};border:1px solid ${isA?"rgba(232,72,85,0.5)":"rgba(255,255,255,0.15)"};color:${isA?"#e84855":"rgba(255,255,255,0.6)"}">${g.players.map(p=>p.name).join(" & ")}</button>`;
+      switchBtns += `<button class="btn" onclick="switchToGame('${g.id}')" style="padding:6px 14px;font-size:12px;color:${isA?"#e84855":"rgba(255,255,255,0.55)"};border-color:${isA?"rgba(232,72,85,0.4)":"rgba(255,255,255,0.1)"}">${g.players.map(p=>p.name).join(" & ")}</button>`;
     });
-    switcherHtml = `<div style="margin-bottom:16px;padding:12px 16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:6px"><div style="font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.4);margin-bottom:8px">BYT MATCH</div><div style="display:flex;flex-wrap:wrap;gap:8px">${switchBtns}</div></div>`;
+    switcherHtml = `<div style="padding:14px 0;border-bottom:1px solid var(--divider);margin-bottom:28px"><div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:10px">BYT MATCH</div><div style="display:flex;flex-wrap:wrap;gap:8px">${switchBtns}</div></div>`;
   }
 
   el.innerHTML = `${switcherHtml}
-    <div style="text-align:center;margin-bottom:28px">
-      <div style="font-size:11px;letter-spacing:4px;color:rgba(255,255,255,0.4)">OMGÅNG</div>
-      <div style="font-size:52px;line-height:1;margin:4px 0">${currentGame.currentRound}</div>
-      <div style="font-size:14px;color:rgba(255,255,255,0.35)">av ${TOTAL_ROUNDS}</div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.3);margin-top:4px">📅 ${currentGame.date}</div>
-      <div style="display:flex;gap:4px;justify-content:center;margin-top:16px;flex-wrap:wrap">${bars}</div>
+    <div style="text-align:center;padding:32px 0 28px">
+      <div style="font-size:10px;letter-spacing:4px;color:var(--muted)">OMGÅNG</div>
+      <div style="font-family:Georgia,serif;font-size:64px;line-height:1;margin:6px 0">${currentGame.currentRound}</div>
+      <div style="font-size:13px;color:var(--muted)">av ${TOTAL_ROUNDS}</div>
+      <div style="font-size:11px;color:var(--dim);margin-top:4px">${currentGame.date}</div>
+      <div style="display:flex;gap:5px;justify-content:center;align-items:center;margin-top:20px;flex-wrap:wrap">${bars}</div>
     </div>
     ${renderTurnGoal(currentGame.currentRound)}
     ${scoreCards}
-    <div class="card" style="padding:24px;margin-bottom:20px">
-      <div style="font-size:12px;letter-spacing:3px;color:rgba(255,255,255,0.4);margin-bottom:18px">REGISTRERA OMGÅNG ${currentGame.currentRound}</div>
-      <div style="margin-bottom:20px">
-        <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:10px">Vem gick ut?</div>
+    <div style="padding:28px 0">
+      <div style="font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:20px">REGISTRERA OMGÅNG ${currentGame.currentRound}</div>
+      <div style="margin-bottom:24px">
+        <div style="font-size:12px;color:var(--muted);letter-spacing:1px;margin-bottom:12px">VEM GICK UT?</div>
         <div style="display:flex;flex-wrap:wrap;gap:8px">${goesOutBtns}</div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:14px">${playerRows}</div>
-      <button class="btn" onclick="submitRound()" style="margin-top:24px;width:100%;padding:14px;background:#e84855;color:#fff;font-size:16px;letter-spacing:1px">
+      <div>${playerRows}</div>
+      <button class="btn" onclick="submitRound()" style="margin-top:28px;width:100%;padding:16px;background:#e84855;border:none;color:#fff;font-size:15px;letter-spacing:1px;border-radius:10px;font-weight:600">
         Registrera omgång ${currentGame.currentRound} →
       </button>
     </div>
@@ -931,38 +927,38 @@ function renderFinished() {
   let rows = "";
   sorted.forEach((p,rank) => {
     const i = game.players.findIndex(x=>x.name===p.name);
-    rows += `<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-radius:6px;background:${rank===0?PLAYER_COLORS[i]+"22":"rgba(255,255,255,0.04)"};border:1px solid ${rank===0?PLAYER_COLORS[i]+"55":"rgba(255,255,255,0.08)"}">
-      <div style="display:flex;align-items:center;gap:12px">
-        <span style="font-size:18px">${rank===0?"👑":`${rank+1}.`}</span>
-        <span style="color:${PLAYER_COLORS[i]}">${p.name}</span>
-      </div>
+    rows += `<div style="display:flex;align-items:center;padding:14px 0;border-bottom:1px solid var(--divider)">
+      <div style="width:28px;font-size:16px;flex-shrink:0">${rank===0?"👑":`${rank+1}.`}</div>
+      <div style="flex:1;color:${PLAYER_COLORS[i]}">${p.name}</div>
       <div style="text-align:right">
-        <div style="font-size:22px;font-weight:bold">${totalScore(p)}</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.35)">${totalBuys(p)} köp</div>
+        <div style="font-family:Georgia,serif;font-size:24px">${totalScore(p)}</div>
+        <div style="font-size:11px;color:var(--muted)">${totalBuys(p)} köp</div>
       </div>
     </div>`;
   });
   document.getElementById("view-game").innerHTML = `
-    <div style="text-align:center;animation:fadeIn 0.4s ease">
-      <div style="font-size:64px;margin-bottom:16px">🏆</div>
-      <h2 style="font-size:32px;margin:0 0 8px;font-weight:normal">${sorted[0].name} vinner!</h2>
-      <div style="font-size:14px;color:rgba(255,255,255,0.4);margin-bottom:32px">Matchen avslutad · ${game.date}</div>
-      <div style="display:flex;flex-direction:column;gap:10px;max-width:400px;margin:0 auto 24px">${rows}</div>
-      <div class="card" style="padding:20px;max-width:400px;margin:0 auto 24px;text-align:left">
-        <div style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.4);margin-bottom:10px">NOTAT OM MATCHEN</div>
-        <textarea id="game-note-input" placeholder="Lägg till ett notat om matchen…" style="width:100%;min-height:80px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:4px;color:var(--fg);font-family:inherit;padding:10px 12px;font-size:14px;outline:none;resize:vertical">${game.note||""}</textarea>
-        <button class="btn" onclick="saveGameNote(document.getElementById('game-note-input').value)" style="margin-top:10px;width:100%;padding:10px;background:rgba(6,214,160,0.15);border:1px solid rgba(6,214,160,0.35);color:#06d6a0;font-size:14px">💾 Spara notat</button>
+    <div style="animation:fadeIn 0.3s ease;padding-top:40px">
+      <div style="text-align:center;margin-bottom:36px">
+        <div style="font-size:56px;margin-bottom:16px">🏆</div>
+        <h2 style="font-family:Georgia,serif;font-size:28px;font-weight:normal;margin-bottom:6px">${sorted[0].name} vinner!</h2>
+        <div style="font-size:13px;color:var(--muted)">${game.date}</div>
       </div>
-      <button class="btn" onclick="lastFinishedGame=null;showView('home')" style="padding:12px 32px;background:#e84855;color:#fff;font-size:16px">Ny match</button>
+      <div style="border-top:1px solid var(--divider)">${rows}</div>
+      <div style="border-top:1px solid var(--divider);padding:24px 0">
+        <div style="font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:12px">NOTAT</div>
+        <textarea id="game-note-input" placeholder="Lägg till ett notat…" style="width:100%;min-height:80px;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.16);color:var(--fg);font-family:inherit;padding:8px 0;font-size:14px;outline:none;resize:vertical">${game.note||""}</textarea>
+        <button class="btn" onclick="saveGameNote(document.getElementById('game-note-input').value)" style="margin-top:14px;width:100%;padding:12px;border-color:rgba(6,214,160,0.35);color:#06d6a0;font-size:14px;border-radius:8px">Spara notat</button>
+      </div>
+      <button class="btn" onclick="lastFinishedGame=null;showView('home')" style="width:100%;padding:15px;background:#e84855;border:none;color:#fff;font-size:15px;font-weight:600;border-radius:10px">Ny match</button>
     </div>`;
 }
 
 function renderStats() {
   const stats = getStats().filter(s=>s.gamesPlayed>0);
-  let html = `<h2 style="font-size:22px;font-weight:normal;margin-bottom:28px;letter-spacing:1px">📊 Statistik</h2>`;
+  let html = `<div style="padding:28px 0 0;font-size:10px;letter-spacing:4px;color:var(--muted)">STATISTIK</div>`;
 
   if (allGames.length===0) {
-    html += `<div style="text-align:center;color:rgba(255,255,255,0.3);padding:60px">Inga avslutade matcher ännu</div>`;
+    html += `<div style="text-align:center;color:var(--muted);padding:60px 20px">Inga avslutade matcher ännu</div>`;
   } else {
     let lbRows = "";
     stats.forEach((s,i) => {
@@ -970,21 +966,21 @@ function renderStats() {
       const color = PLAYER_COLORS[idx%PLAYER_COLORS.length];
       const medal = i===0?"👑":i===1?"🥈":i===2?"🥉":`${i+1}.`;
       const wr = Math.round(s.wins/s.gamesPlayed*100);
-      lbRows += `<div style="display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:12px;padding:12px 16px;border-radius:6px;background:${i===0?color+"11":"rgba(255,255,255,0.02)"};border:1px solid ${i===0?color+"33":"rgba(255,255,255,0.06)"}">
-        <div style="font-size:18px;text-align:center">${medal}</div>
-        <div>
+      lbRows += `<div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--divider)">
+        <div style="font-size:16px;width:24px;text-align:center;flex-shrink:0">${medal}</div>
+        <div style="flex:1">
           <div style="color:${color};margin-bottom:3px">${s.name}</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.35)">${s.gamesPlayed} matcher · ⌀ ${s.avgScore} p · 🛒 ${s.totalBuys} köp</div>
+          <div style="font-size:12px;color:var(--muted)">${s.gamesPlayed} matcher · ⌀ ${s.avgScore} p · ${s.totalBuys} köp</div>
         </div>
         <div style="text-align:right">
-          <div style="font-size:22px;color:${color}">${s.wins} 🏆</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.35)">${wr}% winrate</div>
+          <div style="font-family:Georgia,serif;font-size:24px;color:${color}">${s.wins}</div>
+          <div style="font-size:11px;color:var(--muted)">${wr}% wins</div>
         </div>
       </div>`;
     });
-    html += `<div class="card" style="padding:24px;margin-bottom:20px">
-      <div style="font-size:12px;letter-spacing:3px;color:rgba(255,255,255,0.4);margin-bottom:16px">SAMMANLAGT LEADERBOARD</div>
-      <div style="display:flex;flex-direction:column;gap:8px">${lbRows}</div>
+    html += `<div style="border-top:1px solid var(--divider);padding:28px 0 8px">
+      <div style="font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:4px">LEADERBOARD</div>
+      <div>${lbRows}</div>
     </div>`;
 
     // Date visualization
@@ -999,8 +995,8 @@ function renderStats() {
         <div style="font-size:11px;color:rgba(255,255,255,0.4);white-space:nowrap">${d}</div>
       </div>`;
     }).join("");
-    html += `<div class="card" style="padding:20px;margin-bottom:20px">
-      <div style="font-size:12px;letter-spacing:3px;color:rgba(255,255,255,0.4);margin-bottom:16px">SPELDATUM</div>
+    html += `<div style="border-top:1px solid var(--divider);padding:28px 0">
+      <div style="font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:16px">SPELDATUM</div>
       <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">${dateChips}</div>
     </div>`;
 
@@ -1011,18 +1007,18 @@ function renderStats() {
         const idx = g.players.findIndex(x=>x.name===p.name);
         return `<span style="color:${PLAYER_COLORS[idx%PLAYER_COLORS.length]}">${p.name}</span><span style="color:rgba(255,255,255,0.5);margin-left:6px">${totalScore(p)} p</span>`;
       }).join(`<span style="color:rgba(255,255,255,0.2);margin:0 6px">·</span>`);
-      gameRows += `<div style="padding:14px 16px;border-radius:6px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06)">
-        <div style="display:flex;justify-content:space-between;margin-bottom:10px">
-          <div style="font-size:12px;color:rgba(255,255,255,0.4)">Match ${allGames.length-gi} · ${g.date}</div>
-          <div style="font-size:13px">👑 ${sorted[0].name}</div>
+      gameRows += `<div style="padding:14px 0;border-bottom:1px solid var(--divider)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <div style="font-size:11px;color:var(--muted)">${g.date} · Match ${allGames.length-gi}</div>
+          <div style="font-size:12px;color:var(--muted)">👑 ${sorted[0].name}</div>
         </div>
-        <div style="font-size:12px;display:flex;flex-wrap:wrap;gap:6px">${players}</div>
-        ${g.note ? `<div style="margin-top:8px;font-size:12px;color:rgba(255,255,255,0.45);font-style:italic;border-top:1px solid rgba(255,255,255,0.06);padding-top:8px">📝 ${g.note}</div>` : ""}
+        <div style="font-size:13px;display:flex;flex-wrap:wrap;gap:6px">${players}</div>
+        ${g.note ? `<div style="margin-top:8px;font-size:12px;color:var(--muted);font-style:italic">📝 ${g.note}</div>` : ""}
       </div>`;
     });
-    html += `<div class="card" style="padding:24px">
-      <div style="font-size:12px;letter-spacing:3px;color:rgba(255,255,255,0.4);margin-bottom:16px">MATCHHISTORIK</div>
-      <div style="display:flex;flex-direction:column;gap:10px">${gameRows}</div>
+    html += `<div style="border-top:1px solid var(--divider);padding:28px 0 0">
+      <div style="font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:4px">MATCHHISTORIK</div>
+      <div>${gameRows}</div>
     </div>`;
   }
   document.getElementById("view-stats").innerHTML = html;
@@ -1030,31 +1026,23 @@ function renderStats() {
 
 function renderPlayers() {
   const stats = getStats();
-  let html = `<h2 style="font-size:22px;font-weight:normal;margin-bottom:28px;letter-spacing:1px">👥 Sparade spelare</h2>`;
+  let html = `<div style="padding:28px 0 0;font-size:10px;letter-spacing:4px;color:var(--muted)">SPELARE</div>`;
   if (savedPlayers.length===0) {
-    html += `<div style="text-align:center;color:rgba(255,255,255,0.3);padding:60px">Inga sparade spelare ännu</div>`;
+    html += `<div style="text-align:center;color:var(--muted);padding:60px 20px">Inga sparade spelare ännu</div>`;
   } else {
-    html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px">`;
     savedPlayers.forEach((p,i) => {
       const color = PLAYER_COLORS[i%PLAYER_COLORS.length];
       const s = stats.find(x=>x.name===p.name)||{};
       const wr = p.gamesPlayed>0 ? Math.round(p.wins/p.gamesPlayed*100) : 0;
-      const emoji = p.wins>=5?"👑":p.wins>=3?"🏆":p.wins>=1?"⭐":"🃏";
-      html += `<div class="card" style="padding:20px;border-color:${color}33;background:${color}08">
-        <div style="font-size:32px;margin-bottom:8px">${emoji}</div>
-        <div style="font-size:18px;color:${color};margin-bottom:12px">${p.name}</div>
-        <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:rgba(255,255,255,0.5)">
-          <div>🏆 ${p.wins} vinster</div>
-          <div>🎮 ${p.gamesPlayed} matcher</div>
-          <div>📈 ${wr}% winrate</div>
-          ${s.avgScore!==undefined?`<div>⌀ ${s.avgScore} p/match</div>`:""}
-          ${s.totalBuys!==undefined?`<div>🛒 ${s.totalBuys} köp totalt</div>`:""}
+      html += `<div style="display:flex;align-items:center;gap:16px;padding:16px 0;border-bottom:1px solid var(--divider)">
+        <div style="flex:1">
+          <div style="font-size:17px;color:${color};margin-bottom:4px">${p.name}</div>
+          <div style="font-size:12px;color:var(--muted)">${p.gamesPlayed} matcher · ${p.wins} vinster · ${wr}% wins${s.avgScore!==undefined?` · ⌀ ${s.avgScore} p`:""}</div>
         </div>
         <button class="btn" onclick="deletePlayer('${p.name}')"
-          style="margin-top:14px;width:100%;padding:6px;font-size:12px;background:rgba(255,80,80,0.1);border:1px solid rgba(255,80,80,0.2);color:rgba(255,100,100,0.7)">Ta bort</button>
+          style="padding:6px 12px;font-size:12px;color:rgba(255,100,100,0.6);border-color:rgba(255,80,80,0.15)">Ta bort</button>
       </div>`;
     });
-    html += "</div>";
   }
   document.getElementById("view-players").innerHTML = html;
 }
@@ -1074,11 +1062,11 @@ function renderRounds() {
     </div>`;
   }
 
-  let html = `<h2 style="font-size:22px;font-weight:normal;margin-bottom:8px;letter-spacing:1px">🃏 Omgångar</h2>`;
+  let html = `<div style="padding:28px 0 0;font-size:10px;letter-spacing:4px;color:var(--muted)">OMGÅNGAR</div>`;
   if (game) {
-    html += `<div style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:28px;letter-spacing:1px">Pågående match · omgång ${currentRound} av ${TOTAL_ROUNDS}</div>`;
+    html += `<div style="font-size:13px;color:var(--muted);padding:8px 0 20px">Omgång ${currentRound} av ${TOTAL_ROUNDS}</div>`;
   } else {
-    html += `<div style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:28px;letter-spacing:1px">Alla ${TOTAL_ROUNDS} omgångar och deras mål</div>`;
+    html += `<div style="font-size:13px;color:var(--muted);padding:8px 0 20px">Alla ${TOTAL_ROUNDS} omgångar</div>`;
   }
 
   html += `<div style="display:flex;flex-direction:column;gap:10px">`;
@@ -1126,7 +1114,7 @@ function renderRounds() {
     const borderColor = isCurrent ? "#e8485588" : isCompleted ? "#06d6a044" : `${diffColor}33`;
     const bgColor = isCurrent ? "rgba(232,72,85,0.07)" : isCompleted ? "rgba(6,214,160,0.05)" : `${diffColor}08`;
 
-    html += `<div class="card" style="padding:14px 18px;${opacity}border-color:${borderColor};background:${bgColor}">
+    html += `<div class="panel" style="padding:14px 18px;${opacity}border-color:${borderColor};background:${bgColor}">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
         <div style="display:flex;align-items:center;gap:8px;min-width:90px">
           <div style="font-size:11px;color:${diffColor};letter-spacing:2px;white-space:nowrap">OMG ${roundNum}</div>
