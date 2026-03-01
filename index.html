@@ -131,15 +131,11 @@
     <button id="nav-home" class="active" onclick="showView('home')">Hem</button>
     <button id="nav-game" disabled onclick="showView('game')">Match</button>
     <button id="nav-stats" onclick="showView('stats')">Statistik</button>
-    <button id="nav-players" onclick="showView('players')">Spelare</button>
-    <button id="nav-rounds" onclick="showView('rounds')">Omgångar</button>
   </nav>
 
   <div id="view-home" class="view active"></div>
   <div id="view-game" class="view"></div>
   <div id="view-stats" class="view"></div>
-  <div id="view-players" class="view"></div>
-  <div id="view-rounds" class="view"></div>
 </div>
 
 <script>
@@ -568,11 +564,9 @@ function showView(v) {
 function render() {
   renderAuthBar();
   updateNavState();
-  if (currentView==="home")    renderHome();
-  if (currentView==="game")    renderGame();
-  if (currentView==="stats")   renderStats();
-  if (currentView==="players") renderPlayers();
-  if (currentView==="rounds")  renderRounds();
+  if (currentView==="home")  renderHome();
+  if (currentView==="game")  renderGame();
+  if (currentView==="stats") renderStats();
 }
 
 function updateNavState() {
@@ -607,28 +601,42 @@ function renderHome() {
     const isActive = g.id === activeGameId;
     const gLeader = [...g.players].sort((a,b)=>totalScore(a)-totalScore(b))[0];
     const li = g.players.findIndex(p=>p.name===gLeader?.name);
-    html += `<div style="border-top:1px solid var(--divider);padding:20px 0;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
-      <div>
-        <div style="font-size:12px;letter-spacing:3px;color:#c9622f;margin-bottom:6px">PÅGÅENDE MATCH${isActive?" · AKTIV":""}</div>
-        <div style="font-size:22px;font-family:Georgia,serif">Omgång ${g.currentRound} <span style="font-size:16px;color:var(--muted)">/ ${TOTAL_ROUNDS}</span></div>
-        <div style="font-size:15px;color:var(--muted);margin-top:4px">${g.players.map(p=>p.name).join(", ")}</div>
-        ${gLeader ? `<div style="font-size:15px;color:var(--muted);margin-top:2px">Leder: <span style="color:${PLAYER_COLORS[li]}">${gLeader.name}</span> · ${totalScore(gLeader)} p</div>` : ""}
-        <div style="font-size:13px;color:var(--dim);margin-top:4px">${g.date}</div>
-      </div>
-      <button class="btn" onclick="switchToGame('${g.id}')" style="padding:10px 22px;background:#c9622f;border:none;color:#fff;font-size:16px;font-weight:600;border-radius:8px;white-space:nowrap">Spela →</button>
+    html += `<div style="border-top:1px solid var(--divider);padding:24px 0">
+      <div style="font-size:12px;letter-spacing:3px;color:#c9622f;margin-bottom:10px">PÅGÅENDE MATCH${isActive&&ongoingGames.length>1?" · AKTIV":""}</div>
+      <div style="font-family:Georgia,serif;font-size:32px;line-height:1;margin-bottom:6px">Omgång ${g.currentRound} <span style="font-size:18px;color:var(--muted)">/ ${TOTAL_ROUNDS}</span></div>
+      <div style="font-size:15px;color:var(--muted);margin-bottom:4px">${g.players.map(p=>p.name).join(", ")}</div>
+      ${gLeader ? `<div style="font-size:15px;color:var(--muted);margin-bottom:2px">Leder: <span style="color:${PLAYER_COLORS[li]}">${gLeader.name}</span> · ${totalScore(gLeader)} p</div>` : ""}
+      <div style="font-size:13px;color:var(--dim);margin-bottom:16px">${g.date}</div>
+      <button class="btn" onclick="switchToGame('${g.id}')" style="width:100%;padding:16px;background:#c9622f;border:none;color:#fff;font-size:18px;font-weight:600;border-radius:10px">Fortsätt →</button>
     </div>`;
   });
 
+  const lastSrc = allGames.length > 0
+    ? allGames[allGames.length - 1]
+    : (ongoingGames.length > 0 ? ongoingGames[0] : null);
+  const newGameHeading = ongoingGames.length > 0
+    ? `<div style="font-size:12px;letter-spacing:2px;color:var(--muted);margin-bottom:20px">NY MATCH</div>`
+    : `<h2 style="font-size:20px;font-weight:normal;letter-spacing:0.5px;margin-bottom:24px">Starta ny match</h2>`;
   html += `<div style="padding-top:${ongoingGames.length>0?"8px":"0"}">
     <div style="border-top:1px solid var(--divider);padding:28px 0 20px">
-      <h2 style="font-size:20px;font-weight:normal;letter-spacing:0.5px;margin-bottom:24px">Starta ny match</h2>
-      <div style="margin-bottom:24px">
-        <div style="font-size:12px;letter-spacing:2px;color:var(--muted);margin-bottom:14px">LÄGG TILL SPELARE</div>
-        <div style="display:flex;gap:10px;align-items:flex-end">
-          <input type="text" id="new-player-input" placeholder="Namn…" style="flex:1" onkeydown="if(event.key==='Enter')addPlayerFromInput()">
-          <button class="btn" onclick="addPlayerFromInput()" style="padding:8px 18px;white-space:nowrap;border-color:rgba(26,23,20,0.22);margin-bottom:1px">+ Lägg till</button>
-        </div>
-      </div>`;
+      ${newGameHeading}`;
+
+  if (lastSrc && setupPlayers.length === 0) {
+    const names = lastSrc.players.map(p => p.name).join(", ");
+    html += `<button class="btn" onclick="loadLastGamePlayers()"
+      style="width:100%;padding:14px;margin-bottom:20px;border-color:rgba(26,23,20,0.18);font-size:16px;text-align:left;border-radius:10px">
+      ↩ Samma spelare som senast
+      <div style="font-size:13px;color:var(--muted);margin-top:3px;font-weight:normal">${names}</div>
+    </button>`;
+  }
+
+  html += `<div style="margin-bottom:24px">
+      <div style="font-size:12px;letter-spacing:2px;color:var(--muted);margin-bottom:14px">LÄGG TILL SPELARE</div>
+      <div style="display:flex;gap:10px;align-items:flex-end">
+        <input type="text" id="new-player-input" placeholder="Namn…" style="flex:1" onkeydown="if(event.key==='Enter')addPlayerFromInput()">
+        <button class="btn" onclick="addPlayerFromInput()" style="padding:8px 18px;white-space:nowrap;border-color:rgba(26,23,20,0.22);margin-bottom:1px">+ Lägg till</button>
+      </div>
+    </div>`;
 
   if (savedPlayers.length > 0) {
     html += `<div style="margin-bottom:24px">
@@ -720,6 +728,18 @@ function moveSetupPlayerDown(name) {
 function switchToGame(id) {
   setActiveGame(id);
   showView("game");
+}
+
+function loadLastGamePlayers() {
+  const src = allGames.length > 0
+    ? allGames[allGames.length - 1]
+    : (ongoingGames.length > 0 ? ongoingGames[0] : null);
+  if (!src) return;
+  setupPlayers = src.players.map(p => ({
+    name: p.name,
+    id: p.id || String(Date.now() + Math.random())
+  }));
+  renderHome();
 }
 
 function renderTurnGoal(round) {
@@ -1200,10 +1220,16 @@ function renderStats() {
       <div>${gameRows}</div>
     </div>`;
   }
+  html += `<div style="border-top:2px solid var(--divider);margin-top:32px;padding-top:4px">`;
+  html += renderPlayersHtml();
+  html += `</div>`;
+  html += `<div style="border-top:2px solid var(--divider);margin-top:32px;padding-top:4px">`;
+  html += renderRoundsHtml();
+  html += `</div>`;
   document.getElementById("view-stats").innerHTML = html;
 }
 
-function renderPlayers() {
+function renderPlayersHtml() {
   const stats = getStats();
   let html = `<div style="padding:28px 0 0;font-size:12px;letter-spacing:4px;color:var(--muted)">SPELARE</div>`;
   if (savedPlayers.length===0) {
@@ -1223,10 +1249,12 @@ function renderPlayers() {
       </div>`;
     });
   }
-  document.getElementById("view-players").innerHTML = html;
+  return html;
 }
 
-function renderRounds() {
+function renderPlayers() { renderStats(); }
+
+function renderRoundsHtml() {
   const game = currentGame && !currentGame.finished ? currentGame : null;
   const completedRounds = game ? (game.roundWinners || []) : [];
   const currentRound = game ? game.currentRound : null;
@@ -1306,7 +1334,7 @@ function renderRounds() {
   });
 
   html += `</div>`;
-  document.getElementById("view-rounds").innerHTML = html;
+  return html;
 }
 
 async function updateGameNoteInSheets(gameId, note) {
