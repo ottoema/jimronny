@@ -727,6 +727,71 @@ function renderTurnGoal(round) {
   </div>`;
 }
 
+function renderScoreChart() {
+  const completedRounds = currentGame.players[0]?.scores.length || 0;
+  if (completedRounds === 0) return "";
+
+  const cumulative = currentGame.players.map(p => {
+    let sum = 0;
+    return p.scores.map(s => (sum += s));
+  });
+
+  const allVals = cumulative.flat();
+  const maxVal = Math.max(...allVals, 1);
+
+  const W = 600, H = 200;
+  const padL = 42, padR = 72, padT = 16, padB = 28;
+  const cW = W - padL - padR;
+  const cH = H - padT - padB;
+
+  const xOf = r => padL + (r / (TOTAL_ROUNDS - 1)) * cW;
+  const yOf = s => padT + (1 - s / maxVal) * cH;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;overflow:visible">`;
+
+  const gridLines = 4;
+  for (let g = 0; g <= gridLines; g++) {
+    const val = (maxVal / gridLines) * g;
+    const y = yOf(val);
+    svg += `<line x1="${padL}" y1="${y}" x2="${padL + cW}" y2="${y}" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`;
+    svg += `<text x="${padL - 6}" y="${y + 4}" text-anchor="end" fill="rgba(255,255,255,0.25)" font-size="10" font-family="monospace">${Math.round(val)}</text>`;
+  }
+
+  for (let r = 0; r < TOTAL_ROUNDS; r++) {
+    const x = xOf(r);
+    if (r % 3 === 0 || r === TOTAL_ROUNDS - 1) {
+      svg += `<line x1="${x}" y1="${padT}" x2="${x}" y2="${padT + cH}" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`;
+      svg += `<text x="${x}" y="${padT + cH + 16}" text-anchor="middle" fill="rgba(255,255,255,0.25)" font-size="10" font-family="monospace">${r + 1}</text>`;
+    }
+  }
+
+  if (completedRounds < TOTAL_ROUNDS) {
+    const xMarker = xOf(completedRounds - 1) + (xOf(completedRounds) - xOf(completedRounds - 1)) / 2;
+    svg += `<line x1="${xMarker}" y1="${padT}" x2="${xMarker}" y2="${padT + cH}" stroke="rgba(232,72,85,0.35)" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+  }
+
+  currentGame.players.forEach((p, i) => {
+    const color = PLAYER_COLORS[i];
+    const pts = cumulative[i].map((val, ri) => `${xOf(ri)},${yOf(val)}`).join(" ");
+    if (cumulative[i].length > 1) {
+      svg += `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.85"/>`;
+    }
+    cumulative[i].forEach((val, ri) => {
+      svg += `<circle cx="${xOf(ri)}" cy="${yOf(val)}" r="4" fill="${color}" opacity="0.9"/>`;
+    });
+    const lastX = xOf(completedRounds - 1);
+    const lastY = yOf(cumulative[i][completedRounds - 1]);
+    svg += `<text x="${lastX + 10}" y="${lastY + 4}" fill="${color}" font-size="11" font-family="Georgia,serif" opacity="0.9">${p.name}</text>`;
+  });
+
+  svg += `</svg>`;
+
+  return `<div class="card" style="padding:20px;margin-top:20px;overflow:hidden">
+    <div style="font-size:12px;letter-spacing:3px;color:rgba(255,255,255,0.4);margin-bottom:14px">POÄNGUTVECKLING</div>
+    ${svg}
+  </div>`;
+}
+
 function renderGame() {
   if (lastFinishedGame || !currentGame || currentGame.finished) {
     renderFinished(); return;
@@ -816,6 +881,7 @@ function renderGame() {
       <div style="font-size:12px;letter-spacing:3px;color:rgba(255,255,255,0.4);margin-bottom:16px">POÄNGHISTORIK</div>
       <table><thead><tr>${headers}</tr></thead><tbody>${rows}<tr style="border-top:2px solid rgba(255,255,255,0.15)">${totRow}</tr></tbody></table>
     </div>`;
+    historyTable += renderScoreChart();
   }
 
   let switcherHtml = "";
