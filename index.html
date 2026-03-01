@@ -865,48 +865,52 @@ function renderGame() {
     const isOut = goesOutIdx===i;
     let buyDots = "";
     for(let b=0;b<MAX_BUYS;b++) {
-      buyDots += `<div style="width:8px;height:8px;border-radius:50%;background:${b<rb?PLAYER_COLORS[i]:"rgba(26,23,20,0.12)"}"></div>`;
+      const filled = b < rb;
+      const action = filled ? `removeBuy(${i})` : `addBuy(${i})`;
+      const disabled = !filled && rb >= MAX_BUYS;
+      buyDots += `<button onclick="${action}" ${disabled?"disabled":""} style="width:40px;height:40px;border-radius:50%;border:none;padding:0;display:flex;align-items:center;justify-content:center;background:transparent;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;flex-shrink:0">
+        <div style="width:16px;height:16px;border-radius:50%;background:${filled?PLAYER_COLORS[i]:"rgba(26,23,20,0.14)"}"></div>
+      </button>`;
     }
-    const buyBtns = `
-      <div style="display:flex;gap:3px;align-items:center">${buyDots}</div>
-      <button class="btn" onclick="addBuy(${i})" ${rb>=MAX_BUYS?"disabled":""}
-        style="padding:4px 9px;font-size:13px;min-height:36px;color:${rb>=MAX_BUYS?"rgba(26,23,20,0.22)":PLAYER_COLORS[i]};border-color:${rb>=MAX_BUYS?"rgba(26,23,20,0.1)":PLAYER_COLORS[i]+"55"}">Köp</button>
-      <button class="btn" onclick="removeBuy(${i})" ${rb<=0?"disabled":""}
-        style="padding:4px 8px;font-size:15px;min-height:36px;color:${rb<=0?"rgba(26,23,20,0.18)":"var(--muted)"}">↩</button>`;
+    const buyBtns = `<div style="display:flex;gap:0;align-items:center">${buyDots}</div>`;
 
     if (!winnerChosen) {
       // Step 1: only show "Gick ut" — score inputs are hidden
-      playerRows += `<div style="display:flex;align-items:center;gap:6px;padding:10px 0;border-bottom:1px solid var(--divider)">
-        <div style="flex:1;font-size:16px;color:${PLAYER_COLORS[i]}">${p.name}</div>
+      playerRows += `<div style="display:flex;align-items:center;gap:8px;padding:14px 0;border-bottom:1px solid var(--divider)">
+        <div style="flex:1;font-size:20px;font-weight:600;color:${PLAYER_COLORS[i]}">${p.name}</div>
         ${buyBtns}
         <button class="btn" onclick="setGoesOut(${i})"
-          style="padding:4px 12px;font-size:14px;min-height:36px;font-weight:600;color:#3d6b45;border-color:rgba(61,107,69,0.45)">Gick ut</button>
+          style="padding:10px 20px;font-size:18px;min-height:52px;font-weight:600;color:#3d6b45;border-color:rgba(61,107,69,0.45);border-radius:10px">Gick&nbsp;ut</button>
       </div>`;
     } else if (isOut) {
-      // Winner row: compact, with undo
-      playerRows += `<div style="display:flex;align-items:center;gap:6px;padding:10px 0;border-bottom:1px solid var(--divider)">
+      // Winner row: with undo
+      playerRows += `<div style="display:flex;align-items:center;gap:8px;padding:14px 0;border-bottom:1px solid var(--divider)">
         <div style="flex:1">
-          <span style="font-size:16px;color:${PLAYER_COLORS[i]}">${p.name}</span>
-          <span style="font-size:13px;color:#3d6b45;margin-left:6px">✓ gick ut · 0 p</span>
+          <div style="font-size:20px;font-weight:600;color:${PLAYER_COLORS[i]}">${p.name}</div>
+          <div style="font-size:15px;color:#3d6b45;margin-top:2px">✓ gick ut · 0 p</div>
         </div>
         ${buyBtns}
         <button class="btn" onclick="setGoesOut(null)"
-          style="padding:4px 8px;font-size:13px;min-height:36px;color:var(--muted)">Ångra</button>
+          style="padding:8px 14px;font-size:15px;min-height:52px;color:var(--muted)">Ångra</button>
       </div>`;
     } else {
-      // Scorer row: all on one line — name, buys, stepper
+      // Scorer row: name+buys on top, full-width stepper below
       const curScore = parseInt(roundInputs[i])||0;
-      playerRows += `<div style="display:flex;align-items:center;gap:6px;padding:10px 0;border-bottom:1px solid var(--divider)">
-        <div style="font-size:16px;color:${PLAYER_COLORS[i]};min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
-        ${buyBtns}
-        <button class="btn" id="score-minus-${i}" onclick="adjustScore(${i},-5)" ${curScore<=5?"disabled":""}
-          style="padding:0;font-size:20px;flex-shrink:0;width:40px;min-height:40px">−</button>
-        <input type="tel" inputmode="numeric" placeholder="—" value="${roundInputs[i]??""}"
-          oninput="roundInputs[${i}]=this.value;updateScoreMinus(${i})"
-          id="score-input-${i}"
-          style="font-family:Georgia,serif;font-size:22px;text-align:center;width:56px;flex-shrink:0;min-width:0;padding:4px 2px">
-        <button class="btn" onclick="adjustScore(${i},5)"
-          style="padding:0;font-size:20px;flex-shrink:0;width:40px;min-height:40px">+</button>
+      playerRows += `<div style="padding:14px 0;border-bottom:1px solid var(--divider)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div style="font-size:20px;font-weight:600;color:${PLAYER_COLORS[i]};flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+          ${buyBtns}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn" id="score-minus-${i}" onclick="adjustScore(${i},-5)" ${curScore<=5?"disabled":""}
+            style="padding:0;font-size:28px;flex-shrink:0;width:58px;min-height:58px">−</button>
+          <input type="tel" inputmode="numeric" placeholder="—" value="${roundInputs[i]??""}"
+            oninput="roundInputs[${i}]=this.value;updateScoreMinus(${i})"
+            id="score-input-${i}"
+            style="font-family:Georgia,serif;font-size:30px;text-align:center;flex:1;min-width:0;padding:6px 4px">
+          <button class="btn" onclick="adjustScore(${i},5)"
+            style="padding:0;font-size:28px;flex-shrink:0;width:58px;min-height:58px">+</button>
+        </div>
       </div>`;
     }
   });
@@ -965,10 +969,10 @@ function renderGame() {
     </div>
     ${renderTurnGoal(currentGame.currentRound)}
     <div style="padding:4px 0 0">
-      ${!winnerChosen ? `<div style="font-size:12px;letter-spacing:2px;color:var(--muted);padding:8px 0 2px">VEM GICK UT?</div>` : ""}
+      ${!winnerChosen ? `<div style="font-size:15px;letter-spacing:2px;color:var(--muted);font-weight:600;padding:16px 0 4px">VEM GICK UT?</div>` : ""}
       <div>${playerRows}</div>
       <button class="btn" onclick="submitRound()" ${!winnerChosen?"disabled":""}
-        style="margin-top:14px;width:100%;padding:13px;background:${winnerChosen?"#c9622f":"rgba(26,23,20,0.07)"};border:none;color:#fff;font-size:16px;letter-spacing:1px;border-radius:10px;font-weight:600;opacity:${winnerChosen?1:0.4}">
+        style="margin-top:16px;width:100%;padding:18px;background:${winnerChosen?"#c9622f":"rgba(26,23,20,0.07)"};border:none;color:#fff;font-size:18px;letter-spacing:1px;border-radius:12px;font-weight:600;opacity:${winnerChosen?1:0.4}">
         Registrera omgång ${currentGame.currentRound} →
       </button>
     </div>
