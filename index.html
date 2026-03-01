@@ -231,19 +231,29 @@ const TURN_DESCRIPTIONS = [
 ];
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
-let authToken    = null;
-let savedPlayers = lload("gin_players", []);
-let currentGame  = lload("gin_current_game", null);
-let allGames     = lload("gin_all_games", []);
-let setupPlayers = [];
-let roundInputs  = {};
-let goesOutIdx   = null;
-let currentView  = "home";
-let syncStatus   = "idle";
+let authToken        = null;
+let savedPlayers     = lload("gin_players", []);
+let ongoingGames     = lload("gin_ongoing_games", []);
+let activeGameId     = lload("gin_active_game_id", null);
+let currentGame      = null; // set at init via setActiveGame()
+let lastFinishedGame = null;
+let allGames         = lload("gin_all_games", []);
+let setupPlayers     = [];
+let roundInputs      = {};
+let goesOutIdx       = null;
+let currentView      = "home";
+let syncStatus       = "idle";
 
 // ─── LOCAL STORAGE ────────────────────────────────────────────────────────────
 function lsave(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} }
 function lload(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e) { return d; } }
+
+// ─── ACTIVE GAME ──────────────────────────────────────────────────────────────
+function setActiveGame(id) {
+  activeGameId = id;
+  lsave("gin_active_game_id", activeGameId);
+  currentGame = ongoingGames.find(g => g.id === activeGameId) || null;
+}
 
 // ─── NOTIFICATIONS ────────────────────────────────────────────────────────────
 let notifTimer = null;
@@ -362,16 +372,25 @@ async function loadFromSheets() {
       lsave("gin_all_games", allGames);
     }
     try {
-      const cgRows = await sheetsGet("CurrentGame!A2:B2");
-      if (cgRows.length > 0 && cgRows[0][0]==="game" && cgRows[0][1]) {
-        const ongoing = JSON.parse(cgRows[0][1]);
-        if (ongoing && !ongoing.finished) {
-          currentGame = ongoing;
-          lsave("gin_current_game", currentGame);
-          notify("Pågående match återupptagen ✓", "success");
+      const cgRows = await sheetsGet("CurrentGame!A2:B100");
+      const loaded = [];
+      let loadedActiveId = null;
+      for (const [key, val] of cgRows) {
+        if (key === "activeGameId") { loadedActiveId = val; continue; }
+        if (key?.startsWith("game_") && val) {
+          try { const g = JSON.parse(val); if (g && !g.finished) loaded.push(g); } catch(e) {}
         }
       }
+      if (loaded.length > 0) {
+        ongoingGames = loaded;
+        lsave("gin_ongoing_games", ongoingGames);
+        setActiveGame(loadedActiveId || loaded[0].id);
+        notify(`${loaded.length} pågående matcher återupptagna ✓`, "success");
+      }
     } catch(e) {}
+    if (!currentGame && ongoingGames.length > 0) {
+      setActiveGame(activeGameId && ongoingGames.find(g => g.id === activeGameId) ? activeGameId : ongoingGames[0].id);
+    }
     setSyncStatus("synced");
     render();
   } catch(e) {
@@ -380,12 +399,14 @@ async function loadFromSheets() {
   }
 }
 
-async function saveCurrentGame(game) {
+async function saveOngoingGamesToSheets() {
   if (!authToken) return;
   try {
     await sheetsClear("CurrentGame!A2:B100");
-    if (game) await sheetsUpdate("CurrentGame!A2:B2", [["game", JSON.stringify(game)]]);
-  } catch(e) { console.warn("saveCurrentGame failed", e); }
+    const rows = ongoingGames.map(g => [`game_${g.id}`, JSON.stringify(g)]);
+    if (activeGameId) rows.push(["activeGameId", activeGameId]);
+    if (rows.length > 0) await sheetsUpdate(`CurrentGame!A2:B${rows.length + 1}`, rows);
+  } catch(e) { console.warn("saveOngoingGamesToSheets failed", e); }
 }
 
 async function saveFinishedGame(game, updatedPlayers) {
@@ -407,7 +428,7 @@ async function saveFinishedGame(game, updatedPlayers) {
     await sheetsClear("Players!A2:D1000");
     if (updatedPlayers.length > 0)
       await sheetsAppend("Players!A:D", updatedPlayers.map(p=>[p.id,p.name,p.wins,p.gamesPlayed]));
-    await saveCurrentGame(null);
+    await saveOngoingGamesToSheets();
     setSyncStatus("synced"); renderAuthBar();
   } catch(e) {
     setSyncStatus("error"); renderAuthBar();
@@ -422,6 +443,11 @@ function getLeader()   { return currentGame ? [...currentGame.players].sort((a,b
 
 function startGame() {
   if (setupPlayers.length < 2) { notify("Minst 2 spelare krävs!", "warn"); return; }
+  const names = new Set(setupPlayers.map(p => p.name.toLowerCase()));
+  if (ongoingGames.some(g => {
+    const s = new Set(g.players.map(p => p.name.toLowerCase()));
+    return s.size === names.size && [...names].every(n => s.has(n));
+  })) { notify("En match med dessa spelare pågår redan!", "warn"); return; }
   const game = { id:String(Date.now()), date:new Date().toLocaleDateString("sv-SE"),
     players:setupPlayers.map(p=>({...p,scores:[],buys:[]})), currentRound:1, finished:false };
   setupPlayers.forEach(sp => {
@@ -429,10 +455,11 @@ function startGame() {
       savedPlayers.push({name:sp.name, id:String(sp.id), wins:0, gamesPlayed:0});
   });
   lsave("gin_players", savedPlayers);
-  currentGame = game;
-  lsave("gin_current_game", currentGame);
+  ongoingGames.push(game);
+  lsave("gin_ongoing_games", ongoingGames);
+  setActiveGame(game.id);
   setupPlayers = []; roundInputs = {}; goesOutIdx = null;
-  saveCurrentGame(game);
+  saveOngoingGamesToSheets();
   showView("game");
 }
 
@@ -442,7 +469,7 @@ function addBuy(idx) {
   if (rb>=MAX_BUYS) { notify(`${p.name} har redan använt alla köp!`, "warn"); return; }
   const nb = [...p.buys]; nb[currentGame.currentRound-1] = rb+1;
   currentGame.players[idx] = {...p, buys:nb};
-  lsave("gin_current_game", currentGame);
+  lsave("gin_ongoing_games", ongoingGames);
   renderGame();
 }
 
@@ -452,7 +479,7 @@ function removeBuy(idx) {
   if (rb<=0) return;
   const nb = [...p.buys]; nb[currentGame.currentRound-1] = rb-1;
   currentGame.players[idx] = {...p, buys:nb};
-  lsave("gin_current_game", currentGame);
+  lsave("gin_ongoing_games", ongoingGames);
   notify(`Köp ångrad för ${p.name}`, "info");
   renderGame();
 }
@@ -485,13 +512,17 @@ function submitRound() {
     allGames.push({...currentGame});
     lsave("gin_all_games", allGames);
     notify(`Spelet slut! ${winner.name} vinner! 🏆`, "success");
-    saveFinishedGame(currentGame, savedPlayers);
+    lastFinishedGame = {...currentGame};
+    ongoingGames = ongoingGames.filter(g => g.id !== currentGame.id);
+    lsave("gin_ongoing_games", ongoingGames);
+    setActiveGame(ongoingGames.length > 0 ? ongoingGames[0].id : null);
+    saveFinishedGame(lastFinishedGame, savedPlayers);
   } else {
     currentGame.currentRound++;
-    saveCurrentGame(currentGame);
+    lsave("gin_ongoing_games", ongoingGames);
+    saveOngoingGamesToSheets();
   }
 
-  lsave("gin_current_game", currentGame);
   roundInputs = {}; goesOutIdx = null;
   render();
 }
@@ -511,6 +542,7 @@ function setSyncStatus(s) { syncStatus = s; }
 
 // ─── RENDER ───────────────────────────────────────────────────────────────────
 function showView(v) {
+  if (v === "game") lastFinishedGame = null;
   currentView = v;
   document.querySelectorAll(".view").forEach(el => el.classList.remove("active"));
   document.querySelectorAll("nav button").forEach(el => el.classList.remove("active"));
@@ -531,7 +563,7 @@ function render() {
 
 function updateNavState() {
   const gameBtn = document.getElementById("nav-game");
-  gameBtn.disabled = !currentGame || currentGame.finished;
+  gameBtn.disabled = ongoingGames.length === 0;
 }
 
 function renderAuthBar() {
@@ -555,32 +587,25 @@ function renderAuthBar() {
 }
 
 function renderHome() {
-  const leader = getLeader();
   let html = "";
 
-  if (currentGame && !currentGame.finished) {
-    const li = currentGame.players.findIndex(p=>p.name===leader?.name);
-    html += `<div class="card" style="padding:24px;margin-bottom:24px;border-color:rgba(232,72,85,0.3);background:rgba(232,72,85,0.06)">
+  ongoingGames.forEach(g => {
+    const isActive = g.id === activeGameId;
+    const gLeader = [...g.players].sort((a,b)=>totalScore(a)-totalScore(b))[0];
+    const li = g.players.findIndex(p=>p.name===gLeader?.name);
+    html += `<div class="card" style="padding:24px;margin-bottom:24px;border-color:rgba(232,72,85,${isActive?0.5:0.2});background:rgba(232,72,85,${isActive?0.08:0.03})">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
         <div>
-          <div style="font-size:11px;letter-spacing:3px;color:#e84855;margin-bottom:4px">PÅGÅENDE MATCH</div>
-          <div style="font-size:22px">Omgång ${currentGame.currentRound} / ${TOTAL_ROUNDS}</div>
-          ${leader ? `<div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:4px">Leder: <span style="color:${PLAYER_COLORS[li]}">${leader.name}</span> (${totalScore(leader)} p)</div>` : ""}
-          <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:4px">📅 ${currentGame.date}</div>
+          <div style="font-size:11px;letter-spacing:3px;color:#e84855;margin-bottom:4px">PÅGÅENDE MATCH${isActive?" · AKTIV":""}</div>
+          <div style="font-size:22px">Omgång ${g.currentRound} / ${TOTAL_ROUNDS}</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:4px">Spelare: ${g.players.map(p=>p.name).join(", ")}</div>
+          ${gLeader ? `<div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:2px">Leder: <span style="color:${PLAYER_COLORS[li]}">${gLeader.name}</span> (${totalScore(gLeader)} p)</div>` : ""}
+          <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:4px">📅 ${g.date}</div>
         </div>
-        <button class="btn" onclick="showView('game')" style="padding:10px 24px;background:#e84855;color:#fff;font-size:14px">Fortsätt →</button>
+        <button class="btn" onclick="switchToGame('${g.id}')" style="padding:10px 24px;background:#e84855;color:#fff;font-size:14px">Spela →</button>
       </div>
     </div>`;
-  }
-
-  if (currentGame && currentGame.finished) {
-    const w = [...currentGame.players].sort((a,b)=>totalScore(a)-totalScore(b))[0];
-    html += `<div class="card" style="padding:24px;margin-bottom:24px;border-color:rgba(6,214,160,0.3);background:rgba(6,214,160,0.06);text-align:center">
-      <div style="font-size:11px;letter-spacing:3px;color:#06d6a0;margin-bottom:8px">SENASTE MATCH AVSLUTAD</div>
-      <div style="font-size:28px;margin-bottom:8px">👑 ${w.name} vann!</div>
-      <div style="font-size:13px;color:rgba(255,255,255,0.4)">${currentGame.date}</div>
-    </div>`;
-  }
+  });
 
   html += `<div class="card" style="padding:32px">
     <h2 style="margin:0 0 24px;font-size:20px;font-weight:normal;letter-spacing:1px">Starta ny match</h2>
@@ -618,8 +643,16 @@ function renderHome() {
     html += `</div></div>`;
   }
 
-  html += `<button class="btn" onclick="startGame()"
-    style="padding:14px 36px;background:${setupPlayers.length>=2?"#e84855":"rgba(255,255,255,0.1)"};color:#fff;font-size:16px;letter-spacing:1px;width:100%;cursor:${setupPlayers.length<2?"not-allowed":"pointer"}">
+  const setupNames = new Set(setupPlayers.map(p => p.name.toLowerCase()));
+  const isDuplicate = setupPlayers.length >= 2 && ongoingGames.some(g => {
+    const s = new Set(g.players.map(p => p.name.toLowerCase()));
+    return s.size === setupNames.size && [...setupNames].every(n => s.has(n));
+  });
+  if (isDuplicate) {
+    html += `<div style="padding:10px 14px;background:rgba(255,190,11,0.1);border:1px solid rgba(255,190,11,0.35);border-radius:4px;color:#ffbe0b;font-size:13px;margin-bottom:12px">⚠️ En match med dessa spelare pågår redan!</div>`;
+  }
+  html += `<button class="btn" onclick="startGame()" ${isDuplicate||setupPlayers.length<2?"disabled":""}
+    style="padding:14px 36px;background:${setupPlayers.length>=2&&!isDuplicate?"#e84855":"rgba(255,255,255,0.1)"};color:#fff;font-size:16px;letter-spacing:1px;width:100%;cursor:${setupPlayers.length<2||isDuplicate?"not-allowed":"pointer"}">
     🃏 Starta match
   </button></div>`;
 
@@ -646,6 +679,11 @@ function addSavedPlayer(name) {
 function removeSetupPlayer(name) {
   setupPlayers = setupPlayers.filter(p=>p.name!==name);
   renderHome();
+}
+
+function switchToGame(id) {
+  setActiveGame(id);
+  showView("game");
 }
 
 function renderTurnGoal(round) {
@@ -690,7 +728,7 @@ function renderTurnGoal(round) {
 }
 
 function renderGame() {
-  if (!currentGame || currentGame.finished) {
+  if (lastFinishedGame || !currentGame || currentGame.finished) {
     renderFinished(); return;
   }
   const el = document.getElementById("view-game");
@@ -780,7 +818,17 @@ function renderGame() {
     </div>`;
   }
 
-  el.innerHTML = `
+  let switcherHtml = "";
+  if (ongoingGames.length > 1) {
+    let switchBtns = "";
+    ongoingGames.forEach(g => {
+      const isA = g.id === activeGameId;
+      switchBtns += `<button class="btn" onclick="switchToGame('${g.id}')" style="padding:6px 12px;font-size:12px;background:${isA?"rgba(232,72,85,0.2)":"rgba(255,255,255,0.06)"};border:1px solid ${isA?"rgba(232,72,85,0.5)":"rgba(255,255,255,0.15)"};color:${isA?"#e84855":"rgba(255,255,255,0.6)"}">${g.players.map(p=>p.name).join(" & ")}</button>`;
+    });
+    switcherHtml = `<div style="margin-bottom:16px;padding:12px 16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:6px"><div style="font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.4);margin-bottom:8px">BYT MATCH</div><div style="display:flex;flex-wrap:wrap;gap:8px">${switchBtns}</div></div>`;
+  }
+
+  el.innerHTML = `${switcherHtml}
     <div style="text-align:center;margin-bottom:28px">
       <div style="font-size:11px;letter-spacing:4px;color:rgba(255,255,255,0.4)">OMGÅNG</div>
       <div style="font-size:52px;line-height:1;margin:4px 0">${currentGame.currentRound}</div>
@@ -793,7 +841,7 @@ function renderGame() {
     <div class="card" style="padding:24px;margin-bottom:20px">
       <div style="font-size:12px;letter-spacing:3px;color:rgba(255,255,255,0.4);margin-bottom:18px">REGISTRERA OMGÅNG ${currentGame.currentRound}</div>
       <div style="margin-bottom:20px">
-        <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:10px">Vem gick ut? (får 0 poäng)</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:10px">Vem gick ut?</div>
         <div style="display:flex;flex-wrap:wrap;gap:8px">${goesOutBtns}</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px">${playerRows}</div>
@@ -805,11 +853,12 @@ function renderGame() {
 }
 
 function renderFinished() {
-  if (!currentGame) return;
-  const sorted = [...currentGame.players].sort((a,b)=>totalScore(a)-totalScore(b));
+  const game = lastFinishedGame || (currentGame?.finished ? currentGame : null);
+  if (!game) { showView("home"); return; }
+  const sorted = [...game.players].sort((a,b)=>totalScore(a)-totalScore(b));
   let rows = "";
   sorted.forEach((p,rank) => {
-    const i = currentGame.players.findIndex(x=>x.name===p.name);
+    const i = game.players.findIndex(x=>x.name===p.name);
     rows += `<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-radius:6px;background:${rank===0?PLAYER_COLORS[i]+"22":"rgba(255,255,255,0.04)"};border:1px solid ${rank===0?PLAYER_COLORS[i]+"55":"rgba(255,255,255,0.08)"}">
       <div style="display:flex;align-items:center;gap:12px">
         <span style="font-size:18px">${rank===0?"👑":`${rank+1}.`}</span>
@@ -825,14 +874,14 @@ function renderFinished() {
     <div style="text-align:center;animation:fadeIn 0.4s ease">
       <div style="font-size:64px;margin-bottom:16px">🏆</div>
       <h2 style="font-size:32px;margin:0 0 8px;font-weight:normal">${sorted[0].name} vinner!</h2>
-      <div style="font-size:14px;color:rgba(255,255,255,0.4);margin-bottom:32px">Matchen avslutad · ${currentGame.date}</div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.4);margin-bottom:32px">Matchen avslutad · ${game.date}</div>
       <div style="display:flex;flex-direction:column;gap:10px;max-width:400px;margin:0 auto 24px">${rows}</div>
       <div class="card" style="padding:20px;max-width:400px;margin:0 auto 24px;text-align:left">
         <div style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.4);margin-bottom:10px">NOTAT OM MATCHEN</div>
-        <textarea id="game-note-input" placeholder="Lägg till ett notat om matchen…" style="width:100%;min-height:80px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:4px;color:var(--fg);font-family:inherit;padding:10px 12px;font-size:14px;outline:none;resize:vertical">${currentGame.note||""}</textarea>
+        <textarea id="game-note-input" placeholder="Lägg till ett notat om matchen…" style="width:100%;min-height:80px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:4px;color:var(--fg);font-family:inherit;padding:10px 12px;font-size:14px;outline:none;resize:vertical">${game.note||""}</textarea>
         <button class="btn" onclick="saveGameNote(document.getElementById('game-note-input').value)" style="margin-top:10px;width:100%;padding:10px;background:rgba(6,214,160,0.15);border:1px solid rgba(6,214,160,0.35);color:#06d6a0;font-size:14px">💾 Spara notat</button>
       </div>
-      <button class="btn" onclick="currentGame=null;lsave('gin_current_game',null);showView('home')" style="padding:12px 32px;background:#e84855;color:#fff;font-size:16px">Ny match</button>
+      <button class="btn" onclick="lastFinishedGame=null;showView('home')" style="padding:12px 32px;background:#e84855;color:#fff;font-size:16px">Ny match</button>
     </div>`;
 }
 
@@ -1031,12 +1080,13 @@ async function updateGameNoteInSheets(gameId, note) {
 }
 
 function saveGameNote(note) {
-  if (!currentGame) return;
-  currentGame.note = note.trim();
-  lsave("gin_current_game", currentGame);
-  const idx = allGames.findIndex(g => g.id === currentGame.id);
-  if (idx >= 0) { allGames[idx].note = currentGame.note; lsave("gin_all_games", allGames); }
-  updateGameNoteInSheets(currentGame.id, currentGame.note);
+  const game = lastFinishedGame || currentGame;
+  if (!game) return;
+  game.note = note.trim();
+  if (!lastFinishedGame) lsave("gin_ongoing_games", ongoingGames);
+  const idx = allGames.findIndex(g => g.id === game.id);
+  if (idx >= 0) { allGames[idx].note = game.note; lsave("gin_all_games", allGames); }
+  updateGameNoteInSheets(game.id, game.note);
   notify("Notat sparat ✓", "success");
 }
 
@@ -1055,6 +1105,16 @@ if (wasOAuth && authToken) {
     .then(() => loadFromSheets())
     .catch(e => { notify("Sheets-fel: " + e.message, "warn"); });
 } else {
+  // Migrate old gin_current_game if present
+  const oldGame = lload("gin_current_game", null);
+  if (oldGame && !oldGame.finished && !ongoingGames.find(g => g.id === oldGame.id)) {
+    ongoingGames.push(oldGame);
+    lsave("gin_ongoing_games", ongoingGames);
+    lsave("gin_current_game", null);
+  }
+  if (ongoingGames.length > 0) {
+    setActiveGame(activeGameId && ongoingGames.find(g => g.id === activeGameId) ? activeGameId : ongoingGames[0].id);
+  }
   render();
 }
 </script>
