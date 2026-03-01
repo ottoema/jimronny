@@ -7,76 +7,76 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #12100e;
-      --fg: #f5ead8;
-      --muted: rgba(245,234,216,0.38);
-      --dim: rgba(245,234,216,0.16);
-      --divider: rgba(245,234,216,0.08);
+      --bg: #f4f0ea;
+      --fg: #1a1714;
+      --muted: rgba(26,23,20,0.5);
+      --dim: rgba(26,23,20,0.2);
+      --divider: rgba(26,23,20,0.1);
       --red: #c9622f;
-      --blue: #7b8fa8;
-      --green: #8b9e6b;
-      --yellow: #d4a843;
+      --blue: #2c5f8a;
+      --green: #3d6b45;
+      --yellow: #9e7820;
     }
-    body { background: var(--bg); color: var(--fg); font-family: system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif; min-height: 100vh; }
+    body { background: var(--bg); color: var(--fg); font-family: system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif; min-height: 100vh; font-size: 18px; }
     #app { max-width: 680px; margin: 0 auto; padding: 0 20px 80px; }
 
     /* NOTIFICATION */
     #notification {
       position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
       z-index: 1000; padding: 10px 24px; border-radius: 6px;
-      font-weight: 600; font-size: 14px; font-family: inherit;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+      font-weight: 600; font-size: 16px; font-family: inherit;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.18);
       animation: slideDown 0.25s ease; display: none;
     }
 
     /* HEADER */
     header { padding: 40px 0 22px; text-align: center; border-bottom: 1px solid var(--divider); margin-bottom: 0; }
-    .subtitle { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
-    h1 { font-family: Georgia, serif; font-size: clamp(26px,6vw,42px); font-weight: normal; letter-spacing: -1px; }
-    .tagline { font-size: 12px; color: rgba(255,255,255,0.28); margin-top: 4px; letter-spacing: 2px; }
+    .subtitle { font-size: 13px; letter-spacing: 4px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    h1 { font-family: Georgia, serif; font-size: clamp(34px,7vw,52px); font-weight: normal; letter-spacing: -1px; }
+    .tagline { font-size: 15px; color: rgba(26,23,20,0.45); margin-top: 4px; letter-spacing: 2px; }
     #auth-bar { margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
 
     /* NAV */
     nav { display: flex; border-bottom: 1px solid var(--divider); margin-bottom: 32px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
     nav::-webkit-scrollbar { display: none; }
-    nav button { padding: 14px 14px; background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--muted); font-family: inherit; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; white-space: nowrap; margin-bottom: -1px; transition: color 0.2s, border-color 0.2s; }
-    nav button:hover { color: rgba(255,255,255,0.75); }
-    nav button.active { color: #fff; border-bottom-color: #fff; }
+    nav button { padding: 14px 14px; background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--muted); font-family: inherit; font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; white-space: nowrap; margin-bottom: -1px; transition: color 0.2s, border-color 0.2s; }
+    nav button:hover { color: rgba(26,23,20,0.75); }
+    nav button.active { color: #1a1714; border-bottom-color: #1a1714; }
     nav button:disabled { opacity: 0.22; cursor: not-allowed; }
 
     /* CARDS / SECTIONS */
     .card { border-top: 1px solid var(--divider); padding: 28px 0; background: transparent; border-radius: 0; animation: fadeIn 0.3s ease; }
     /* Boxed panel for content that needs visual containment */
-    .panel { background: rgba(255,255,255,0.03); border: 1px solid var(--divider); border-radius: 10px; animation: fadeIn 0.3s ease; }
+    .panel { background: rgba(26,23,20,0.04); border: 1px solid var(--divider); border-radius: 10px; animation: fadeIn 0.3s ease; }
 
     /* BUTTONS */
-    .btn { cursor: pointer; background: transparent; border: 1px solid var(--divider); border-radius: 8px; font-family: inherit; color: var(--fg); font-size: 14px; transition: opacity 0.15s, transform 0.1s; }
+    .btn { cursor: pointer; background: transparent; border: 1px solid var(--divider); border-radius: 8px; font-family: inherit; color: var(--fg); font-size: 16px; transition: opacity 0.15s, transform 0.1s; }
     .btn:active { opacity: 0.6; transform: scale(0.97); }
     .btn:disabled { opacity: 0.2; cursor: not-allowed; }
 
     /* INPUTS */
-    input[type=text], input[type=number] {
-      background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.16);
+    input[type=text], input[type=number], input[type=tel] {
+      background: transparent; border: none; border-bottom: 1px solid rgba(26,23,20,0.2);
       border-radius: 0; color: var(--fg); font-family: inherit;
-      padding: 8px 0; font-size: 22px; outline: none; width: 100%;
+      padding: 8px 0; font-size: 24px; outline: none; width: 100%;
       -webkit-appearance: none;
     }
-    input:focus { border-bottom-color: rgba(255,255,255,0.5); }
-    ::placeholder { color: rgba(255,255,255,0.18); }
+    input:focus { border-bottom-color: rgba(26,23,20,0.55); }
+    ::placeholder { color: rgba(26,23,20,0.3); }
 
     /* CHIPS */
-    .chip { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 100px; font-size: 13px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--divider); background: transparent; font-family: inherit; color: var(--fg); }
+    .chip { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 100px; font-size: 16px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--divider); background: transparent; font-family: inherit; color: var(--fg); }
 
     /* SPINNER */
-    .spinner { display: inline-block; width: 13px; height: 13px; border: 1.5px solid rgba(255,255,255,0.15); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+    .spinner { display: inline-block; width: 13px; height: 13px; border: 1.5px solid rgba(26,23,20,0.15); border-top-color: #1a1714; border-radius: 50%; animation: spin 0.7s linear infinite; }
 
     /* SYNC DOT */
     .sync-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
 
     /* SCORE TABLE */
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th { padding: 6px 10px; font-weight: normal; font-size: 11px; color: var(--muted); }
-    td { padding: 9px 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 16px; }
+    th { padding: 6px 10px; font-weight: normal; font-size: 14px; color: var(--muted); }
+    td { padding: 10px 10px; }
 
     /* VIEWS */
     .view { display: none; animation: fadeIn 0.3s ease; }
@@ -85,7 +85,7 @@
     /* GOOGLE SIGNIN BTN */
     .google-btn {
       padding: 8px 18px; background: transparent; border: 1px solid rgba(66,133,244,0.35);
-      color: #4285f4; font-size: 13px; cursor: pointer; border-radius: 8px;
+      color: #4285f4; font-size: 15px; cursor: pointer; border-radius: 8px;
       font-family: inherit; display: flex; align-items: center; gap: 8px; transition: background 0.15s;
     }
     .google-btn:hover { background: rgba(66,133,244,0.1); }
@@ -95,7 +95,7 @@
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
     ::-webkit-scrollbar { width: 3px; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+    ::-webkit-scrollbar-thumb { background: rgba(26,23,20,0.25); border-radius: 2px; }
 
     button, input, .chip { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 
@@ -108,10 +108,10 @@
     }
 
     @media (max-width: 480px) {
-      nav button { padding: 12px 8px; font-size: 10px; letter-spacing: 0.5px; min-height: 44px; flex: 1; justify-content: center; }
+      nav button { padding: 12px 8px; font-size: 12px; letter-spacing: 0.5px; min-height: 44px; flex: 1; justify-content: center; }
       .btn { min-height: 44px; }
       .chip { min-height: 44px; }
-      input[type=text], input[type=number] { font-size: 16px !important; }
+      input[type=text], input[type=number], input[type=tel] { font-size: 18px !important; }
       header { padding: 24px 0 18px; }
       #app { padding: 0 16px 80px; }
     }
@@ -151,7 +151,7 @@ const REDIRECT_URI   = "https://ottoema.github.io/jimronny/";
 
 const TOTAL_ROUNDS = 15;
 const MAX_BUYS = 3;
-const PLAYER_COLORS = ["#c9622f","#8b9e6b","#d4a843","#7b8fa8","#b56b8a","#6b8f7b","#a07850","#8a6baf"];
+const PLAYER_COLORS = ["#b5341e","#3d6b45","#9e7820","#2c5f8a","#8b3a6b","#2e6b5a","#7a4e20","#5a2e8e"];
 
 // ─── TURN GOALS ───────────────────────────────────────────────────────────────
 // Each hand = array of [value, suit]. suit "★" = joker card.
@@ -253,8 +253,8 @@ let notifTimer = null;
 function notify(msg, type = "info") {
   const el = document.getElementById("notification");
   el.textContent = msg;
-  el.style.background = type === "success" ? "#8b9e6b" : type === "warn" ? "#d4a843" : "#7b8fa8";
-  el.style.color = "#12100e";
+  el.style.background = type === "success" ? "#3d6b45" : type === "warn" ? "#9e7820" : "#2c5f8a";
+  el.style.color = "#fff";
   el.style.display = "block";
   if (notifTimer) clearTimeout(notifTimer);
   notifTimer = setTimeout(() => { el.style.display = "none"; }, 3000);
@@ -588,15 +588,15 @@ function renderAuthBar() {
         <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
         Logga in med Google
       </button>
-      <span style="font-size:12px;color:rgba(255,255,255,0.25)">Logga in för att synka med Google Sheets</span>`;
+      <span style="font-size:14px;color:rgba(26,23,20,0.4)">Logga in för att synka med Google Sheets</span>`;
   } else {
-    const dotColor = syncStatus==="syncing" ? "#d4a843" : syncStatus==="error" ? "#c9622f" : "#8b9e6b";
+    const dotColor = syncStatus==="syncing" ? "#d4a843" : syncStatus==="error" ? "#c9622f" : "#3d6b45";
     const syncText = syncStatus==="syncing" ? "Synkar…" : syncStatus==="error" ? "Synkfel" : "Google Sheets synkad ✓";
     bar.innerHTML = `
       <span class="sync-dot" style="background:${dotColor}"></span>
-      <span style="font-size:13px;color:rgba(255,255,255,0.5)">${syncText}</span>
-      <button class="btn" onclick="loadFromSheets()" style="padding:4px 12px;font-size:12px;color:rgba(255,255,255,0.55)">↻ Hämta</button>
-      <button class="btn" onclick="signOut()" style="padding:4px 12px;font-size:12px;color:rgba(255,255,255,0.35)">Logga ut</button>`;
+      <span style="font-size:15px;color:rgba(26,23,20,0.5)">${syncText}</span>
+      <button class="btn" onclick="loadFromSheets()" style="padding:4px 12px;font-size:14px;color:rgba(26,23,20,0.55)">↻ Hämta</button>
+      <button class="btn" onclick="signOut()" style="padding:4px 12px;font-size:14px;color:rgba(26,23,20,0.42)">Logga ut</button>`;
   }
 }
 
@@ -609,36 +609,36 @@ function renderHome() {
     const li = g.players.findIndex(p=>p.name===gLeader?.name);
     html += `<div style="border-top:1px solid var(--divider);padding:20px 0;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
       <div>
-        <div style="font-size:10px;letter-spacing:3px;color:#c9622f;margin-bottom:6px">PÅGÅENDE MATCH${isActive?" · AKTIV":""}</div>
-        <div style="font-size:20px;font-family:Georgia,serif">Omgång ${g.currentRound} <span style="font-size:14px;color:var(--muted)">/ ${TOTAL_ROUNDS}</span></div>
-        <div style="font-size:13px;color:var(--muted);margin-top:4px">${g.players.map(p=>p.name).join(", ")}</div>
-        ${gLeader ? `<div style="font-size:13px;color:var(--muted);margin-top:2px">Leder: <span style="color:${PLAYER_COLORS[li]}">${gLeader.name}</span> · ${totalScore(gLeader)} p</div>` : ""}
-        <div style="font-size:11px;color:var(--dim);margin-top:4px">${g.date}</div>
+        <div style="font-size:12px;letter-spacing:3px;color:#c9622f;margin-bottom:6px">PÅGÅENDE MATCH${isActive?" · AKTIV":""}</div>
+        <div style="font-size:22px;font-family:Georgia,serif">Omgång ${g.currentRound} <span style="font-size:16px;color:var(--muted)">/ ${TOTAL_ROUNDS}</span></div>
+        <div style="font-size:15px;color:var(--muted);margin-top:4px">${g.players.map(p=>p.name).join(", ")}</div>
+        ${gLeader ? `<div style="font-size:15px;color:var(--muted);margin-top:2px">Leder: <span style="color:${PLAYER_COLORS[li]}">${gLeader.name}</span> · ${totalScore(gLeader)} p</div>` : ""}
+        <div style="font-size:13px;color:var(--dim);margin-top:4px">${g.date}</div>
       </div>
-      <button class="btn" onclick="switchToGame('${g.id}')" style="padding:10px 22px;background:#c9622f;border:none;color:#fff;font-size:14px;font-weight:600;border-radius:8px;white-space:nowrap">Spela →</button>
+      <button class="btn" onclick="switchToGame('${g.id}')" style="padding:10px 22px;background:#c9622f;border:none;color:#fff;font-size:16px;font-weight:600;border-radius:8px;white-space:nowrap">Spela →</button>
     </div>`;
   });
 
   html += `<div style="padding-top:${ongoingGames.length>0?"8px":"0"}">
     <div style="border-top:1px solid var(--divider);padding:28px 0 20px">
-      <h2 style="font-size:18px;font-weight:normal;letter-spacing:0.5px;margin-bottom:24px">Starta ny match</h2>
+      <h2 style="font-size:20px;font-weight:normal;letter-spacing:0.5px;margin-bottom:24px">Starta ny match</h2>
       <div style="margin-bottom:24px">
-        <div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:14px">LÄGG TILL SPELARE</div>
+        <div style="font-size:12px;letter-spacing:2px;color:var(--muted);margin-bottom:14px">LÄGG TILL SPELARE</div>
         <div style="display:flex;gap:10px;align-items:flex-end">
           <input type="text" id="new-player-input" placeholder="Namn…" style="flex:1" onkeydown="if(event.key==='Enter')addPlayerFromInput()">
-          <button class="btn" onclick="addPlayerFromInput()" style="padding:8px 18px;white-space:nowrap;border-color:rgba(255,255,255,0.2);margin-bottom:1px">+ Lägg till</button>
+          <button class="btn" onclick="addPlayerFromInput()" style="padding:8px 18px;white-space:nowrap;border-color:rgba(26,23,20,0.22);margin-bottom:1px">+ Lägg till</button>
         </div>
       </div>`;
 
   if (savedPlayers.length > 0) {
     html += `<div style="margin-bottom:24px">
-      <div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:12px">SPARADE SPELARE</div>
+      <div style="font-size:12px;letter-spacing:2px;color:var(--muted);margin-bottom:12px">SPARADE SPELARE</div>
       <div style="display:flex;flex-wrap:wrap;gap:8px">`;
     savedPlayers.forEach(sp => {
       const already = setupPlayers.find(p=>p.name===sp.name);
       html += `<button class="chip" onclick="addSavedPlayer('${sp.name}')"
-        style="color:${already?"#8b9e6b":"rgba(255,255,255,0.7)"};border-color:${already?"rgba(139,158,107,0.45)":"rgba(255,255,255,0.12)"};background:${already?"rgba(139,158,107,0.1)":"transparent"}">
-        ${already?"✓ ":""}${sp.name}${sp.wins>0?`<span style="opacity:0.45;font-size:11px;margin-left:2px">${sp.wins}🏆</span>`:""}
+        style="color:${already?"#3d6b45":"rgba(26,23,20,0.68)"};border-color:${already?"rgba(61,107,69,0.45)":"rgba(26,23,20,0.12)"};background:${already?"rgba(61,107,69,0.1)":"transparent"}">
+        ${already?"✓ ":""}${sp.name}${sp.wins>0?`<span style="opacity:0.45;font-size:13px;margin-left:2px">${sp.wins}🏆</span>`:""}
       </button>`;
     });
     html += `</div></div>`;
@@ -650,17 +650,17 @@ function renderHome() {
       const color = PLAYER_COLORS[i];
       const isFirst = i === 0, isLast = i === setupPlayers.length - 1;
       orderRows += `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--divider)">
-        <div style="font-size:12px;color:var(--muted);width:20px;flex-shrink:0">${i+1}.</div>
-        <div style="flex:1;color:${color}">${p.name}${i===0?`<span style="font-size:10px;color:${color};opacity:0.55;margin-left:8px">blandar först</span>`:""}</div>
+        <div style="font-size:14px;color:var(--muted);width:20px;flex-shrink:0">${i+1}.</div>
+        <div style="flex:1;color:${color}">${p.name}${i===0?`<span style="font-size:12px;color:${color};opacity:0.55;margin-left:8px">blandar först</span>`:""}</div>
         <div style="display:flex;gap:4px">
-          <button class="btn" onclick="moveSetupPlayerUp('${p.name}')" ${isFirst?"disabled":""} style="padding:4px 10px;font-size:14px;min-height:36px">↑</button>
-          <button class="btn" onclick="moveSetupPlayerDown('${p.name}')" ${isLast?"disabled":""} style="padding:4px 10px;font-size:14px;min-height:36px">↓</button>
-          <button class="btn" onclick="removeSetupPlayer('${p.name}')" style="padding:4px 10px;font-size:13px;min-height:36px;color:var(--muted)">✕</button>
+          <button class="btn" onclick="moveSetupPlayerUp('${p.name}')" ${isFirst?"disabled":""} style="padding:4px 10px;font-size:16px;min-height:36px">↑</button>
+          <button class="btn" onclick="moveSetupPlayerDown('${p.name}')" ${isLast?"disabled":""} style="padding:4px 10px;font-size:16px;min-height:36px">↓</button>
+          <button class="btn" onclick="removeSetupPlayer('${p.name}')" style="padding:4px 10px;font-size:15px;min-height:36px;color:var(--muted)">✕</button>
         </div>
       </div>`;
     });
     html += `<div style="margin-bottom:24px">
-      <div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:4px">SPELORDNING</div>
+      <div style="font-size:12px;letter-spacing:2px;color:var(--muted);margin-bottom:4px">SPELORDNING</div>
       <div>${orderRows}</div>
     </div>`;
   }
@@ -671,10 +671,10 @@ function renderHome() {
     return s.size === setupNames.size && [...setupNames].every(n => s.has(n));
   });
   if (isDuplicate) {
-    html += `<div style="padding:10px 14px;background:rgba(212,168,67,0.08);border:1px solid rgba(212,168,67,0.3);border-radius:6px;color:#d4a843;font-size:13px;margin-bottom:16px">⚠️ En match med dessa spelare pågår redan!</div>`;
+    html += `<div style="padding:10px 14px;background:rgba(212,168,67,0.08);border:1px solid rgba(212,168,67,0.3);border-radius:6px;color:#9e7820;font-size:15px;margin-bottom:16px">⚠️ En match med dessa spelare pågår redan!</div>`;
   }
   html += `<button class="btn" onclick="startGame()" ${isDuplicate||setupPlayers.length<2?"disabled":""}
-    style="padding:15px;background:${setupPlayers.length>=2&&!isDuplicate?"#c9622f":"rgba(255,255,255,0.06)"};border:none;color:#fff;font-size:15px;font-weight:600;width:100%;border-radius:10px">
+    style="padding:15px;background:${setupPlayers.length>=2&&!isDuplicate?"#c9622f":"rgba(26,23,20,0.07)"};border:none;color:#fff;font-size:17px;font-weight:600;width:100%;border-radius:10px">
     Starta match
   </button></div></div>`;
 
@@ -725,15 +725,15 @@ function switchToGame(id) {
 function renderTurnGoal(round) {
   const goal = TURN_GOALS[round - 1];
   if (!goal) return "";
-  const diffColor = round <= 4 ? "#7b8fa8" : round <= 8 ? "#d4a843" : round <= 12 ? "#c9622f" : "#b56b8a";
+  const diffColor = round <= 4 ? "#2c5f8a" : round <= 8 ? "#9e7820" : round <= 12 ? "#c9622f" : "#8b3a6b";
 
   function miniCard(value, suit) {
     const isJoker = suit === "★";
     const isRed   = suit === "♥" || suit === "♦";
     const fgColor  = isJoker ? "#7b2fff" : isRed ? "#cc2233" : "#0d0d20";
     return `<div style="width:24px;height:34px;background:#fff;border-radius:3px;display:inline-flex;flex-direction:column;justify-content:space-between;padding:2px 2px 3px;box-shadow:0 1px 4px rgba(0,0,0,0.45);vertical-align:middle">
-      <div style="font-size:8px;line-height:1;color:${fgColor};font-weight:bold;font-family:monospace">${value}</div>
-      <div style="font-size:11px;line-height:1;color:${fgColor};text-align:center">${suit}</div>
+      <div style="font-size:10px;line-height:1;color:${fgColor};font-weight:bold;font-family:monospace">${value}</div>
+      <div style="font-size:13px;line-height:1;color:${fgColor};text-align:center">${suit}</div>
     </div>`;
   }
 
@@ -744,20 +744,20 @@ function renderTurnGoal(round) {
     handsHtml += `<div style="display:flex;gap:3px;align-items:center">`;
     hand.forEach(([value, suit]) => { handsHtml += miniCard(value, suit); });
     handsHtml += `</div>`;
-    if (note) handsHtml += `<div style="font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:1px">${note}</div>`;
+    if (note) handsHtml += `<div style="font-size:12px;color:rgba(26,23,20,0.5);letter-spacing:1px">${note}</div>`;
     handsHtml += `</div>`;
     if (hi < goal.hands.length - 1)
-      handsHtml += `<div style="font-size:18px;color:rgba(255,255,255,0.35);align-self:center;line-height:1">+</div>`;
+      handsHtml += `<div style="font-size:20px;color:rgba(26,23,20,0.42);align-self:center;line-height:1">+</div>`;
   });
   handsHtml += `</div>`;
 
   const footerHtml = goal.footer
-    ? `<div style="margin-top:12px;font-size:11px;color:#c9622f;letter-spacing:2px;font-weight:bold">${goal.footer}</div>`
+    ? `<div style="margin-top:12px;font-size:13px;color:#c9622f;letter-spacing:2px;font-weight:bold">${goal.footer}</div>`
     : "";
 
   return `<div class="panel" style="padding:16px 20px;margin-bottom:4px;text-align:center;border-color:${diffColor}33;background:${diffColor}09">
-    <div style="font-size:10px;letter-spacing:3px;color:${diffColor};margin-bottom:8px">OMGÅNGENS MÅL</div>
-    <div style="margin-bottom:2px">${goal.emoji} <span style="font-size:13px;color:rgba(255,255,255,0.5);font-style:italic">${TURN_DESCRIPTIONS[round-1]}</span></div>
+    <div style="font-size:12px;letter-spacing:3px;color:${diffColor};margin-bottom:8px">OMGÅNGENS MÅL</div>
+    <div style="margin-bottom:2px">${goal.emoji} <span style="font-size:15px;color:rgba(26,23,20,0.5);font-style:italic">${TURN_DESCRIPTIONS[round-1]}</span></div>
     ${handsHtml}
     ${footerHtml}
   </div>`;
@@ -789,15 +789,15 @@ function renderScoreChart() {
   for (let g = 0; g <= gridLines; g++) {
     const val = (maxVal / gridLines) * g;
     const y = yOf(val);
-    svg += `<line x1="${padL}" y1="${y}" x2="${padL + cW}" y2="${y}" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`;
-    svg += `<text x="${padL - 6}" y="${y + 4}" text-anchor="end" fill="rgba(255,255,255,0.25)" font-size="10" font-family="monospace">${Math.round(val)}</text>`;
+    svg += `<line x1="${padL}" y1="${y}" x2="${padL + cW}" y2="${y}" stroke="rgba(26,23,20,0.08)" stroke-width="1"/>`;
+    svg += `<text x="${padL - 6}" y="${y + 4}" text-anchor="end" fill="rgba(26,23,20,0.4)" font-size="10" font-family="monospace">${Math.round(val)}</text>`;
   }
 
   for (let r = 0; r < TOTAL_ROUNDS; r++) {
     const x = xOf(r);
     if (r % 3 === 0 || r === TOTAL_ROUNDS - 1) {
-      svg += `<line x1="${x}" y1="${padT}" x2="${x}" y2="${padT + cH}" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`;
-      svg += `<text x="${x}" y="${padT + cH + 16}" text-anchor="middle" fill="rgba(255,255,255,0.25)" font-size="10" font-family="monospace">${r + 1}</text>`;
+      svg += `<line x1="${x}" y1="${padT}" x2="${x}" y2="${padT + cH}" stroke="rgba(26,23,20,0.08)" stroke-width="1"/>`;
+      svg += `<text x="${x}" y="${padT + cH + 16}" text-anchor="middle" fill="rgba(26,23,20,0.4)" font-size="10" font-family="monospace">${r + 1}</text>`;
     }
   }
 
@@ -823,7 +823,7 @@ function renderScoreChart() {
   svg += `</svg>`;
 
   return `<div style="border-top:1px solid var(--divider);padding:28px 0;overflow:hidden">
-    <div style="font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:18px">POÄNGUTVECKLING</div>
+    <div style="font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:18px">POÄNGUTVECKLING</div>
     ${svg}
   </div>`;
 }
@@ -839,7 +839,7 @@ function renderGame() {
   for (let i=0;i<TOTAL_ROUNDS;i++) {
     const done = i < currentGame.currentRound - 1;
     const cur  = i === currentGame.currentRound - 1;
-    bars += `<div style="width:${cur?"10px":"7px"};height:${cur?"10px":"7px"};border-radius:50%;background:${done?"#8b9e6b":cur?"#c9622f":"rgba(255,255,255,0.12)"};transition:all 0.2s;flex-shrink:0"></div>`;
+    bars += `<div style="width:${cur?"10px":"7px"};height:${cur?"10px":"7px"};border-radius:50%;background:${done?"#3d6b45":cur?"#c9622f":"rgba(26,23,20,0.12)"};transition:all 0.2s;flex-shrink:0"></div>`;
   }
 
   // Live scores — vertical list
@@ -848,11 +848,11 @@ function renderGame() {
   sorted.forEach(({p,i,t},rank) => {
     scoreCards += `<div style="display:flex;align-items:center;padding:14px 0;border-bottom:1px solid var(--divider)">
       <div style="flex:1">
-        <span style="font-size:16px;color:${PLAYER_COLORS[i]}">${p.name}</span>
-        ${rank===0?`<span style="font-size:10px;letter-spacing:2px;color:${PLAYER_COLORS[i]};opacity:0.6;margin-left:10px">LEDER</span>`:""}
-        <div style="font-size:11px;color:var(--muted);margin-top:3px">${totalBuys(p)} köp</div>
+        <span style="font-size:18px;color:${PLAYER_COLORS[i]}">${p.name}</span>
+        ${rank===0?`<span style="font-size:12px;letter-spacing:2px;color:${PLAYER_COLORS[i]};opacity:0.6;margin-left:10px">LEDER</span>`:""}
+        <div style="font-size:13px;color:var(--muted);margin-top:3px">${totalBuys(p)} köp</div>
       </div>
-      <div style="font-family:Georgia,serif;font-size:32px;color:${rank===0?PLAYER_COLORS[i]:"rgba(255,255,255,0.85)"}">${t}</div>
+      <div style="font-family:Georgia,serif;font-size:36px;color:${rank===0?PLAYER_COLORS[i]:"rgba(26,23,20,0.82)"}">${t}</div>
     </div>`;
   });
   scoreCards += `</div>`;
@@ -865,48 +865,48 @@ function renderGame() {
     const isOut = goesOutIdx===i;
     let buyDots = "";
     for(let b=0;b<MAX_BUYS;b++) {
-      buyDots += `<div style="width:8px;height:8px;border-radius:50%;background:${b<rb?PLAYER_COLORS[i]:"rgba(255,255,255,0.12)"}"></div>`;
+      buyDots += `<div style="width:8px;height:8px;border-radius:50%;background:${b<rb?PLAYER_COLORS[i]:"rgba(26,23,20,0.12)"}"></div>`;
     }
     const buyBtns = `
       <div style="display:flex;gap:3px;align-items:center">${buyDots}</div>
       <button class="btn" onclick="addBuy(${i})" ${rb>=MAX_BUYS?"disabled":""}
-        style="padding:4px 9px;font-size:11px;min-height:36px;color:${rb>=MAX_BUYS?"rgba(255,255,255,0.2)":PLAYER_COLORS[i]};border-color:${rb>=MAX_BUYS?"rgba(255,255,255,0.08)":PLAYER_COLORS[i]+"55"}">Köp</button>
+        style="padding:4px 9px;font-size:13px;min-height:36px;color:${rb>=MAX_BUYS?"rgba(26,23,20,0.22)":PLAYER_COLORS[i]};border-color:${rb>=MAX_BUYS?"rgba(26,23,20,0.1)":PLAYER_COLORS[i]+"55"}">Köp</button>
       <button class="btn" onclick="removeBuy(${i})" ${rb<=0?"disabled":""}
-        style="padding:4px 8px;font-size:13px;min-height:36px;color:${rb<=0?"rgba(255,255,255,0.15)":"var(--muted)"}">↩</button>`;
+        style="padding:4px 8px;font-size:15px;min-height:36px;color:${rb<=0?"rgba(26,23,20,0.18)":"var(--muted)"}">↩</button>`;
 
     if (!winnerChosen) {
       // Step 1: only show "Gick ut" — score inputs are hidden
       playerRows += `<div style="display:flex;align-items:center;gap:6px;padding:10px 0;border-bottom:1px solid var(--divider)">
-        <div style="flex:1;font-size:14px;color:${PLAYER_COLORS[i]}">${p.name}</div>
+        <div style="flex:1;font-size:16px;color:${PLAYER_COLORS[i]}">${p.name}</div>
         ${buyBtns}
         <button class="btn" onclick="setGoesOut(${i})"
-          style="padding:4px 12px;font-size:12px;min-height:36px;font-weight:600;color:#8b9e6b;border-color:rgba(139,158,107,0.45)">Gick ut</button>
+          style="padding:4px 12px;font-size:14px;min-height:36px;font-weight:600;color:#3d6b45;border-color:rgba(61,107,69,0.45)">Gick ut</button>
       </div>`;
     } else if (isOut) {
       // Winner row: compact, with undo
       playerRows += `<div style="display:flex;align-items:center;gap:6px;padding:10px 0;border-bottom:1px solid var(--divider)">
         <div style="flex:1">
-          <span style="font-size:14px;color:${PLAYER_COLORS[i]}">${p.name}</span>
-          <span style="font-size:11px;color:#8b9e6b;margin-left:6px">✓ gick ut · 0 p</span>
+          <span style="font-size:16px;color:${PLAYER_COLORS[i]}">${p.name}</span>
+          <span style="font-size:13px;color:#3d6b45;margin-left:6px">✓ gick ut · 0 p</span>
         </div>
         ${buyBtns}
         <button class="btn" onclick="setGoesOut(null)"
-          style="padding:4px 8px;font-size:11px;min-height:36px;color:var(--muted)">Ångra</button>
+          style="padding:4px 8px;font-size:13px;min-height:36px;color:var(--muted)">Ångra</button>
       </div>`;
     } else {
       // Scorer row: all on one line — name, buys, stepper
       const curScore = parseInt(roundInputs[i])||0;
       playerRows += `<div style="display:flex;align-items:center;gap:6px;padding:10px 0;border-bottom:1px solid var(--divider)">
-        <div style="font-size:14px;color:${PLAYER_COLORS[i]};min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+        <div style="font-size:16px;color:${PLAYER_COLORS[i]};min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
         ${buyBtns}
         <button class="btn" id="score-minus-${i}" onclick="adjustScore(${i},-5)" ${curScore<=5?"disabled":""}
-          style="padding:0;font-size:18px;flex-shrink:0;width:40px;min-height:40px">−</button>
+          style="padding:0;font-size:20px;flex-shrink:0;width:40px;min-height:40px">−</button>
         <input type="tel" inputmode="numeric" placeholder="—" value="${roundInputs[i]??""}"
           oninput="roundInputs[${i}]=this.value;updateScoreMinus(${i})"
           id="score-input-${i}"
-          style="font-family:Georgia,serif;font-size:20px;text-align:center;width:56px;flex-shrink:0;min-width:0;padding:4px 2px">
+          style="font-family:Georgia,serif;font-size:22px;text-align:center;width:56px;flex-shrink:0;min-width:0;padding:4px 2px">
         <button class="btn" onclick="adjustScore(${i},5)"
-          style="padding:0;font-size:18px;flex-shrink:0;width:40px;min-height:40px">+</button>
+          style="padding:0;font-size:20px;flex-shrink:0;width:40px;min-height:40px">+</button>
       </div>`;
     }
   });
@@ -914,25 +914,25 @@ function renderGame() {
   // History table
   let historyTable = "";
   if (currentGame.players[0].scores.length > 0) {
-    let headers = `<th style="text-align:left;color:rgba(255,255,255,0.4);font-size:11px">OMG</th>`;
+    let headers = `<th style="text-align:left;color:rgba(26,23,20,0.45);font-size:13px">OMG</th>`;
     currentGame.players.forEach((p,i) => { headers += `<th style="color:${PLAYER_COLORS[i]};text-align:center">${p.name}</th>`; });
     let rows = "";
     currentGame.players[0].scores.forEach((_,round) => {
       const winnerIdx = currentGame.roundWinners ? currentGame.roundWinners[round] : -1;
-      let cells = `<td style="color:rgba(255,255,255,0.3)">${round+1}</td>`;
+      let cells = `<td style="color:rgba(26,23,20,0.38)">${round+1}</td>`;
       currentGame.players.forEach((p,i) => {
         const s = p.scores[round];
         const b = p.buys[round]||0;
         const isWinner = winnerIdx >= 0 ? i === winnerIdx : s === 0;
-        cells += `<td style="text-align:center;color:${isWinner?PLAYER_COLORS[i]:"#f5ead8"};font-weight:${isWinner?"bold":"normal"}">${isWinner?`<span title="Gick ut">—</span>`:s}${b>0?`<span style="font-size:10px;color:${PLAYER_COLORS[i]};margin-left:4px">+${b}🛒</span>`:""}</td>`;
+        cells += `<td style="text-align:center;color:${isWinner?PLAYER_COLORS[i]:"#1a1714"};font-weight:${isWinner?"bold":"normal"}">${isWinner?`<span title="Gick ut">—</span>`:s}${b>0?`<span style="font-size:12px;color:${PLAYER_COLORS[i]};margin-left:4px">+${b}🛒</span>`:""}</td>`;
       });
-      rows += `<tr style="border-top:1px solid rgba(255,255,255,0.05)">${cells}</tr>`;
+      rows += `<tr style="border-top:1px solid rgba(26,23,20,0.06)">${cells}</tr>`;
     });
-    let totRow = `<td style="font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.4)">TOT</td>`;
-    currentGame.players.forEach((p,i) => { totRow += `<td style="text-align:center;color:${PLAYER_COLORS[i]};font-weight:bold;font-size:16px">${totalScore(p)}</td>`; });
+    let totRow = `<td style="font-size:13px;letter-spacing:2px;color:rgba(26,23,20,0.45)">TOT</td>`;
+    currentGame.players.forEach((p,i) => { totRow += `<td style="text-align:center;color:${PLAYER_COLORS[i]};font-weight:bold;font-size:18px">${totalScore(p)}</td>`; });
     historyTable = `<div style="border-top:1px solid var(--divider);padding:28px 0;overflow-x:auto">
-      <div style="font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:20px">POÄNGHISTORIK</div>
-      <table><thead><tr>${headers}</tr></thead><tbody>${rows}<tr style="border-top:1px solid rgba(255,255,255,0.12)">${totRow}</tr></tbody></table>
+      <div style="font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:20px">POÄNGHISTORIK</div>
+      <table><thead><tr>${headers}</tr></thead><tbody>${rows}<tr style="border-top:1px solid rgba(26,23,20,0.12)">${totRow}</tr></tbody></table>
     </div>`;
     historyTable += renderScoreChart();
   }
@@ -942,9 +942,9 @@ function renderGame() {
     let switchBtns = "";
     ongoingGames.forEach(g => {
       const isA = g.id === activeGameId;
-      switchBtns += `<button class="btn" onclick="switchToGame('${g.id}')" style="padding:6px 14px;font-size:12px;color:${isA?"#c9622f":"rgba(255,255,255,0.55)"};border-color:${isA?"rgba(201,98,47,0.4)":"rgba(255,255,255,0.1)"}">${g.players.map(p=>p.name).join(" & ")}</button>`;
+      switchBtns += `<button class="btn" onclick="switchToGame('${g.id}')" style="padding:6px 14px;font-size:14px;color:${isA?"#c9622f":"rgba(26,23,20,0.55)"};border-color:${isA?"rgba(201,98,47,0.4)":"rgba(26,23,20,0.12)"}">${g.players.map(p=>p.name).join(" & ")}</button>`;
     });
-    switcherHtml = `<div style="padding:14px 0;border-bottom:1px solid var(--divider);margin-bottom:28px"><div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:10px">BYT MATCH</div><div style="display:flex;flex-wrap:wrap;gap:8px">${switchBtns}</div></div>`;
+    switcherHtml = `<div style="padding:14px 0;border-bottom:1px solid var(--divider);margin-bottom:28px"><div style="font-size:12px;letter-spacing:2px;color:var(--muted);margin-bottom:10px">BYT MATCH</div><div style="display:flex;flex-wrap:wrap;gap:8px">${switchBtns}</div></div>`;
   }
 
   const dealerIdx = (currentGame.currentRound - 1) % currentGame.players.length;
@@ -954,21 +954,21 @@ function renderGame() {
   el.innerHTML = `${switcherHtml}
     <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 0 16px;border-bottom:1px solid var(--divider)">
       <div>
-        <div style="font-size:10px;letter-spacing:3px;color:var(--muted)">OMGÅNG</div>
-        <div style="font-family:Georgia,serif;font-size:42px;line-height:1;margin:2px 0">${currentGame.currentRound} <span style="font-size:18px;color:var(--muted)">/ ${TOTAL_ROUNDS}</span></div>
-        <div style="font-size:12px;color:var(--muted);margin-top:4px">Blanda &amp; dela: <span style="color:${dealerColor}">${dealer.name}</span></div>
+        <div style="font-size:12px;letter-spacing:3px;color:var(--muted)">OMGÅNG</div>
+        <div style="font-family:Georgia,serif;font-size:46px;line-height:1;margin:2px 0">${currentGame.currentRound} <span style="font-size:20px;color:var(--muted)">/ ${TOTAL_ROUNDS}</span></div>
+        <div style="font-size:14px;color:var(--muted);margin-top:4px">Blanda &amp; dela: <span style="color:${dealerColor}">${dealer.name}</span></div>
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
         <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;max-width:140px">${bars}</div>
-        <div style="font-size:11px;color:var(--dim)">${currentGame.date}</div>
+        <div style="font-size:13px;color:var(--dim)">${currentGame.date}</div>
       </div>
     </div>
     ${renderTurnGoal(currentGame.currentRound)}
     <div style="padding:4px 0 0">
-      ${!winnerChosen ? `<div style="font-size:10px;letter-spacing:2px;color:var(--muted);padding:8px 0 2px">VEM GICK UT?</div>` : ""}
+      ${!winnerChosen ? `<div style="font-size:12px;letter-spacing:2px;color:var(--muted);padding:8px 0 2px">VEM GICK UT?</div>` : ""}
       <div>${playerRows}</div>
       <button class="btn" onclick="submitRound()" ${!winnerChosen?"disabled":""}
-        style="margin-top:14px;width:100%;padding:13px;background:${winnerChosen?"#c9622f":"rgba(255,255,255,0.06)"};border:none;color:#fff;font-size:14px;letter-spacing:1px;border-radius:10px;font-weight:600;opacity:${winnerChosen?1:0.4}">
+        style="margin-top:14px;width:100%;padding:13px;background:${winnerChosen?"#c9622f":"rgba(26,23,20,0.07)"};border:none;color:#fff;font-size:16px;letter-spacing:1px;border-radius:10px;font-weight:600;opacity:${winnerChosen?1:0.4}">
         Registrera omgång ${currentGame.currentRound} →
       </button>
     </div>
@@ -984,34 +984,34 @@ function renderFinished() {
   sorted.forEach((p,rank) => {
     const i = game.players.findIndex(x=>x.name===p.name);
     rows += `<div style="display:flex;align-items:center;padding:14px 0;border-bottom:1px solid var(--divider)">
-      <div style="width:28px;font-size:16px;flex-shrink:0">${rank===0?"👑":`${rank+1}.`}</div>
+      <div style="width:28px;font-size:18px;flex-shrink:0">${rank===0?"👑":`${rank+1}.`}</div>
       <div style="flex:1;color:${PLAYER_COLORS[i]}">${p.name}</div>
       <div style="text-align:right">
-        <div style="font-family:Georgia,serif;font-size:24px">${totalScore(p)}</div>
-        <div style="font-size:11px;color:var(--muted)">${totalBuys(p)} köp</div>
+        <div style="font-family:Georgia,serif;font-size:26px">${totalScore(p)}</div>
+        <div style="font-size:13px;color:var(--muted)">${totalBuys(p)} köp</div>
       </div>
     </div>`;
   });
   document.getElementById("view-game").innerHTML = `
     <div style="animation:fadeIn 0.3s ease;padding-top:40px">
       <div style="text-align:center;margin-bottom:36px">
-        <div style="font-size:56px;margin-bottom:16px">🏆</div>
-        <h2 style="font-family:Georgia,serif;font-size:28px;font-weight:normal;margin-bottom:6px">${sorted[0].name} vinner!</h2>
-        <div style="font-size:13px;color:var(--muted)">${game.date}</div>
+        <div style="font-size:60px;margin-bottom:16px">🏆</div>
+        <h2 style="font-family:Georgia,serif;font-size:32px;font-weight:normal;margin-bottom:6px">${sorted[0].name} vinner!</h2>
+        <div style="font-size:15px;color:var(--muted)">${game.date}</div>
       </div>
       <div style="border-top:1px solid var(--divider)">${rows}</div>
       <div style="border-top:1px solid var(--divider);padding:24px 0">
-        <div style="font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:12px">NOTAT</div>
-        <textarea id="game-note-input" placeholder="Lägg till ett notat…" style="width:100%;min-height:80px;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.16);color:var(--fg);font-family:inherit;padding:8px 0;font-size:14px;outline:none;resize:vertical">${game.note||""}</textarea>
-        <button class="btn" onclick="saveGameNote(document.getElementById('game-note-input').value)" style="margin-top:14px;width:100%;padding:12px;border-color:rgba(139,158,107,0.35);color:#8b9e6b;font-size:14px;border-radius:8px">Spara notat</button>
+        <div style="font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:12px">NOTAT</div>
+        <textarea id="game-note-input" placeholder="Lägg till ett notat…" style="width:100%;min-height:80px;background:transparent;border:none;border-bottom:1px solid rgba(26,23,20,0.2);color:var(--fg);font-family:inherit;padding:8px 0;font-size:16px;outline:none;resize:vertical">${game.note||""}</textarea>
+        <button class="btn" onclick="saveGameNote(document.getElementById('game-note-input').value)" style="margin-top:14px;width:100%;padding:12px;border-color:rgba(61,107,69,0.35);color:#3d6b45;font-size:16px;border-radius:8px">Spara notat</button>
       </div>
-      <button class="btn" onclick="lastFinishedGame=null;showView('home')" style="width:100%;padding:15px;background:#c9622f;border:none;color:#fff;font-size:15px;font-weight:600;border-radius:10px">Ny match</button>
+      <button class="btn" onclick="lastFinishedGame=null;showView('home')" style="width:100%;padding:15px;background:#c9622f;border:none;color:#fff;font-size:17px;font-weight:600;border-radius:10px">Ny match</button>
     </div>`;
 }
 
 function renderStats() {
   const stats = getStats().filter(s=>s.gamesPlayed>0);
-  let html = `<div style="padding:28px 0 0;font-size:10px;letter-spacing:4px;color:var(--muted)">STATISTIK</div>`;
+  let html = `<div style="padding:28px 0 0;font-size:12px;letter-spacing:4px;color:var(--muted)">STATISTIK</div>`;
 
   if (allGames.length===0) {
     html += `<div style="text-align:center;color:var(--muted);padding:60px 20px">Inga avslutade matcher ännu</div>`;
@@ -1041,25 +1041,25 @@ function renderStats() {
       const ex = extraStats[s.name]||{};
       lbRows += `<div style="padding:16px 0;border-bottom:1px solid var(--divider)">
         <div style="display:flex;align-items:center;gap:12px">
-          <div style="font-size:15px;width:22px;flex-shrink:0;text-align:center">${medal}</div>
+          <div style="font-size:17px;width:22px;flex-shrink:0;text-align:center">${medal}</div>
           <div style="flex:1">
             <div style="color:${color};margin-bottom:3px">${s.name}</div>
-            <div style="font-size:12px;color:var(--muted)">${s.gamesPlayed} matcher · ${wr}% wins · ${s.totalBuys} köp</div>
+            <div style="font-size:14px;color:var(--muted)">${s.gamesPlayed} matcher · ${wr}% wins · ${s.totalBuys} köp</div>
           </div>
           <div style="text-align:right">
-            <div style="font-family:Georgia,serif;font-size:22px;color:${color}">${s.wins}</div>
-            <div style="font-size:11px;color:var(--muted)">⌀ ${s.avgScore} p</div>
+            <div style="font-family:Georgia,serif;font-size:24px;color:${color}">${s.wins}</div>
+            <div style="font-size:13px;color:var(--muted)">⌀ ${s.avgScore} p</div>
           </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px;margin-left:34px">
-          <div style="font-size:11px;color:var(--muted)"><div style="font-family:Georgia,serif;font-size:15px;color:var(--fg);margin-bottom:2px">${ex.zeroRounds||0}</div>utgångar</div>
-          <div style="font-size:11px;color:var(--muted)"><div style="font-family:Georgia,serif;font-size:15px;color:var(--fg);margin-bottom:2px">${ex.highestRound||'—'}</div>värsta omg.</div>
-          <div style="font-size:11px;color:var(--muted)"><div style="font-family:Georgia,serif;font-size:15px;color:var(--fg);margin-bottom:2px">${ex.highestTotal||'—'}</div>värsta match</div>
+          <div style="font-size:13px;color:var(--muted)"><div style="font-family:Georgia,serif;font-size:17px;color:var(--fg);margin-bottom:2px">${ex.zeroRounds||0}</div>utgångar</div>
+          <div style="font-size:13px;color:var(--muted)"><div style="font-family:Georgia,serif;font-size:17px;color:var(--fg);margin-bottom:2px">${ex.highestRound||'—'}</div>värsta omg.</div>
+          <div style="font-size:13px;color:var(--muted)"><div style="font-family:Georgia,serif;font-size:17px;color:var(--fg);margin-bottom:2px">${ex.highestTotal||'—'}</div>värsta match</div>
         </div>
       </div>`;
     });
     html += `<div style="border-top:1px solid var(--divider);padding:28px 0 8px">
-      <div style="font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:4px">ALLA TIDER</div>
+      <div style="font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:4px">ALLA TIDER</div>
       <div>${lbRows}</div>
     </div>`;
 
@@ -1079,14 +1079,14 @@ function renderStats() {
         const idx = savedPlayers.findIndex(p => p.name === e.name);
         const color = PLAYER_COLORS[(idx>=0?idx:e.pi)%PLAYER_COLORS.length];
         return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--divider)">
-          <div style="width:18px;font-size:11px;color:var(--muted);flex-shrink:0">${i+1}.</div>
+          <div style="width:18px;font-size:13px;color:var(--muted);flex-shrink:0">${i+1}.</div>
           <div style="flex:1;color:${color}">${e.name}</div>
-          <div style="font-size:11px;color:var(--muted);margin-right:10px">omg. ${e.round} · ${e.date}</div>
-          <div style="font-family:Georgia,serif;font-size:20px;color:${color}">${e.score}</div>
+          <div style="font-size:13px;color:var(--muted);margin-right:10px">omg. ${e.round} · ${e.date}</div>
+          <div style="font-family:Georgia,serif;font-size:22px;color:${color}">${e.score}</div>
         </div>`;
       }).join("");
       html += `<div style="border-top:1px solid var(--divider);padding:28px 0 8px">
-        <div style="font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:4px">HÖGST POÄNG I EN OMGÅNG (TOPP 5)</div>
+        <div style="font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:4px">HÖGST POÄNG I EN OMGÅNG (TOPP 5)</div>
         <div>${top5Rows}</div>
       </div>`;
     }
@@ -1103,17 +1103,17 @@ function renderStats() {
       const barPct = Math.round(z.count/maxZero*100);
       return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--divider)">
         <div style="flex:1">
-          <div style="font-size:14px;color:${color};margin-bottom:5px">${z.name}</div>
+          <div style="font-size:16px;color:${color};margin-bottom:5px">${z.name}</div>
           <div style="height:2px;background:var(--divider);border-radius:1px"><div style="height:2px;width:${barPct}%;background:${color};border-radius:1px"></div></div>
         </div>
         <div style="text-align:right;min-width:48px">
-          <div style="font-family:Georgia,serif;font-size:20px;color:${color}">${z.count}</div>
-          <div style="font-size:10px;color:var(--muted)">utgångar</div>
+          <div style="font-family:Georgia,serif;font-size:22px;color:${color}">${z.count}</div>
+          <div style="font-size:12px;color:var(--muted)">utgångar</div>
         </div>
       </div>`;
     }).join("");
     html += `<div style="border-top:1px solid var(--divider);padding:28px 0 8px">
-      <div style="font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:4px">FLEST UTGÅNGAR (0P-RUNDOR)</div>
+      <div style="font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:4px">FLEST UTGÅNGAR (0P-RUNDOR)</div>
       <div>${zeroRows}</div>
     </div>`;
 
@@ -1138,19 +1138,19 @@ function renderStats() {
         const rows = groupStats.map(gs => {
           const color = PLAYER_COLORS[(gs.idx>=0?gs.idx:0)%PLAYER_COLORS.length];
           return `<div style="display:flex;align-items:center;padding:8px 0;border-bottom:1px solid var(--divider)">
-            <div style="flex:1;font-size:14px;color:${color}">${gs.name}</div>
-            <div style="font-size:12px;color:var(--muted);margin-right:16px">⌀ ${gs.avg} p</div>
-            <div style="font-family:Georgia,serif;font-size:18px;color:${color}">${gs.wins} <span style="font-size:11px;font-family:inherit;color:var(--muted)">vinster</span></div>
+            <div style="flex:1;font-size:16px;color:${color}">${gs.name}</div>
+            <div style="font-size:14px;color:var(--muted);margin-right:16px">⌀ ${gs.avg} p</div>
+            <div style="font-family:Georgia,serif;font-size:20px;color:${color}">${gs.wins} <span style="font-size:13px;font-family:inherit;color:var(--muted)">vinster</span></div>
           </div>`;
         }).join("");
         return `<div style="padding:20px 0;border-bottom:1px solid var(--divider)">
-          <div style="font-size:14px;color:var(--fg);margin-bottom:2px">${names.join(" & ")}</div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:12px">${games.length} matcher</div>
+          <div style="font-size:16px;color:var(--fg);margin-bottom:2px">${names.join(" & ")}</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:12px">${games.length} matcher</div>
           <div>${rows}</div>
         </div>`;
       }).join("");
     html += `<div style="border-top:1px solid var(--divider);padding:28px 0 8px">
-      <div style="font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:4px">PER SPELARSÄLLSKAP</div>
+      <div style="font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:4px">PER SPELARSÄLLSKAP</div>
       <div>${groupHtml}</div>
     </div>`;
 
@@ -1160,14 +1160,14 @@ function renderStats() {
     const sortedDates = Object.keys(dateCounts).sort();
     let dateChips = sortedDates.map(d => {
       const count = dateCounts[d];
-      const dots = Array(count).fill(`<div style="width:9px;height:9px;border-radius:50%;background:#7b8fa8;opacity:0.85"></div>`).join("");
+      const dots = Array(count).fill(`<div style="width:9px;height:9px;border-radius:50%;background:#2c5f8a;opacity:0.85"></div>`).join("");
       return `<div style="display:flex;flex-direction:column;align-items:center;gap:5px">
         <div style="display:flex;gap:3px">${dots}</div>
-        <div style="font-size:11px;color:var(--muted);white-space:nowrap">${d}</div>
+        <div style="font-size:13px;color:var(--muted);white-space:nowrap">${d}</div>
       </div>`;
     }).join("");
     html += `<div style="border-top:1px solid var(--divider);padding:28px 0">
-      <div style="font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:16px">SPELDATUM</div>
+      <div style="font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:16px">SPELDATUM</div>
       <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">${dateChips}</div>
     </div>`;
 
@@ -1181,15 +1181,15 @@ function renderStats() {
       }).join(`<span style="color:var(--divider);margin:0 6px">·</span>`);
       gameRows += `<div style="padding:14px 0;border-bottom:1px solid var(--divider)">
         <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-          <div style="font-size:11px;color:var(--muted)">${g.date} · Match ${allGames.length-gi}</div>
-          <div style="font-size:12px;color:var(--muted)">👑 ${sorted[0].name}</div>
+          <div style="font-size:13px;color:var(--muted)">${g.date} · Match ${allGames.length-gi}</div>
+          <div style="font-size:14px;color:var(--muted)">👑 ${sorted[0].name}</div>
         </div>
-        <div style="font-size:13px;display:flex;flex-wrap:wrap;gap:6px">${players}</div>
-        ${g.note?`<div style="margin-top:8px;font-size:12px;color:var(--muted);font-style:italic">📝 ${g.note}</div>`:""}
+        <div style="font-size:15px;display:flex;flex-wrap:wrap;gap:6px">${players}</div>
+        ${g.note?`<div style="margin-top:8px;font-size:14px;color:var(--muted);font-style:italic">📝 ${g.note}</div>`:""}
       </div>`;
     });
     html += `<div style="border-top:1px solid var(--divider);padding:28px 0 0">
-      <div style="font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:4px">MATCHHISTORIK</div>
+      <div style="font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:4px">MATCHHISTORIK</div>
       <div>${gameRows}</div>
     </div>`;
   }
@@ -1198,7 +1198,7 @@ function renderStats() {
 
 function renderPlayers() {
   const stats = getStats();
-  let html = `<div style="padding:28px 0 0;font-size:10px;letter-spacing:4px;color:var(--muted)">SPELARE</div>`;
+  let html = `<div style="padding:28px 0 0;font-size:12px;letter-spacing:4px;color:var(--muted)">SPELARE</div>`;
   if (savedPlayers.length===0) {
     html += `<div style="text-align:center;color:var(--muted);padding:60px 20px">Inga sparade spelare ännu</div>`;
   } else {
@@ -1208,11 +1208,11 @@ function renderPlayers() {
       const wr = p.gamesPlayed>0 ? Math.round(p.wins/p.gamesPlayed*100) : 0;
       html += `<div style="display:flex;align-items:center;gap:16px;padding:16px 0;border-bottom:1px solid var(--divider)">
         <div style="flex:1">
-          <div style="font-size:17px;color:${color};margin-bottom:4px">${p.name}</div>
-          <div style="font-size:12px;color:var(--muted)">${p.gamesPlayed} matcher · ${p.wins} vinster · ${wr}% wins${s.avgScore!==undefined?` · ⌀ ${s.avgScore} p`:""}</div>
+          <div style="font-size:19px;color:${color};margin-bottom:4px">${p.name}</div>
+          <div style="font-size:14px;color:var(--muted)">${p.gamesPlayed} matcher · ${p.wins} vinster · ${wr}% wins${s.avgScore!==undefined?` · ⌀ ${s.avgScore} p`:""}</div>
         </div>
         <button class="btn" onclick="deletePlayer('${p.name}')"
-          style="padding:6px 12px;font-size:12px;color:rgba(255,100,100,0.6);border-color:rgba(255,80,80,0.15)">Ta bort</button>
+          style="padding:6px 12px;font-size:14px;color:#b5341e;border-color:rgba(181,52,30,0.2)">Ta bort</button>
       </div>`;
     });
   }
@@ -1229,16 +1229,16 @@ function renderRounds() {
     const isRed   = suit === "♥" || suit === "♦";
     const fgColor  = isJoker ? "#7b2fff" : isRed ? "#cc2233" : "#0d0d20";
     return `<div style="width:20px;height:29px;background:#fff;border-radius:2px;display:inline-flex;flex-direction:column;justify-content:space-between;padding:2px 2px 2px;box-shadow:0 1px 3px rgba(0,0,0,0.4);vertical-align:middle;flex-shrink:0">
-      <div style="font-size:7px;line-height:1;color:${fgColor};font-weight:bold;font-family:monospace">${value}</div>
-      <div style="font-size:9px;line-height:1;color:${fgColor};text-align:center">${suit}</div>
+      <div style="font-size:9px;line-height:1;color:${fgColor};font-weight:bold;font-family:monospace">${value}</div>
+      <div style="font-size:11px;line-height:1;color:${fgColor};text-align:center">${suit}</div>
     </div>`;
   }
 
-  let html = `<div style="padding:28px 0 0;font-size:10px;letter-spacing:4px;color:var(--muted)">OMGÅNGAR</div>`;
+  let html = `<div style="padding:28px 0 0;font-size:12px;letter-spacing:4px;color:var(--muted)">OMGÅNGAR</div>`;
   if (game) {
-    html += `<div style="font-size:13px;color:var(--muted);padding:8px 0 20px">Omgång ${currentRound} av ${TOTAL_ROUNDS}</div>`;
+    html += `<div style="font-size:15px;color:var(--muted);padding:8px 0 20px">Omgång ${currentRound} av ${TOTAL_ROUNDS}</div>`;
   } else {
-    html += `<div style="font-size:13px;color:var(--muted);padding:8px 0 20px">Alla ${TOTAL_ROUNDS} omgångar</div>`;
+    html += `<div style="font-size:15px;color:var(--muted);padding:8px 0 20px">Alla ${TOTAL_ROUNDS} omgångar</div>`;
   }
 
   html += `<div style="display:flex;flex-direction:column;gap:10px">`;
@@ -1249,19 +1249,19 @@ function renderRounds() {
     const isCompleted = completedRounds.length >= roundNum;
     const isFuture = !isCurrent && !isCompleted;
 
-    const diffColor = roundNum <= 4 ? "#7b8fa8" : roundNum <= 8 ? "#d4a843" : roundNum <= 12 ? "#c9622f" : "#b56b8a";
+    const diffColor = roundNum <= 4 ? "#2c5f8a" : roundNum <= 8 ? "#9e7820" : roundNum <= 12 ? "#c9622f" : "#8b3a6b";
 
     let statusBadge = "";
     if (isCurrent) {
-      statusBadge = `<div style="font-size:10px;letter-spacing:2px;color:#c9622f;background:rgba(201,98,47,0.15);border:1px solid rgba(201,98,47,0.35);padding:2px 8px;border-radius:3px;white-space:nowrap">NUVARANDE</div>`;
+      statusBadge = `<div style="font-size:12px;letter-spacing:2px;color:#c9622f;background:rgba(201,98,47,0.15);border:1px solid rgba(201,98,47,0.35);padding:2px 8px;border-radius:3px;white-space:nowrap">NUVARANDE</div>`;
     } else if (isCompleted) {
       const winnerIdx = completedRounds[idx];
       const winnerName = game && game.players[winnerIdx] ? game.players[winnerIdx].name : null;
-      const winnerColor = game && winnerIdx !== undefined ? PLAYER_COLORS[winnerIdx] : "#8b9e6b";
+      const winnerColor = game && winnerIdx !== undefined ? PLAYER_COLORS[winnerIdx] : "#3d6b45";
       const winnerLabel = winnerName
         ? `<span style="color:${winnerColor}">${winnerName}</span>`
-        : `<span style="color:#8b9e6b">✓</span>`;
-      statusBadge = `<div style="font-size:11px;color:rgba(255,255,255,0.5)">Vinnare: ${winnerLabel}</div>`;
+        : `<span style="color:#3d6b45">✓</span>`;
+      statusBadge = `<div style="font-size:13px;color:rgba(26,23,20,0.5)">Vinnare: ${winnerLabel}</div>`;
     }
 
     // Build compact hands display
@@ -1272,25 +1272,25 @@ function renderRounds() {
       handsHtml += `<div style="display:flex;gap:2px;align-items:center">`;
       hand.forEach(([value, suit]) => { handsHtml += miniCard(value, suit); });
       handsHtml += `</div>`;
-      if (note) handsHtml += `<div style="font-size:9px;color:rgba(255,255,255,0.4)">${note}</div>`;
+      if (note) handsHtml += `<div style="font-size:11px;color:rgba(26,23,20,0.45)">${note}</div>`;
       handsHtml += `</div>`;
       if (hi < goal.hands.length - 1)
-        handsHtml += `<div style="font-size:14px;color:rgba(255,255,255,0.3);line-height:1">+</div>`;
+        handsHtml += `<div style="font-size:16px;color:rgba(26,23,20,0.38);line-height:1">+</div>`;
     });
     handsHtml += `</div>`;
-    handsHtml += `<div style="margin-top:6px;font-size:12px;color:rgba(255,255,255,0.6)">${TURN_DESCRIPTIONS[idx]}</div>`;
+    handsHtml += `<div style="margin-top:6px;font-size:14px;color:rgba(26,23,20,0.55)">${TURN_DESCRIPTIONS[idx]}</div>`;
     if (goal.footer)
-      handsHtml += `<div style="margin-top:4px;font-size:10px;color:#c9622f;letter-spacing:1px">${goal.footer}</div>`;
+      handsHtml += `<div style="margin-top:4px;font-size:12px;color:#c9622f;letter-spacing:1px">${goal.footer}</div>`;
 
     const opacity = isFuture && game ? "opacity:0.45;" : "";
-    const borderColor = isCurrent ? "#c9622f88" : isCompleted ? "#8b9e6b44" : `${diffColor}33`;
-    const bgColor = isCurrent ? "rgba(201,98,47,0.07)" : isCompleted ? "rgba(139,158,107,0.05)" : `${diffColor}08`;
+    const borderColor = isCurrent ? "#c9622f88" : isCompleted ? "#3d6b4544" : `${diffColor}33`;
+    const bgColor = isCurrent ? "rgba(201,98,47,0.07)" : isCompleted ? "rgba(61,107,69,0.06)" : `${diffColor}08`;
 
     html += `<div class="panel" style="padding:14px 18px;${opacity}border-color:${borderColor};background:${bgColor}">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
         <div style="display:flex;align-items:center;gap:8px;min-width:90px">
-          <div style="font-size:11px;color:${diffColor};letter-spacing:2px;white-space:nowrap">OMG ${roundNum}</div>
-          <div style="font-size:16px;line-height:1">${goal.emoji}</div>
+          <div style="font-size:13px;color:${diffColor};letter-spacing:2px;white-space:nowrap">OMG ${roundNum}</div>
+          <div style="font-size:18px;line-height:1">${goal.emoji}</div>
         </div>
         <div style="flex:1;min-width:0">${handsHtml}</div>
         <div style="text-align:right">${statusBadge}</div>
