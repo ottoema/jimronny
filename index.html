@@ -630,15 +630,24 @@ function renderHome() {
   }
 
   if (setupPlayers.length > 0) {
-    html += `<div style="margin-bottom:24px">
-      <div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:12px">VALDA (${setupPlayers.length})</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px">`;
+    let orderRows = "";
     setupPlayers.forEach((p,i) => {
-      html += `<div class="chip" style="color:${PLAYER_COLORS[i]};border-color:${PLAYER_COLORS[i]}55;background:${PLAYER_COLORS[i]}12">
-        ${p.name}<span style="opacity:0.6;cursor:pointer;margin-left:6px;font-size:12px" onclick="removeSetupPlayer('${p.name}')">✕</span>
+      const color = PLAYER_COLORS[i];
+      const isFirst = i === 0, isLast = i === setupPlayers.length - 1;
+      orderRows += `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--divider)">
+        <div style="font-size:12px;color:var(--muted);width:20px;flex-shrink:0">${i+1}.</div>
+        <div style="flex:1;color:${color}">${p.name}${i===0?`<span style="font-size:10px;color:${color};opacity:0.55;margin-left:8px">blandar först</span>`:""}</div>
+        <div style="display:flex;gap:4px">
+          <button class="btn" onclick="moveSetupPlayerUp('${p.name}')" ${isFirst?"disabled":""} style="padding:4px 10px;font-size:14px;min-height:36px">↑</button>
+          <button class="btn" onclick="moveSetupPlayerDown('${p.name}')" ${isLast?"disabled":""} style="padding:4px 10px;font-size:14px;min-height:36px">↓</button>
+          <button class="btn" onclick="removeSetupPlayer('${p.name}')" style="padding:4px 10px;font-size:13px;min-height:36px;color:var(--muted)">✕</button>
+        </div>
       </div>`;
     });
-    html += `</div></div>`;
+    html += `<div style="margin-bottom:24px">
+      <div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:4px">SPELORDNING</div>
+      <div>${orderRows}</div>
+    </div>`;
   }
 
   const setupNames = new Set(setupPlayers.map(p => p.name.toLowerCase()));
@@ -676,6 +685,20 @@ function addSavedPlayer(name) {
 
 function removeSetupPlayer(name) {
   setupPlayers = setupPlayers.filter(p=>p.name!==name);
+  renderHome();
+}
+
+function moveSetupPlayerUp(name) {
+  const i = setupPlayers.findIndex(p=>p.name===name);
+  if (i <= 0) return;
+  [setupPlayers[i-1], setupPlayers[i]] = [setupPlayers[i], setupPlayers[i-1]];
+  renderHome();
+}
+
+function moveSetupPlayerDown(name) {
+  const i = setupPlayers.findIndex(p=>p.name===name);
+  if (i < 0 || i >= setupPlayers.length-1) return;
+  [setupPlayers[i], setupPlayers[i+1]] = [setupPlayers[i+1], setupPlayers[i]];
   renderHome();
 }
 
@@ -896,13 +919,20 @@ function renderGame() {
     switcherHtml = `<div style="padding:14px 0;border-bottom:1px solid var(--divider);margin-bottom:28px"><div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:10px">BYT MATCH</div><div style="display:flex;flex-wrap:wrap;gap:8px">${switchBtns}</div></div>`;
   }
 
+  const dealerIdx = (currentGame.currentRound - 1) % currentGame.players.length;
+  const dealer = currentGame.players[dealerIdx];
+  const dealerColor = PLAYER_COLORS[dealerIdx];
+
   el.innerHTML = `${switcherHtml}
     <div style="text-align:center;padding:32px 0 28px">
       <div style="font-size:10px;letter-spacing:4px;color:var(--muted)">OMGÅNG</div>
       <div style="font-family:Georgia,serif;font-size:64px;line-height:1;margin:6px 0">${currentGame.currentRound}</div>
       <div style="font-size:13px;color:var(--muted)">av ${TOTAL_ROUNDS}</div>
       <div style="font-size:11px;color:var(--dim);margin-top:4px">${currentGame.date}</div>
-      <div style="display:flex;gap:5px;justify-content:center;align-items:center;margin-top:20px;flex-wrap:wrap">${bars}</div>
+      <div style="margin-top:14px;font-size:13px">
+        <span style="color:var(--muted);letter-spacing:1px">Blanda &amp; dela: </span><span style="color:${dealerColor}">${dealer.name}</span>
+      </div>
+      <div style="display:flex;gap:5px;justify-content:center;align-items:center;margin-top:16px;flex-wrap:wrap">${bars}</div>
     </div>
     ${renderTurnGoal(currentGame.currentRound)}
     ${scoreCards}
