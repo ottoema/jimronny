@@ -320,7 +320,7 @@ async function initSheets() {
   const existing = (data.sheets||[]).map(s=>s.properties.title);
   const needed = [
     { title:"Players",     headers:["id","name","wins","gamesPlayed"] },
-    { title:"Games",       headers:["id","date","playerNames","playerScores","playerBuys","winnerId","winnerName"] },
+    { title:"Games",       headers:["id","date","playerNames","playerScores","playerBuys","winnerId","winnerName","note"] },
     { title:"Rounds",      headers:["gameId","round","playerName","score","buys"] },
     { title:"CurrentGame", headers:["key","value"] },
   ];
@@ -349,14 +349,15 @@ async function loadFromSheets() {
       savedPlayers = playerRows.map(r => ({ id:r[0], name:r[1], wins:parseInt(r[2])||0, gamesPlayed:parseInt(r[3])||0 }));
       lsave("gin_players", savedPlayers);
     }
-    const gameRows = await sheetsGet("Games!A2:G1000");
+    const gameRows = await sheetsGet("Games!A2:H1000");
     if (gameRows.length > 0) {
       allGames = gameRows.map(r => {
         const names  = r[2] ? r[2].split("|") : [];
         const scores = r[3] ? r[3].split("|").map(s=>s.split(",").map(Number)) : [];
         const buys   = r[4] ? r[4].split("|").map(b=>b.split(",").map(Number)) : [];
         return { id:r[0], date:r[1], finished:true,
-          players: names.map((name,i) => ({ name, id:name+r[0], scores:scores[i]||[], buys:buys[i]||[] })) };
+          players: names.map((name,i) => ({ name, id:name+r[0], scores:scores[i]||[], buys:buys[i]||[] })),
+          note: r[7] || "" };
       });
       lsave("gin_all_games", allGames);
     }
@@ -392,12 +393,13 @@ async function saveFinishedGame(game, updatedPlayers) {
   setSyncStatus("syncing"); renderAuthBar();
   try {
     const winner = [...game.players].sort((a,b)=>totalScore(a)-totalScore(b))[0];
-    await sheetsAppend("Games!A:G", [[
+    await sheetsAppend("Games!A:H", [[
       game.id, game.date,
       game.players.map(p=>p.name).join("|"),
       game.players.map(p=>p.scores.join(",")).join("|"),
       game.players.map(p=>p.buys.join(",")).join("|"),
-      winner?.id||"", winner?.name||""
+      winner?.id||"", winner?.name||"",
+      game.note || ""
     ]]);
     const roundRows = [];
     game.players.forEach(p => p.scores.forEach((score,i) => roundRows.push([game.id,i+1,p.name,score,p.buys[i]||0])));
@@ -564,6 +566,7 @@ function renderHome() {
           <div style="font-size:11px;letter-spacing:3px;color:#e84855;margin-bottom:4px">PÅGÅENDE MATCH</div>
           <div style="font-size:22px">Omgång ${currentGame.currentRound} / ${TOTAL_ROUNDS}</div>
           ${leader ? `<div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:4px">Leder: <span style="color:${PLAYER_COLORS[li]}">${leader.name}</span> (${totalScore(leader)} p)</div>` : ""}
+          <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:4px">📅 ${currentGame.date}</div>
         </div>
         <button class="btn" onclick="showView('game')" style="padding:10px 24px;background:#e84855;color:#fff;font-size:14px">Fortsätt →</button>
       </div>
@@ -759,11 +762,13 @@ function renderGame() {
     currentGame.players.forEach((p,i) => { headers += `<th style="color:${PLAYER_COLORS[i]};text-align:center">${p.name}</th>`; });
     let rows = "";
     currentGame.players[0].scores.forEach((_,round) => {
+      const winnerIdx = currentGame.roundWinners ? currentGame.roundWinners[round] : -1;
       let cells = `<td style="color:rgba(255,255,255,0.3)">${round+1}</td>`;
       currentGame.players.forEach((p,i) => {
         const s = p.scores[round];
         const b = p.buys[round]||0;
-        cells += `<td style="text-align:center;color:${s===0?"#06d6a0":"#f0ede8"};font-weight:${s===0?"bold":"normal"}">${s===0?"0 ✓":s}${b>0?`<span style="font-size:10px;color:${PLAYER_COLORS[i]};margin-left:4px">+${b}🛒</span>`:""}</td>`;
+        const isWinner = winnerIdx >= 0 ? i === winnerIdx : s === 0;
+        cells += `<td style="text-align:center;color:${isWinner?PLAYER_COLORS[i]:"#f0ede8"};font-weight:${isWinner?"bold":"normal"}">${isWinner?`<span title="Gick ut">—</span>`:s}${b>0?`<span style="font-size:10px;color:${PLAYER_COLORS[i]};margin-left:4px">+${b}🛒</span>`:""}</td>`;
       });
       rows += `<tr style="border-top:1px solid rgba(255,255,255,0.05)">${cells}</tr>`;
     });
@@ -780,6 +785,7 @@ function renderGame() {
       <div style="font-size:11px;letter-spacing:4px;color:rgba(255,255,255,0.4)">OMGÅNG</div>
       <div style="font-size:52px;line-height:1;margin:4px 0">${currentGame.currentRound}</div>
       <div style="font-size:14px;color:rgba(255,255,255,0.35)">av ${TOTAL_ROUNDS}</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.3);margin-top:4px">📅 ${currentGame.date}</div>
       <div style="display:flex;gap:4px;justify-content:center;margin-top:16px;flex-wrap:wrap">${bars}</div>
     </div>
     ${renderTurnGoal(currentGame.currentRound)}
@@ -820,7 +826,12 @@ function renderFinished() {
       <div style="font-size:64px;margin-bottom:16px">🏆</div>
       <h2 style="font-size:32px;margin:0 0 8px;font-weight:normal">${sorted[0].name} vinner!</h2>
       <div style="font-size:14px;color:rgba(255,255,255,0.4);margin-bottom:32px">Matchen avslutad · ${currentGame.date}</div>
-      <div style="display:flex;flex-direction:column;gap:10px;max-width:400px;margin:0 auto 32px">${rows}</div>
+      <div style="display:flex;flex-direction:column;gap:10px;max-width:400px;margin:0 auto 24px">${rows}</div>
+      <div class="card" style="padding:20px;max-width:400px;margin:0 auto 24px;text-align:left">
+        <div style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.4);margin-bottom:10px">NOTAT OM MATCHEN</div>
+        <textarea id="game-note-input" placeholder="Lägg till ett notat om matchen…" style="width:100%;min-height:80px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:4px;color:var(--fg);font-family:inherit;padding:10px 12px;font-size:14px;outline:none;resize:vertical">${currentGame.note||""}</textarea>
+        <button class="btn" onclick="saveGameNote(document.getElementById('game-note-input').value)" style="margin-top:10px;width:100%;padding:10px;background:rgba(6,214,160,0.15);border:1px solid rgba(6,214,160,0.35);color:#06d6a0;font-size:14px">💾 Spara notat</button>
+      </div>
       <button class="btn" onclick="currentGame=null;lsave('gin_current_game',null);showView('home')" style="padding:12px 32px;background:#e84855;color:#fff;font-size:16px">Ny match</button>
     </div>`;
 }
@@ -855,6 +866,23 @@ function renderStats() {
       <div style="display:flex;flex-direction:column;gap:8px">${lbRows}</div>
     </div>`;
 
+    // Date visualization
+    const dateCounts = {};
+    allGames.forEach(g => { if (g.date) dateCounts[g.date] = (dateCounts[g.date]||0)+1; });
+    const sortedDates = Object.keys(dateCounts).sort();
+    let dateChips = sortedDates.map(d => {
+      const count = dateCounts[d];
+      const dots = Array(count).fill(`<div style="width:9px;height:9px;border-radius:50%;background:#3a86ff;opacity:0.85"></div>`).join("");
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+        <div style="display:flex;gap:3px">${dots}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);white-space:nowrap">${d}</div>
+      </div>`;
+    }).join("");
+    html += `<div class="card" style="padding:20px;margin-bottom:20px">
+      <div style="font-size:12px;letter-spacing:3px;color:rgba(255,255,255,0.4);margin-bottom:16px">SPELDATUM</div>
+      <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">${dateChips}</div>
+    </div>`;
+
     let gameRows = "";
     [...allGames].reverse().forEach((g,gi) => {
       const sorted = [...g.players].sort((a,b)=>totalScore(a)-totalScore(b));
@@ -868,6 +896,7 @@ function renderStats() {
           <div style="font-size:13px">👑 ${sorted[0].name}</div>
         </div>
         <div style="font-size:12px;display:flex;flex-wrap:wrap;gap:6px">${players}</div>
+        ${g.note ? `<div style="margin-top:8px;font-size:12px;color:rgba(255,255,255,0.45);font-style:italic;border-top:1px solid rgba(255,255,255,0.06);padding-top:8px">📝 ${g.note}</div>` : ""}
       </div>`;
     });
     html += `<div class="card" style="padding:24px">
@@ -951,7 +980,7 @@ function renderRounds() {
       const winnerLabel = winnerName
         ? `<span style="color:${winnerColor}">${winnerName}</span>`
         : `<span style="color:#06d6a0">✓</span>`;
-      statusBadge = `<div style="font-size:11px;color:rgba(255,255,255,0.5)">Mästare: ${winnerLabel}</div>`;
+      statusBadge = `<div style="font-size:11px;color:rgba(255,255,255,0.5)">Vinnare: ${winnerLabel}</div>`;
     }
 
     // Build compact hands display
@@ -990,6 +1019,25 @@ function renderRounds() {
 
   html += `</div>`;
   document.getElementById("view-rounds").innerHTML = html;
+}
+
+async function updateGameNoteInSheets(gameId, note) {
+  if (!authToken) return;
+  try {
+    const rows = await sheetsGet("Games!A2:A1000");
+    const rowIdx = rows.findIndex(r => r[0] === gameId);
+    if (rowIdx >= 0) await sheetsUpdate(`Games!H${rowIdx + 2}`, [[note]]);
+  } catch(e) { console.warn("updateGameNoteInSheets failed", e); }
+}
+
+function saveGameNote(note) {
+  if (!currentGame) return;
+  currentGame.note = note.trim();
+  lsave("gin_current_game", currentGame);
+  const idx = allGames.findIndex(g => g.id === currentGame.id);
+  if (idx >= 0) { allGames[idx].note = currentGame.note; lsave("gin_all_games", allGames); }
+  updateGameNoteInSheets(currentGame.id, currentGame.note);
+  notify("Notat sparat ✓", "success");
 }
 
 function deletePlayer(name) {
