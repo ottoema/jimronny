@@ -494,9 +494,15 @@ function submitRound() {
   const allFilled = currentGame.players.every((_,i) =>
     i===goesOutIdx || (roundInputs[i]!==undefined && roundInputs[i]!==""));
   if (!allFilled) { notify("Fyll i poäng för alla spelare!", "warn"); return; }
+  for (let i = 0; i < currentGame.players.length; i++) {
+    if (i === goesOutIdx) continue;
+    const val = parseInt(roundInputs[i]);
+    if (!val || val === 0) { notify(`${currentGame.players[i].name}: 0 är inte tillåtet!`, "warn"); return; }
+    if (val % 5 !== 0) { notify(`${currentGame.players[i].name}: Poäng måste vara delbart med 5!`, "warn"); return; }
+  }
 
   currentGame.players = currentGame.players.map((p,i) => ({
-    ...p, scores:[...p.scores, i===goesOutIdx ? 0 : parseInt(roundInputs[i])||0]
+    ...p, scores:[...p.scores, i===goesOutIdx ? 0 : parseInt(roundInputs[i])]
   }));
   if (!currentGame.roundWinners) currentGame.roundWinners = [];
   currentGame.roundWinners.push(goesOutIdx);
@@ -842,7 +848,7 @@ function renderGame() {
         <div style="font-size:13px;color:${PLAYER_COLORS[i]};margin-bottom:4px">${p.name}</div>
         ${isOut
           ? `<div style="font-size:22px;color:#06d6a0">0 poäng ✓</div>`
-          : `<input type="number" min="0" placeholder="Poäng…" value="${roundInputs[i]??""}" oninput="roundInputs[${i}]=this.value" style="width:100%;font-size:18px">`
+          : `<input type="number" min="5" step="5" placeholder="Poäng…" value="${roundInputs[i]??""}" oninput="roundInputs[${i}]=this.value" style="width:100%;font-size:18px">`
         }
       </div>
       <div style="text-align:center">
