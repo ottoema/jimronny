@@ -7,15 +7,15 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0a0a0f;
-      --fg: #f0ede8;
-      --muted: rgba(255,255,255,0.38);
-      --dim: rgba(255,255,255,0.16);
-      --divider: rgba(255,255,255,0.08);
-      --red: #e84855;
-      --blue: #3a86ff;
-      --green: #06d6a0;
-      --yellow: #ffbe0b;
+      --bg: #12100e;
+      --fg: #f5ead8;
+      --muted: rgba(245,234,216,0.38);
+      --dim: rgba(245,234,216,0.16);
+      --divider: rgba(245,234,216,0.08);
+      --red: #c9622f;
+      --blue: #7b8fa8;
+      --green: #8b9e6b;
+      --yellow: #d4a843;
     }
     body { background: var(--bg); color: var(--fg); font-family: system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif; min-height: 100vh; }
     #app { max-width: 680px; margin: 0 auto; padding: 0 20px 80px; }
@@ -151,7 +151,7 @@ const REDIRECT_URI   = "https://ottoema.github.io/jimronny/";
 
 const TOTAL_ROUNDS = 15;
 const MAX_BUYS = 3;
-const PLAYER_COLORS = ["#e84855","#3a86ff","#06d6a0","#ffbe0b","#fb5607","#8338ec","#ff006e","#3ddc84"];
+const PLAYER_COLORS = ["#c9622f","#8b9e6b","#d4a843","#7b8fa8","#b56b8a","#6b8f7b","#a07850","#8a6baf"];
 
 // ─── TURN GOALS ───────────────────────────────────────────────────────────────
 // Each hand = array of [value, suit]. suit "★" = joker card.
@@ -253,8 +253,8 @@ let notifTimer = null;
 function notify(msg, type = "info") {
   const el = document.getElementById("notification");
   el.textContent = msg;
-  el.style.background = type === "success" ? "#06d6a0" : type === "warn" ? "#ffbe0b" : "#3a86ff";
-  el.style.color = "#0a0a0f";
+  el.style.background = type === "success" ? "#8b9e6b" : type === "warn" ? "#d4a843" : "#7b8fa8";
+  el.style.color = "#12100e";
   el.style.display = "block";
   if (notifTimer) clearTimeout(notifTimer);
   notifTimer = setTimeout(() => { el.style.display = "none"; }, 3000);
@@ -575,7 +575,7 @@ function renderAuthBar() {
       </button>
       <span style="font-size:12px;color:rgba(255,255,255,0.25)">Logga in för att synka med Google Sheets</span>`;
   } else {
-    const dotColor = syncStatus==="syncing" ? "#ffbe0b" : syncStatus==="error" ? "#e84855" : "#06d6a0";
+    const dotColor = syncStatus==="syncing" ? "#d4a843" : syncStatus==="error" ? "#c9622f" : "#8b9e6b";
     const syncText = syncStatus==="syncing" ? "Synkar…" : syncStatus==="error" ? "Synkfel" : "Google Sheets synkad ✓";
     bar.innerHTML = `
       <span class="sync-dot" style="background:${dotColor}"></span>
@@ -594,13 +594,13 @@ function renderHome() {
     const li = g.players.findIndex(p=>p.name===gLeader?.name);
     html += `<div style="border-top:1px solid var(--divider);padding:20px 0;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
       <div>
-        <div style="font-size:10px;letter-spacing:3px;color:#e84855;margin-bottom:6px">PÅGÅENDE MATCH${isActive?" · AKTIV":""}</div>
+        <div style="font-size:10px;letter-spacing:3px;color:#c9622f;margin-bottom:6px">PÅGÅENDE MATCH${isActive?" · AKTIV":""}</div>
         <div style="font-size:20px;font-family:Georgia,serif">Omgång ${g.currentRound} <span style="font-size:14px;color:var(--muted)">/ ${TOTAL_ROUNDS}</span></div>
         <div style="font-size:13px;color:var(--muted);margin-top:4px">${g.players.map(p=>p.name).join(", ")}</div>
         ${gLeader ? `<div style="font-size:13px;color:var(--muted);margin-top:2px">Leder: <span style="color:${PLAYER_COLORS[li]}">${gLeader.name}</span> · ${totalScore(gLeader)} p</div>` : ""}
         <div style="font-size:11px;color:var(--dim);margin-top:4px">${g.date}</div>
       </div>
-      <button class="btn" onclick="switchToGame('${g.id}')" style="padding:10px 22px;background:#e84855;border:none;color:#fff;font-size:14px;font-weight:600;border-radius:8px;white-space:nowrap">Spela →</button>
+      <button class="btn" onclick="switchToGame('${g.id}')" style="padding:10px 22px;background:#c9622f;border:none;color:#fff;font-size:14px;font-weight:600;border-radius:8px;white-space:nowrap">Spela →</button>
     </div>`;
   });
 
@@ -622,7 +622,7 @@ function renderHome() {
     savedPlayers.forEach(sp => {
       const already = setupPlayers.find(p=>p.name===sp.name);
       html += `<button class="chip" onclick="addSavedPlayer('${sp.name}')"
-        style="color:${already?"#06d6a0":"rgba(255,255,255,0.7)"};border-color:${already?"rgba(6,214,160,0.45)":"rgba(255,255,255,0.12)"};background:${already?"rgba(6,214,160,0.1)":"transparent"}">
+        style="color:${already?"#8b9e6b":"rgba(255,255,255,0.7)"};border-color:${already?"rgba(139,158,107,0.45)":"rgba(255,255,255,0.12)"};background:${already?"rgba(139,158,107,0.1)":"transparent"}">
         ${already?"✓ ":""}${sp.name}${sp.wins>0?`<span style="opacity:0.45;font-size:11px;margin-left:2px">${sp.wins}🏆</span>`:""}
       </button>`;
     });
@@ -647,10 +647,10 @@ function renderHome() {
     return s.size === setupNames.size && [...setupNames].every(n => s.has(n));
   });
   if (isDuplicate) {
-    html += `<div style="padding:10px 14px;background:rgba(255,190,11,0.08);border:1px solid rgba(255,190,11,0.3);border-radius:6px;color:#ffbe0b;font-size:13px;margin-bottom:16px">⚠️ En match med dessa spelare pågår redan!</div>`;
+    html += `<div style="padding:10px 14px;background:rgba(212,168,67,0.08);border:1px solid rgba(212,168,67,0.3);border-radius:6px;color:#d4a843;font-size:13px;margin-bottom:16px">⚠️ En match med dessa spelare pågår redan!</div>`;
   }
   html += `<button class="btn" onclick="startGame()" ${isDuplicate||setupPlayers.length<2?"disabled":""}
-    style="padding:15px;background:${setupPlayers.length>=2&&!isDuplicate?"#e84855":"rgba(255,255,255,0.06)"};border:none;color:#fff;font-size:15px;font-weight:600;width:100%;border-radius:10px">
+    style="padding:15px;background:${setupPlayers.length>=2&&!isDuplicate?"#c9622f":"rgba(255,255,255,0.06)"};border:none;color:#fff;font-size:15px;font-weight:600;width:100%;border-radius:10px">
     Starta match
   </button></div></div>`;
 
@@ -687,7 +687,7 @@ function switchToGame(id) {
 function renderTurnGoal(round) {
   const goal = TURN_GOALS[round - 1];
   if (!goal) return "";
-  const diffColor = round <= 4 ? "#3a86ff" : round <= 8 ? "#ffbe0b" : round <= 12 ? "#fb5607" : "#e84855";
+  const diffColor = round <= 4 ? "#7b8fa8" : round <= 8 ? "#d4a843" : round <= 12 ? "#c9622f" : "#b56b8a";
 
   function miniCard(value, suit) {
     const isJoker = suit === "★";
@@ -714,7 +714,7 @@ function renderTurnGoal(round) {
   handsHtml += `</div>`;
 
   const footerHtml = goal.footer
-    ? `<div style="margin-top:12px;font-size:11px;color:#e84855;letter-spacing:2px;font-weight:bold">${goal.footer}</div>`
+    ? `<div style="margin-top:12px;font-size:11px;color:#c9622f;letter-spacing:2px;font-weight:bold">${goal.footer}</div>`
     : "";
 
   return `<div class="panel" style="padding:16px 20px;margin-bottom:4px;text-align:center;border-color:${diffColor}33;background:${diffColor}09">
@@ -765,7 +765,7 @@ function renderScoreChart() {
 
   if (completedRounds < TOTAL_ROUNDS) {
     const xMarker = xOf(completedRounds - 1) + (xOf(completedRounds) - xOf(completedRounds - 1)) / 2;
-    svg += `<line x1="${xMarker}" y1="${padT}" x2="${xMarker}" y2="${padT + cH}" stroke="rgba(232,72,85,0.35)" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+    svg += `<line x1="${xMarker}" y1="${padT}" x2="${xMarker}" y2="${padT + cH}" stroke="rgba(201,98,47,0.35)" stroke-width="1.5" stroke-dasharray="4,3"/>`;
   }
 
   currentGame.players.forEach((p, i) => {
@@ -801,7 +801,7 @@ function renderGame() {
   for (let i=0;i<TOTAL_ROUNDS;i++) {
     const done = i < currentGame.currentRound - 1;
     const cur  = i === currentGame.currentRound - 1;
-    bars += `<div style="width:${cur?"10px":"7px"};height:${cur?"10px":"7px"};border-radius:50%;background:${done?"#06d6a0":cur?"#e84855":"rgba(255,255,255,0.12)"};transition:all 0.2s;flex-shrink:0"></div>`;
+    bars += `<div style="width:${cur?"10px":"7px"};height:${cur?"10px":"7px"};border-radius:50%;background:${done?"#8b9e6b":cur?"#c9622f":"rgba(255,255,255,0.12)"};transition:all 0.2s;flex-shrink:0"></div>`;
   }
 
   // Live scores — vertical list
@@ -843,7 +843,7 @@ function renderGame() {
       <div style="display:flex;align-items:flex-end;gap:16px">
         <div style="flex:1">
           ${isOut
-            ? `<div style="font-family:Georgia,serif;font-size:28px;color:#06d6a0">0 <span style="font-size:16px">✓</span></div>`
+            ? `<div style="font-family:Georgia,serif;font-size:28px;color:#8b9e6b">0 <span style="font-size:16px">✓</span></div>`
             : `<input type="number" min="5" step="5" placeholder="Poäng…" value="${roundInputs[i]??""}" oninput="roundInputs[${i}]=this.value" style="font-family:Georgia,serif">`
           }
         </div>
@@ -873,7 +873,7 @@ function renderGame() {
         const s = p.scores[round];
         const b = p.buys[round]||0;
         const isWinner = winnerIdx >= 0 ? i === winnerIdx : s === 0;
-        cells += `<td style="text-align:center;color:${isWinner?PLAYER_COLORS[i]:"#f0ede8"};font-weight:${isWinner?"bold":"normal"}">${isWinner?`<span title="Gick ut">—</span>`:s}${b>0?`<span style="font-size:10px;color:${PLAYER_COLORS[i]};margin-left:4px">+${b}🛒</span>`:""}</td>`;
+        cells += `<td style="text-align:center;color:${isWinner?PLAYER_COLORS[i]:"#f5ead8"};font-weight:${isWinner?"bold":"normal"}">${isWinner?`<span title="Gick ut">—</span>`:s}${b>0?`<span style="font-size:10px;color:${PLAYER_COLORS[i]};margin-left:4px">+${b}🛒</span>`:""}</td>`;
       });
       rows += `<tr style="border-top:1px solid rgba(255,255,255,0.05)">${cells}</tr>`;
     });
@@ -891,7 +891,7 @@ function renderGame() {
     let switchBtns = "";
     ongoingGames.forEach(g => {
       const isA = g.id === activeGameId;
-      switchBtns += `<button class="btn" onclick="switchToGame('${g.id}')" style="padding:6px 14px;font-size:12px;color:${isA?"#e84855":"rgba(255,255,255,0.55)"};border-color:${isA?"rgba(232,72,85,0.4)":"rgba(255,255,255,0.1)"}">${g.players.map(p=>p.name).join(" & ")}</button>`;
+      switchBtns += `<button class="btn" onclick="switchToGame('${g.id}')" style="padding:6px 14px;font-size:12px;color:${isA?"#c9622f":"rgba(255,255,255,0.55)"};border-color:${isA?"rgba(201,98,47,0.4)":"rgba(255,255,255,0.1)"}">${g.players.map(p=>p.name).join(" & ")}</button>`;
     });
     switcherHtml = `<div style="padding:14px 0;border-bottom:1px solid var(--divider);margin-bottom:28px"><div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:10px">BYT MATCH</div><div style="display:flex;flex-wrap:wrap;gap:8px">${switchBtns}</div></div>`;
   }
@@ -913,7 +913,7 @@ function renderGame() {
         <div style="display:flex;flex-wrap:wrap;gap:8px">${goesOutBtns}</div>
       </div>
       <div>${playerRows}</div>
-      <button class="btn" onclick="submitRound()" style="margin-top:28px;width:100%;padding:16px;background:#e84855;border:none;color:#fff;font-size:15px;letter-spacing:1px;border-radius:10px;font-weight:600">
+      <button class="btn" onclick="submitRound()" style="margin-top:28px;width:100%;padding:16px;background:#c9622f;border:none;color:#fff;font-size:15px;letter-spacing:1px;border-radius:10px;font-weight:600">
         Registrera omgång ${currentGame.currentRound} →
       </button>
     </div>
@@ -947,9 +947,9 @@ function renderFinished() {
       <div style="border-top:1px solid var(--divider);padding:24px 0">
         <div style="font-size:10px;letter-spacing:3px;color:var(--muted);margin-bottom:12px">NOTAT</div>
         <textarea id="game-note-input" placeholder="Lägg till ett notat…" style="width:100%;min-height:80px;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.16);color:var(--fg);font-family:inherit;padding:8px 0;font-size:14px;outline:none;resize:vertical">${game.note||""}</textarea>
-        <button class="btn" onclick="saveGameNote(document.getElementById('game-note-input').value)" style="margin-top:14px;width:100%;padding:12px;border-color:rgba(6,214,160,0.35);color:#06d6a0;font-size:14px;border-radius:8px">Spara notat</button>
+        <button class="btn" onclick="saveGameNote(document.getElementById('game-note-input').value)" style="margin-top:14px;width:100%;padding:12px;border-color:rgba(139,158,107,0.35);color:#8b9e6b;font-size:14px;border-radius:8px">Spara notat</button>
       </div>
-      <button class="btn" onclick="lastFinishedGame=null;showView('home')" style="width:100%;padding:15px;background:#e84855;border:none;color:#fff;font-size:15px;font-weight:600;border-radius:10px">Ny match</button>
+      <button class="btn" onclick="lastFinishedGame=null;showView('home')" style="width:100%;padding:15px;background:#c9622f;border:none;color:#fff;font-size:15px;font-weight:600;border-radius:10px">Ny match</button>
     </div>`;
 }
 
@@ -989,7 +989,7 @@ function renderStats() {
     const sortedDates = Object.keys(dateCounts).sort();
     let dateChips = sortedDates.map(d => {
       const count = dateCounts[d];
-      const dots = Array(count).fill(`<div style="width:9px;height:9px;border-radius:50%;background:#3a86ff;opacity:0.85"></div>`).join("");
+      const dots = Array(count).fill(`<div style="width:9px;height:9px;border-radius:50%;background:#7b8fa8;opacity:0.85"></div>`).join("");
       return `<div style="display:flex;flex-direction:column;align-items:center;gap:5px">
         <div style="display:flex;gap:3px">${dots}</div>
         <div style="font-size:11px;color:rgba(255,255,255,0.4);white-space:nowrap">${d}</div>
@@ -1077,18 +1077,18 @@ function renderRounds() {
     const isCompleted = completedRounds.length >= roundNum;
     const isFuture = !isCurrent && !isCompleted;
 
-    const diffColor = roundNum <= 4 ? "#3a86ff" : roundNum <= 8 ? "#ffbe0b" : roundNum <= 12 ? "#fb5607" : "#e84855";
+    const diffColor = roundNum <= 4 ? "#7b8fa8" : roundNum <= 8 ? "#d4a843" : roundNum <= 12 ? "#c9622f" : "#b56b8a";
 
     let statusBadge = "";
     if (isCurrent) {
-      statusBadge = `<div style="font-size:10px;letter-spacing:2px;color:#e84855;background:rgba(232,72,85,0.15);border:1px solid rgba(232,72,85,0.35);padding:2px 8px;border-radius:3px;white-space:nowrap">NUVARANDE</div>`;
+      statusBadge = `<div style="font-size:10px;letter-spacing:2px;color:#c9622f;background:rgba(201,98,47,0.15);border:1px solid rgba(201,98,47,0.35);padding:2px 8px;border-radius:3px;white-space:nowrap">NUVARANDE</div>`;
     } else if (isCompleted) {
       const winnerIdx = completedRounds[idx];
       const winnerName = game && game.players[winnerIdx] ? game.players[winnerIdx].name : null;
-      const winnerColor = game && winnerIdx !== undefined ? PLAYER_COLORS[winnerIdx] : "#06d6a0";
+      const winnerColor = game && winnerIdx !== undefined ? PLAYER_COLORS[winnerIdx] : "#8b9e6b";
       const winnerLabel = winnerName
         ? `<span style="color:${winnerColor}">${winnerName}</span>`
-        : `<span style="color:#06d6a0">✓</span>`;
+        : `<span style="color:#8b9e6b">✓</span>`;
       statusBadge = `<div style="font-size:11px;color:rgba(255,255,255,0.5)">Vinnare: ${winnerLabel}</div>`;
     }
 
@@ -1108,11 +1108,11 @@ function renderRounds() {
     handsHtml += `</div>`;
     handsHtml += `<div style="margin-top:6px;font-size:12px;color:rgba(255,255,255,0.6)">${TURN_DESCRIPTIONS[idx]}</div>`;
     if (goal.footer)
-      handsHtml += `<div style="margin-top:4px;font-size:10px;color:#e84855;letter-spacing:1px">${goal.footer}</div>`;
+      handsHtml += `<div style="margin-top:4px;font-size:10px;color:#c9622f;letter-spacing:1px">${goal.footer}</div>`;
 
     const opacity = isFuture && game ? "opacity:0.45;" : "";
-    const borderColor = isCurrent ? "#e8485588" : isCompleted ? "#06d6a044" : `${diffColor}33`;
-    const bgColor = isCurrent ? "rgba(232,72,85,0.07)" : isCompleted ? "rgba(6,214,160,0.05)" : `${diffColor}08`;
+    const borderColor = isCurrent ? "#c9622f88" : isCompleted ? "#8b9e6b44" : `${diffColor}33`;
+    const bgColor = isCurrent ? "rgba(201,98,47,0.07)" : isCompleted ? "rgba(139,158,107,0.05)" : `${diffColor}08`;
 
     html += `<div class="panel" style="padding:14px 18px;${opacity}border-color:${borderColor};background:${bgColor}">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
