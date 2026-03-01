@@ -834,13 +834,16 @@ function renderGame() {
   }
   const el = document.getElementById("view-game");
 
-  // Progress dots
-  let bars = "";
-  for (let i=0;i<TOTAL_ROUNDS;i++) {
-    const done = i < currentGame.currentRound - 1;
-    const cur  = i === currentGame.currentRound - 1;
-    bars += `<div style="width:${cur?"10px":"7px"};height:${cur?"10px":"7px"};border-radius:50%;background:${done?"#3d6b45":cur?"#c9622f":"rgba(26,23,20,0.12)"};transition:all 0.2s;flex-shrink:0"></div>`;
-  }
+  // Mini standings for header
+  const miniStandings = [...currentGame.players]
+    .map((p, i) => ({ p, i, t: totalScore(p) }))
+    .sort((a, b) => a.t - b.t)
+    .map(({ p, i, t }) =>
+      `<div style="display:flex;align-items:baseline;gap:6px;justify-content:flex-end">
+        <span style="font-size:13px;color:${PLAYER_COLORS[i]};font-weight:600">${p.name}</span>
+        <span style="font-family:Georgia,serif;font-size:17px;color:${PLAYER_COLORS[i]}">${t}</span>
+      </div>`
+    ).join("");
 
   // Live scores — vertical list
   const sorted = [...currentGame.players].map((p,i)=>({p,i,t:totalScore(p)})).sort((a,b)=>a.t-b.t);
@@ -962,9 +965,9 @@ function renderGame() {
         <div style="font-family:Georgia,serif;font-size:46px;line-height:1;margin:2px 0">${currentGame.currentRound} <span style="font-size:20px;color:var(--muted)">/ ${TOTAL_ROUNDS}</span></div>
         <div style="font-size:14px;color:var(--muted);margin-top:4px">Blanda &amp; dela: <span style="color:${dealerColor}">${dealer.name}</span></div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
-        <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;max-width:140px">${bars}</div>
-        <div style="font-size:13px;color:var(--dim)">${currentGame.date}</div>
+      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+        ${miniStandings}
+        <div style="font-size:12px;color:var(--dim);margin-top:4px">${currentGame.date}</div>
       </div>
     </div>
     ${renderTurnGoal(currentGame.currentRound)}
