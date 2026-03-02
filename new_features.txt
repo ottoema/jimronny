@@ -1,0 +1,37 @@
+1. [DONE] Remove the cart emoji in the Poänghistorik table. Showing the +x is sufficient.
+2. [DONE] In the Ställning table, Show the score from the last turn to the left of the players total score in a smaller size.
+3. [DONE] The page needs an icon so that saving it to the home screen shows a suitable icon.
+4. [DONE] Remove "15 omgångar 3 köp per omgång" from the top banner.
+5. [DONE] Can you avoid that the phone screen is locked after inactivity.
+6. [DONE] Make a clearer separation of the top banner and the interactive part of the page.
+7. [DONE] Fix the bug; "NaN köp" in the Ställning table.
+8. [DONE] Poängutveckling is quite small. Try to make it bigger or possible to enlarge.
+9. [DONE] After pressing Fortsätt on the result overlay, scroll to the "Omgång x/15" part of the screen.
+10. [DONE] Disable registering Köp when a player has been selected as "gick ut".
+11. [DONE] Remove KORTSPEL POÄNGTAVLA from the top.
+12. [DONE] When opening Ställning, the scrolling continues on the page below the overlay. Make sure that doesn't happen.
+13. [DONE] Find a better way to close the Ställning overlay.
+14. [DONE] It is still possible to register purchases for the players who didn't "Gick ut". After one player has been marked as "Gick ut", no purchases can be registerd in that turn for any player.
+15. [DONE] When the Ställning overlay is shown, make sure it is showing the content at the top first and not the button.
+16. [DONE] Make the enlaring of the poängutveckling appear more integrated with the rest of the page.
+17. [DONE] In poänghistorik, underline the leader of each turn in the table, as well as the total leader
+18. [DONE] Improve the end-game experience.
+19. [DONE] The note that I previously wanted to add at the end of each game is no longer there. Make sure it is part of the end-game experince.
+20. [DONE] In the matchhistorik, focus on the winner and the note.
+21. [DONE] The matchhistorik list can be long over time so only show the last 5 games and make it possible to expand to all games grouped by year and month.
+22. [DONE] The statisik paged shold include statistics on what weekdays we are playing and what weekdays we are finalizing games
+23. [DONE] Improve the turn end experience so it is clearer that a turn was completed.
+24. [DONE] At any time during a game, it should be possible to associate a Spotify playlist with the game. This playlist should be saved and listed under Matchhistorik.
+25. [DONE] It should not be possible to Ta bort a player.
+26. [DONE] Each time a Köp is registred, Omgångens mål is moving slightly. Try to avoid that.
+27. [DONE] Make it a bit more interactive when a purchase is registered.
+28. [DONE] Instead of printing "Blanda&dela", mark the player whos turn it is to blanda&dela in a clear but discrete way for each turn.
+29. [DONE] The underlining of current leader should not underline the number of purchases.
+30. [DONE] Replace B&D with an arrow poiting at the name.
+31. [DONE] Ensure that you can't zoom on the page. It messes it up. But the Poängutveckling graph should still be possible to enlarge.
+32. [DONE] Make a design change of VEM GICK UT? so it is more separated from the list of names below and solve that all players don't fit in one row.
+33. [DONE] The score input area including - and + should not be visible until you have chosen who gick ut. Together with 32, reconsider changing this completely. The functionality for registering purchases is excellent! Keep that, but make sure it integrates well with the rest.
+34. [DONE] Move the arrow indicating who should blanda&dela to the other side of the name.
+35. Move "Vem gick ut?" to below the score area.
+36. When a winner for one round is selected, hide the Köp dots and show the score input there instead. Make sure to make good use of the screen and avoid displacment of the players.
+37. Remove the text "Omgångens mål". And the emoji from each omgång.
