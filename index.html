@@ -142,6 +142,7 @@
     @keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     @keyframes dotPop { 0% { transform:scale(1); } 40% { transform:scale(1.6); } 100% { transform:scale(1); } }
+    @keyframes scoreIn { from { opacity:0; } to { opacity:1; } }
 
     ::-webkit-scrollbar { width: 3px; }
     ::-webkit-scrollbar-thumb { background: rgba(26,23,20,0.25); border-radius: 2px; }
@@ -547,12 +548,28 @@ function adjustScore(idx, delta) {
   const input = document.getElementById('score-input-'+idx);
   if (input) input.value = newVal;
   updateScoreMinus(idx);
+  updateSubmitButton();
 }
 
 function updateScoreMinus(idx) {
   const val = parseInt(roundInputs[idx])||0;
   const btn = document.getElementById('score-minus-'+idx);
   if (btn) btn.disabled = val <= 5;
+}
+
+function submitBtnHtml(enabled, round) {
+  return `<button id="submit-round-btn" class="btn" onclick="submitRound()" ${!enabled?"disabled":""}
+    style="margin-top:16px;width:100%;padding:18px;background:${enabled?"#c9622f":"rgba(26,23,20,0.07)"};border:none;color:#fff;font-size:18px;letter-spacing:1px;border-radius:12px;font-weight:600;opacity:${enabled?1:0.4}">
+    Registrera omgång ${round} →
+  </button>`;
+}
+
+function updateSubmitButton() {
+  const container = document.getElementById('submit-btn-container');
+  if (!container) return;
+  const all = goesOutIdx !== null && currentGame.players.every((_,i) =>
+    i===goesOutIdx || (roundInputs[i]!==undefined && roundInputs[i]!==""));
+  container.innerHTML = submitBtnHtml(all, currentGame.currentRound);
 }
 
 function submitRound() {
@@ -689,7 +706,12 @@ function renderHome() {
     <div style="border-top:1px solid var(--divider);padding:28px 0 20px">
       ${newGameHeading}`;
 
-  if (lastSrc && setupPlayers.length === 0) {
+  const lastSrcNames = new Set(lastSrc?.players.map(p => p.name.toLowerCase()) || []);
+  const lastSrcHasOngoing = lastSrc && ongoingGames.some(g => {
+    const s = new Set(g.players.map(p => p.name.toLowerCase()));
+    return s.size === lastSrcNames.size && [...lastSrcNames].every(n => s.has(n));
+  });
+  if (lastSrc && setupPlayers.length === 0 && !lastSrcHasOngoing) {
     const names = lastSrc.players.map(p => p.name).join(", ");
     html += `<button class="btn" onclick="loadLastGamePlayers()"
       style="width:100%;padding:14px;margin-bottom:20px;border-color:rgba(26,23,20,0.18);font-size:16px;text-align:left;border-radius:10px">
@@ -753,6 +775,12 @@ function renderHome() {
     style="padding:15px;background:${setupPlayers.length>=2&&!isDuplicate?"#c9622f":"rgba(26,23,20,0.07)"};border:none;color:#fff;font-size:17px;font-weight:600;width:100%;border-radius:10px">
     Starta match
   </button></div></div>`;
+
+  const lastMod = new Date(document.lastModified);
+  if (!isNaN(lastMod.getTime())) {
+    const deployStr = lastMod.toLocaleString('sv-SE', {year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    html += `<div style="text-align:center;padding:24px 0 4px;font-size:12px;color:var(--dim)">Publicerad ${deployStr}</div>`;
+  }
 
   document.getElementById("view-home").innerHTML = html;
 }
@@ -844,8 +872,7 @@ function renderTurnGoal(round) {
     : "";
 
   return `<div class="panel" style="padding:16px 20px;margin-bottom:4px;text-align:center;border-color:${diffColor}33;background:${diffColor}09">
-    <div style="font-size:12px;letter-spacing:3px;color:${diffColor};margin-bottom:8px">OMGÅNGENS MÅL</div>
-    <div style="margin-bottom:2px">${goal.emoji} <span style="font-size:15px;color:rgba(26,23,20,0.5);font-style:italic">${TURN_DESCRIPTIONS[round-1]}</span></div>
+    <div style="margin-bottom:2px"><span style="font-size:15px;color:rgba(26,23,20,0.5);font-style:italic">${TURN_DESCRIPTIONS[round-1]}</span></div>
     ${handsHtml}
     ${footerHtml}
   </div>`;
@@ -864,7 +891,7 @@ function renderScoreChart(tall = false) {
   const maxVal = Math.max(...allVals, 1);
 
   const W = 600, H = tall ? 340 : 220;
-  const padL = 42, padR = 72, padT = 16, padB = 28;
+  const padL = 42, padR = 12, padT = 16, padB = 28;
   const cW = W - padL - padR;
   const cH = H - padT - padB;
 
@@ -903,16 +930,24 @@ function renderScoreChart(tall = false) {
     cumulative[i].forEach((val, ri) => {
       svg += `<circle cx="${xOf(ri)}" cy="${yOf(val)}" r="4" fill="${color}" opacity="0.9"/>`;
     });
-    const lastX = xOf(completedRounds - 1);
-    const lastY = yOf(cumulative[i][completedRounds - 1]);
-    svg += `<text x="${lastX + 10}" y="${lastY + 4}" fill="${color}" font-size="11" font-family="Georgia,serif" opacity="0.9">${p.name}</text>`;
   });
 
   svg += `</svg>`;
 
+  let legendHtml = `<div style="display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:12px">`;
+  currentGame.players.forEach((p,i) => {
+    const c = PLAYER_COLORS[i];
+    legendHtml += `<div style="display:flex;align-items:center;gap:5px">
+      <div style="width:16px;height:3px;background:${c};border-radius:2px"></div>
+      <div style="width:7px;height:7px;border-radius:50%;background:${c}"></div>
+      <span style="font-size:12px;color:${c}">${p.name}</span>
+    </div>`;
+  });
+  legendHtml += `</div>`;
   return `<div style="border-top:1px solid var(--divider);padding:28px 0;overflow:hidden">
     <div style="font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:18px">POÄNGUTVECKLING</div>
     ${svg}
+    ${legendHtml}
   </div>`;
 }
 
@@ -930,7 +965,7 @@ function buildBuyDotsHtml(idx, animateSlot = -1) {
       <div style="width:16px;height:16px;border-radius:50%;background:${filled ? PLAYER_COLORS[idx] : "rgba(26,23,20,0.14)"}${anim}"></div>
     </button>`;
   }
-  return `<div id="buy-dots-${idx}" style="display:flex;gap:0;align-items:center">${dots}</div>`;
+  return `<div id="buy-dots-${idx}" style="display:flex;gap:0;align-items:center;width:144px;justify-content:flex-end">${dots}</div>`;
 }
 
 function renderGame() {
@@ -950,22 +985,9 @@ function renderGame() {
       </div>`
     ).join("");
 
-  // "Gick ut" picker — single chip row above player list
   const winnerChosen = goesOutIdx !== null;
-  let pickerHtml = `<div style="padding:20px 0 20px;border-bottom:2px solid var(--divider);margin-bottom:4px">
-    <div style="font-size:11px;letter-spacing:3px;color:var(--muted);margin-bottom:14px">VEM GICK UT?</div>
-    <div style="display:flex;flex-wrap:wrap;gap:10px">`;
-  currentGame.players.forEach((p, i) => {
-    const isSelected = goesOutIdx === i;
-    pickerHtml += `<button class="btn" onclick="setGoesOut(${isSelected ? "null" : i})"
-      style="padding:10px 20px;font-size:16px;font-weight:600;border-radius:100px;
-             color:${isSelected ? "#fff" : PLAYER_COLORS[i]};
-             background:${isSelected ? PLAYER_COLORS[i] : "transparent"};
-             border-color:${isSelected ? PLAYER_COLORS[i] : PLAYER_COLORS[i]+"66"}">
-      ${isSelected ? "✓ " : ""}${p.name}
-    </button>`;
-  });
-  pickerHtml += `</div></div>`;
+  const allScoresFilled = winnerChosen && currentGame.players.every((_,i) =>
+    i===goesOutIdx || (roundInputs[i]!==undefined && roundInputs[i]!==""));
 
   const dealerIdx = (currentGame.currentRound - 1) % currentGame.players.length;
 
@@ -980,38 +1002,38 @@ function renderGame() {
       ? `<span style="font-size:14px;color:${PLAYER_COLORS[i]};opacity:0.55;margin-left:6px;flex-shrink:0">←</span>`
       : "";
 
-    let scoreArea;
-    if (isOut) {
-      scoreArea = `<div style="display:flex;align-items:center;min-height:54px;padding:4px 0">
-        <div style="font-size:15px;color:#3d6b45;font-weight:600;letter-spacing:0.5px">✓ gick ut · 0 p</div>
-      </div>`;
-    } else if (!winnerChosen) {
-      scoreArea = ``;
+    let rightSide;
+    if (!winnerChosen) {
+      rightSide = buyBtns;
+    } else if (isOut) {
+      rightSide = `<div style="color:#3d6b45;font-size:14px;font-weight:600;flex-shrink:0;width:144px;text-align:right;padding-right:4px">✓ 0 p</div>`;
     } else {
-      scoreArea = `<div>
-        <div style="font-size:11px;letter-spacing:2px;color:${PLAYER_COLORS[i]};margin-bottom:6px">POÄNG</div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <button class="btn" id="score-minus-${i}" onclick="adjustScore(${i},-5)" ${curScore<=5?"disabled":""}
-            style="padding:0;font-size:28px;flex-shrink:0;width:54px;min-height:54px">−</button>
-          <input type="tel" inputmode="numeric" placeholder="—" value="${roundInputs[i]??""}"
-            oninput="roundInputs[${i}]=this.value;updateScoreMinus(${i})"
-            id="score-input-${i}"
-            style="font-family:Georgia,serif;font-size:30px;text-align:center;flex:1;min-width:0;padding:6px 4px;border-bottom:2px solid ${PLAYER_COLORS[i]}">
-          <button class="btn" onclick="adjustScore(${i},5)"
-            style="padding:0;font-size:28px;flex-shrink:0;width:54px;min-height:54px">+</button>
-        </div>
+      rightSide = `<div style="display:flex;align-items:center;gap:6px;flex-shrink:0;width:144px;animation:scoreIn 0.18s ease">
+        <button class="btn" id="score-minus-${i}" onclick="adjustScore(${i},-5)" ${curScore<=5?"disabled":""}
+          style="padding:0;font-size:22px;width:40px;height:40px">−</button>
+        <input type="tel" inputmode="numeric" placeholder="—" value="${roundInputs[i]??""}"
+          oninput="roundInputs[${i}]=this.value;updateScoreMinus(${i});updateSubmitButton()"
+          id="score-input-${i}"
+          style="font-family:Georgia,serif;font-size:22px;text-align:center;width:52px;padding:4px 2px;border-bottom:2px solid ${PLAYER_COLORS[i]}">
+        <button class="btn" onclick="adjustScore(${i},5)"
+          style="padding:0;font-size:22px;width:40px;height:40px">+</button>
       </div>`;
     }
 
+    const buyCountHtml = rb > 0 ? `<div style="font-size:12px;color:var(--muted);margin-top:2px">${rb} köp</div>` : "";
     playerRows += `<div style="padding:14px 0;border-bottom:1px solid var(--divider)">
-      <div style="display:flex;align-items:center;gap:8px${scoreArea ? ';margin-bottom:10px' : ''}">
-        <div style="display:flex;align-items:baseline;gap:0;flex:1;min-width:0;overflow:hidden">
-          <div style="font-size:20px;font-weight:600;color:${PLAYER_COLORS[i]};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
-          ${dealerArrow}
-        </div>
-        ${buyBtns}
+      <div style="display:flex;align-items:center;gap:8px">
+        <button onclick="setGoesOut(${isOut ? "null" : i})"
+          style="flex:1;min-width:0;text-align:left;background:transparent;border:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation">
+          <div style="display:flex;align-items:baseline;gap:0;overflow:hidden">
+            ${isOut ? `<span style="font-size:14px;color:#3d6b45;margin-right:6px;flex-shrink:0">✓</span>` : ""}
+            <div style="font-size:20px;font-weight:600;color:${PLAYER_COLORS[i]};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+            ${dealerArrow}
+          </div>
+          ${buyCountHtml}
+        </button>
+        ${rightSide}
       </div>
-      ${scoreArea}
     </div>`;
   });
 
@@ -1038,12 +1060,8 @@ function renderGame() {
     </div>
     ${renderTurnGoal(currentGame.currentRound)}
     <div style="padding:4px 0 0">
-      ${pickerHtml}
       <div>${playerRows}</div>
-      <button class="btn" onclick="submitRound()" ${!winnerChosen?"disabled":""}
-        style="margin-top:16px;width:100%;padding:18px;background:${winnerChosen?"#c9622f":"rgba(26,23,20,0.07)"};border:none;color:#fff;font-size:18px;letter-spacing:1px;border-radius:12px;font-weight:600;opacity:${winnerChosen?1:0.4}">
-        Registrera omgång ${currentGame.currentRound} →
-      </button>
+      <div id="submit-btn-container">${submitBtnHtml(allScoresFilled, currentGame.currentRound)}</div>
     </div>`;
 }
 
@@ -1514,12 +1532,28 @@ function openStandingsSheet(afterSubmit = false) {
         <div style="font-size:12px;letter-spacing:3px;color:var(--muted)">STÄLLNING</div>
         <div style="font-size:13px;color:var(--dim)">${completedRounds} / ${TOTAL_ROUNDS} omgångar</div>
        </div>`;
+  const prevSorted = completedRounds > 0
+    ? [...currentGame.players]
+        .map((p,i) => ({ i, t: p.scores.slice(0, -1).reduce((a,b) => a+b, 0) }))
+        .sort((a,b) => a.t - b.t)
+    : null;
   sorted.forEach(({p,i,t},rank) => {
     const lastScore = p.scores.length > 0 ? p.scores[p.scores.length - 1] : null;
+    let rankArrow = "";
+    if (prevSorted) {
+      const prevRank = prevSorted.findIndex(x => x.i === i);
+      if (prevRank > rank) rankArrow = `<span style="color:var(--green);font-size:12px;margin-left:6px">▲</span>`;
+      else if (prevRank < rank) rankArrow = `<span style="color:var(--red);font-size:12px;margin-left:6px">▼</span>`;
+    }
+    const pGames = allGames.filter(g => g.players.find(gp => gp.name === p.name));
+    const last3 = pGames.slice(-3);
+    const onStreak = last3.length === 3 && last3.every(g => {
+      const w = [...g.players].sort((a,b) => totalScore(a) - totalScore(b))[0];
+      return w?.name === p.name;
+    });
     html += `<div style="display:flex;align-items:center;padding:16px 24px;border-top:1px solid var(--divider)">
       <div style="flex:1">
-        <span style="font-size:20px;color:${PLAYER_COLORS[i]}">${p.name}</span>
-        ${rank===0?`<span style="font-size:11px;letter-spacing:2px;color:${PLAYER_COLORS[i]};opacity:0.7;margin-left:10px">LEDER</span>`:""}
+        <span style="font-size:20px;color:${PLAYER_COLORS[i]}">${p.name}${onStreak ? " 🔥" : ""}</span>${rankArrow}
         <div style="font-size:13px;color:var(--muted);margin-top:3px">${totalBuys(p)} köp</div>
       </div>
       <div style="display:flex;align-items:baseline;gap:10px">

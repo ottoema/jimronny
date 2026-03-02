@@ -32,6 +32,17 @@
 32. [DONE] Make a design change of VEM GICK UT? so it is more separated from the list of names below and solve that all players don't fit in one row.
 33. [DONE] The score input area including - and + should not be visible until you have chosen who gick ut. Together with 32, reconsider changing this completely. The functionality for registering purchases is excellent! Keep that, but make sure it integrates well with the rest.
 34. [DONE] Move the arrow indicating who should blanda&dela to the other side of the name.
-35. Move "Vem gick ut?" to below the score area.
-36. When a winner for one round is selected, hide the Köp dots and show the score input there instead. Make sure to make good use of the screen and avoid displacment of the players.
-37. Remove the text "Omgångens mål". And the emoji from each omgång.
+35. [DONE] Move "Vem gick ut?" to below the score area.
+36. [DONE] When a winner for one round is selected, hide the Köp dots and show the score input there instead. Make sure to make good use of the screen and avoid displacment of the players.
+37. [DONE] Remove the text "Omgångens mål". And the emoji from each omgång.
+38. [DONE] Change the section "Vem gick ut" and replace it with some kind of button where the turn can be set as completed, then find a way to select the player who "gick ut" in the player area above. Also include a small text with the number of purchases for each player on each row.
+39. [DONE] Don't suggest to start a new game with "Samma spelare som senast" if there is an unfinnished game with the same players.
+40. [DONE] The "Registrera omgång" button should not be enabled untill all points have been entered
+41. [DONE] On the leaderboard, indicate if the standing was changed by indicating a small arrow (up or down) for players that moved up or down in the standings.
+42. [DONE] If a player has "gått ut" three games in a row, there should be a fire emoji next to the name in the leaderboard.
+43. [DONE] In the Poängutveckling graph, show a legend below rather than showing the names on the grap
+44. [DONE] I found a bug: Expected: when selecting the player that gick ut, the Registrera button should be enabled when the other three player's score was registred. Actual: a score must be registered for all players before the button is enabled.
+45. [DONE] Remove LEDER from the leaderboard.
+46. [DONE] A but: the fire emoji should be shown in the game leader board and not the ALLA TIDER leaderboard.
+47. [DONE] On the first page, show a small timestamp when the page was deployed.
+48. [DONE] Improve the experience when a winner of a turn is selected and the points should be entered for the other players. Make sure objects are not displased and make it a nicer experience going into this mode.
