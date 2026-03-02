@@ -2,7 +2,7 @@
 <html lang="sv">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Jim Ronny 🃏</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🃏</text></svg>">
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23f4f0ea'/><text y='.9em' font-size='90'>🃏</text></svg>">
@@ -141,6 +141,7 @@
     @keyframes slideDown { from { opacity:0; transform: translate(-50%,-8px); } to { opacity:1; transform: translate(-50%,0); } }
     @keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes dotPop { 0% { transform:scale(1); } 40% { transform:scale(1.6); } 100% { transform:scale(1); } }
 
     ::-webkit-scrollbar { width: 3px; }
     ::-webkit-scrollbar-thumb { background: rgba(26,23,20,0.25); border-radius: 2px; }
@@ -376,7 +377,7 @@ async function initSheets() {
   const existing = (data.sheets||[]).map(s=>s.properties.title);
   const needed = [
     { title:"Players",     headers:["id","name","wins","gamesPlayed"] },
-    { title:"Games",       headers:["id","date","playerNames","playerScores","playerBuys","winnerId","winnerName","note"] },
+    { title:"Games",       headers:["id","date","playerNames","playerScores","playerBuys","winnerId","winnerName","note","playlist"] },
     { title:"Rounds",      headers:["gameId","round","playerName","score","buys"] },
     { title:"CurrentGame", headers:["key","value"] },
   ];
@@ -405,7 +406,7 @@ async function loadFromSheets() {
       savedPlayers = playerRows.map(r => ({ id:r[0], name:r[1], wins:parseInt(r[2])||0, gamesPlayed:parseInt(r[3])||0 }));
       lsave("gin_players", savedPlayers);
     }
-    const gameRows = await sheetsGet("Games!A2:H1000");
+    const gameRows = await sheetsGet("Games!A2:I1000");
     if (gameRows.length > 0) {
       allGames = gameRows.map(r => {
         const names  = r[2] ? r[2].split("|") : [];
@@ -413,7 +414,7 @@ async function loadFromSheets() {
         const buys   = r[4] ? r[4].split("|").map(b=>b.split(",").map(Number)) : [];
         return { id:r[0], date:r[1], finished:true,
           players: names.map((name,i) => ({ name, id:name+r[0], scores:scores[i]||[], buys:buys[i]||[] })),
-          note: r[7] || "" };
+          note: r[7] || "", playlist: r[8] || "" };
       });
       lsave("gin_all_games", allGames);
     }
@@ -460,13 +461,13 @@ async function saveFinishedGame(game, updatedPlayers) {
   setSyncStatus("syncing"); renderAuthBar();
   try {
     const winner = [...game.players].sort((a,b)=>totalScore(a)-totalScore(b))[0];
-    await sheetsAppend("Games!A:H", [[
+    await sheetsAppend("Games!A:I", [[
       game.id, game.date,
       game.players.map(p=>p.name).join("|"),
       game.players.map(p=>p.scores.join(",")).join("|"),
       game.players.map(p=>p.buys.join(",")).join("|"),
       winner?.id||"", winner?.name||"",
-      game.note || ""
+      game.note || "", game.playlist || ""
     ]]);
     const roundRows = [];
     game.players.forEach(p => p.scores.forEach((score,i) => roundRows.push([game.id,i+1,p.name,score,p.buys[i]||0])));
@@ -516,7 +517,9 @@ function addBuy(idx) {
   const nb = [...p.buys]; nb[currentGame.currentRound-1] = rb+1;
   currentGame.players[idx] = {...p, buys:nb};
   lsave("gin_ongoing_games", ongoingGames);
-  renderGame();
+  const el = document.getElementById(`buy-dots-${idx}`);
+  if (el) el.outerHTML = buildBuyDotsHtml(idx, rb);
+  else renderGame();
 }
 
 function removeBuy(idx) {
@@ -527,7 +530,9 @@ function removeBuy(idx) {
   currentGame.players[idx] = {...p, buys:nb};
   lsave("gin_ongoing_games", ongoingGames);
   notify(`Köp ångrad för ${p.name}`, "info");
-  renderGame();
+  const el = document.getElementById(`buy-dots-${idx}`);
+  if (el) el.outerHTML = buildBuyDotsHtml(idx);
+  else renderGame();
 }
 
 function setGoesOut(idx) {
@@ -911,6 +916,23 @@ function renderScoreChart(tall = false) {
   </div>`;
 }
 
+function buildBuyDotsHtml(idx, animateSlot = -1) {
+  const p = currentGame.players[idx];
+  const rb = p.buys[currentGame.currentRound - 1] || 0;
+  const winnerChosen = goesOutIdx !== null;
+  let dots = "";
+  for (let b = 0; b < MAX_BUYS; b++) {
+    const filled = b < rb;
+    const action = filled ? `removeBuy(${idx})` : `addBuy(${idx})`;
+    const disabled = winnerChosen || (!filled && rb >= MAX_BUYS);
+    const anim = (filled && b === animateSlot) ? ";animation:dotPop 0.3s ease" : "";
+    dots += `<button onclick="${action}" ${disabled ? "disabled" : ""} style="width:40px;height:40px;border-radius:50%;border:none;padding:0;display:flex;align-items:center;justify-content:center;background:transparent;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;flex-shrink:0">
+      <div style="width:16px;height:16px;border-radius:50%;background:${filled ? PLAYER_COLORS[idx] : "rgba(26,23,20,0.14)"}${anim}"></div>
+    </button>`;
+  }
+  return `<div id="buy-dots-${idx}" style="display:flex;gap:0;align-items:center">${dots}</div>`;
+}
+
 function renderGame() {
   if (lastFinishedGame || !currentGame || currentGame.finished) {
     renderFinished(); return;
@@ -945,22 +967,18 @@ function renderGame() {
   });
   pickerHtml += `</div></div>`;
 
+  const dealerIdx = (currentGame.currentRound - 1) % currentGame.players.length;
+
   // Player rows — always two-line structure (no layout shift when winner changes)
   let playerRows = "";
   currentGame.players.forEach((p,i) => {
     const rb = p.buys[currentGame.currentRound-1]||0;
     const isOut = goesOutIdx===i;
     const curScore = parseInt(roundInputs[i])||0;
-    let buyDots = "";
-    for(let b=0;b<MAX_BUYS;b++) {
-      const filled = b < rb;
-      const action = filled ? `removeBuy(${i})` : `addBuy(${i})`;
-      const disabled = winnerChosen || (!filled && rb >= MAX_BUYS);
-      buyDots += `<button onclick="${action}" ${disabled?"disabled":""} style="width:40px;height:40px;border-radius:50%;border:none;padding:0;display:flex;align-items:center;justify-content:center;background:transparent;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;flex-shrink:0">
-        <div style="width:16px;height:16px;border-radius:50%;background:${filled?PLAYER_COLORS[i]:"rgba(26,23,20,0.14)"}"></div>
-      </button>`;
-    }
-    const buyBtns = `<div style="display:flex;gap:0;align-items:center">${buyDots}</div>`;
+    const buyBtns = buildBuyDotsHtml(i);
+    const dealerArrow = i === dealerIdx
+      ? `<span style="font-size:14px;color:${PLAYER_COLORS[i]};opacity:0.55;margin-right:6px;flex-shrink:0">→</span>`
+      : "";
 
     let scoreArea;
     if (isOut) {
@@ -991,7 +1009,10 @@ function renderGame() {
 
     playerRows += `<div style="padding:14px 0;border-bottom:1px solid var(--divider)">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-        <div style="font-size:20px;font-weight:600;color:${PLAYER_COLORS[i]};flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+        <div style="display:flex;align-items:baseline;gap:0;flex:1;min-width:0;overflow:hidden">
+          ${dealerArrow}
+          <div style="font-size:20px;font-weight:600;color:${PLAYER_COLORS[i]};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+        </div>
         ${buyBtns}
       </div>
       ${scoreArea}
@@ -1008,16 +1029,11 @@ function renderGame() {
     switcherHtml = `<div style="padding:14px 0;border-bottom:1px solid var(--divider);margin-bottom:28px"><div style="font-size:12px;letter-spacing:2px;color:var(--muted);margin-bottom:10px">BYT MATCH</div><div style="display:flex;flex-wrap:wrap;gap:8px">${switchBtns}</div></div>`;
   }
 
-  const dealerIdx = (currentGame.currentRound - 1) % currentGame.players.length;
-  const dealer = currentGame.players[dealerIdx];
-  const dealerColor = PLAYER_COLORS[dealerIdx];
-
   el.innerHTML = `${switcherHtml}
     <div id="round-header" style="display:flex;align-items:center;justify-content:space-between;padding:20px 0 16px;border-bottom:1px solid var(--divider)">
       <div>
         <div style="font-size:12px;letter-spacing:3px;color:var(--muted)">OMGÅNG</div>
         <div style="font-family:Georgia,serif;font-size:46px;line-height:1;margin:2px 0">${currentGame.currentRound} <span style="font-size:20px;color:var(--muted)">/ ${TOTAL_ROUNDS}</span></div>
-        <div style="font-size:14px;color:var(--muted);margin-top:4px">Blanda &amp; dela: <span style="color:${dealerColor}">${dealer.name}</span></div>
       </div>
       <div onclick="openStandingsSheet()" style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;cursor:pointer">
         ${miniStandings}
@@ -1291,6 +1307,7 @@ function renderStats() {
         <div style="font-size:20px;color:${wc};margin-bottom:3px">👑 ${sorted[0].name}</div>
         <div style="font-size:13px;color:var(--muted)">${g.date}</div>
         ${g.note?`<div style="font-size:15px;color:var(--fg);font-style:italic;padding:5px 0">📝 ${g.note}</div>`:""}
+        ${g.playlist?`<a href="${g.playlist}" target="_blank" rel="noopener" style="font-size:13px;color:#1DB954;display:inline-block;margin-bottom:4px">♪ Spellista</a>`:""}
         <div style="font-size:13px;color:var(--muted);margin-top:3px">${scores}</div>
       </div>`;
     };
@@ -1347,8 +1364,6 @@ function renderPlayersHtml() {
           <div style="font-size:19px;color:${color};margin-bottom:4px">${p.name}</div>
           <div style="font-size:14px;color:var(--muted)">${p.gamesPlayed} matcher · ${p.wins} vinster · ${wr}% wins${s.avgScore!==undefined?` · ⌀ ${s.avgScore} p`:""}</div>
         </div>
-        <button class="btn" onclick="deletePlayer('${p.name}')"
-          style="padding:6px 12px;font-size:14px;color:#b5341e;border-color:rgba(181,52,30,0.2)">Ta bort</button>
       </div>`;
     });
   }
@@ -1531,14 +1546,17 @@ function openStandingsSheet(afterSubmit = false) {
         const b = p.buys[round]||0;
         const isWinner = winnerIdx >= 0 ? i === winnerIdx : s === 0;
         const isLeader = cumTotals[i] === minCum;
-        cells += `<td style="text-align:center;color:${isWinner?PLAYER_COLORS[i]:"#1a1714"};font-weight:${isWinner?"bold":"normal"};text-decoration:${isLeader?"underline":"none"};text-underline-offset:3px">${isWinner?`<span title="Gick ut">—</span>`:s}${b>0?`<span style="font-size:12px;color:${PLAYER_COLORS[i]};margin-left:4px">+${b}</span>`:""}</td>`;
+        const scoreSpan = isWinner
+          ? `<span title="Gick ut" style="text-decoration:${isLeader?"underline":"none"};text-underline-offset:3px">—</span>`
+          : `<span style="text-decoration:${isLeader?"underline":"none"};text-underline-offset:3px">${s}</span>`;
+        cells += `<td style="text-align:center;color:${isWinner?PLAYER_COLORS[i]:"#1a1714"};font-weight:${isWinner?"bold":"normal"}">${scoreSpan}${b>0?`<span style="font-size:12px;color:${PLAYER_COLORS[i]};margin-left:4px">+${b}</span>`:""}</td>`;
       });
       rows += `<tr style="border-top:1px solid rgba(26,23,20,0.06)">${cells}</tr>`;
     });
     const totals = currentGame.players.map(p => totalScore(p));
     const minTot = Math.min(...totals);
     let totRow = `<td style="font-size:13px;letter-spacing:2px;color:rgba(26,23,20,0.45)">TOT</td>`;
-    currentGame.players.forEach((p,i) => { totRow += `<td style="text-align:center;color:${PLAYER_COLORS[i]};font-weight:bold;font-size:18px;text-decoration:${totals[i]===minTot?"underline":"none"};text-underline-offset:3px">${totalScore(p)}</td>`; });
+    currentGame.players.forEach((p,i) => { totRow += `<td style="text-align:center;color:${PLAYER_COLORS[i]};font-weight:bold;font-size:18px"><span style="text-decoration:${totals[i]===minTot?"underline":"none"};text-underline-offset:3px">${totalScore(p)}</span></td>`; });
     html += `<div style="border-top:1px solid var(--divider);padding:20px 24px;overflow-x:auto">
       <div style="font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:20px">POÄNGHISTORIK</div>
       <table><thead><tr>${headers}</tr></thead><tbody>${rows}<tr style="border-top:1px solid rgba(26,23,20,0.12)">${totRow}</tr></tbody></table>
@@ -1549,7 +1567,16 @@ function openStandingsSheet(afterSubmit = false) {
     </div>`;
   }
 
-  html += `<div style="padding:20px 24px 32px">
+  const plVal = (currentGame.playlist || "").replace(/"/g, "&quot;");
+  html += `<div style="padding:4px 24px 20px;border-top:1px solid var(--divider)">
+    <div style="font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:10px;margin-top:20px">SPELLISTA</div>
+    <input type="url" inputmode="url" id="playlist-input" placeholder="Klistra in Spotify-länk…" value="${plVal}"
+      oninput="currentGame.playlist=this.value;lsave('gin_ongoing_games',ongoingGames);var a=document.getElementById('playlist-link');if(a){a.href=this.value;a.style.display=this.value?'block':'none'}"
+      style="width:100%;font-size:15px;border:none;border-bottom:1px solid var(--divider);padding:6px 0;background:transparent;color:var(--fg);outline:none">
+    <a id="playlist-link" href="${plVal}" target="_blank" rel="noopener"
+      style="font-size:13px;color:#1DB954;display:${plVal?"block":"none"};margin-top:10px">♪ Öppna spellistan</a>
+  </div>`;
+  html += `<div style="padding:0 24px 32px">
     <button class="btn" onclick="closeStandingsSheet()"
       style="width:100%;padding:18px;background:#c9622f;border:none;color:#fff;
              font-size:18px;font-weight:600;border-radius:12px">
@@ -1570,12 +1597,20 @@ function openStandingsSheet(afterSubmit = false) {
   sheetEl.ontouchend = e => { if (e.changedTouches[0].clientY - _ty0 > 70) closeStandingsSheet(); };
 }
 
+function setViewportZoom(allow) {
+  const vp = document.querySelector('meta[name="viewport"]');
+  if (vp) vp.content = allow
+    ? 'width=device-width, initial-scale=1.0'
+    : 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+}
+
 function openChartOverlay() {
   document.getElementById("chart-overlay-content").innerHTML = renderScoreChart(true);
   const el = document.getElementById("chart-overlay");
   el.scrollTop = 0;
   el.classList.add("open");
   document.getElementById("chart-backdrop").style.display = "block";
+  setViewportZoom(true);
   let _ty0 = 0;
   el.ontouchstart = e => { _ty0 = e.touches[0].clientY; };
   el.ontouchend = e => { if (e.changedTouches[0].clientY - _ty0 > 70) closeChartOverlay(); };
@@ -1584,6 +1619,7 @@ function openChartOverlay() {
 function closeChartOverlay() {
   document.getElementById("chart-overlay").classList.remove("open");
   document.getElementById("chart-backdrop").style.display = "none";
+  setViewportZoom(false);
 }
 
 function closeStandingsSheet() {
