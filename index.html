@@ -429,11 +429,27 @@ async function loadFromSheets() {
           try { const g = JSON.parse(val); if (g && !g.finished) loaded.push(g); } catch(e) {}
         }
       }
-      if (loaded.length > 0) {
-        ongoingGames = loaded;
+      if (loaded.length > 0 || ongoingGames.length > 0) {
+        const progress = (g) => Math.max(g.currentRound || 0, ...g.players.map(p => p.scores.length));
+        const localById = Object.fromEntries(ongoingGames.map(g => [g.id, g]));
+        const sheetById = Object.fromEntries(loaded.map(g => [g.id, g]));
+        const allIds = new Set([...Object.keys(localById), ...Object.keys(sheetById)]);
+        const merged = [];
+        for (const id of allIds) {
+          const local = localById[id];
+          const sheet = sheetById[id];
+          if (!local) { merged.push(sheet); continue; }
+          if (!sheet) { merged.push(local); continue; }
+          merged.push(progress(local) >= progress(sheet) ? local : sheet);
+        }
+        ongoingGames = merged;
         lsave("gin_ongoing_games", ongoingGames);
-        setActiveGame(loadedActiveId || loaded[0].id);
-        notify(`${loaded.length} pågående matcher återupptagna ✓`, "success");
+        const newActiveId = loadedActiveId && merged.find(g => g.id === loadedActiveId)
+          ? loadedActiveId
+          : (merged.length > 0 ? merged[0].id : null);
+        if (newActiveId) setActiveGame(newActiveId);
+        saveOngoingGamesToSheets();
+        notify(`${merged.length} pågående matcher synkade ✓`, "success");
       }
     } catch(e) {}
     if (!currentGame && ongoingGames.length > 0) {
