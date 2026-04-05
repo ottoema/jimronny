@@ -20,6 +20,45 @@
       --green: #3d6b45;
       --yellow: #9e7820;
     }
+
+    /* ─── EASTER THEME ──────────────────────────────────────────────────────────
+       Auto-activates March 29 – April 12 (two weeks around Easter 2026-04-05).
+       Manual override: append ?easter=1 to URL to force-enable, ?easter=0 to disable.
+       ─────────────────────────────────────────────────────────────────────────── */
+    body.easter {
+      --bg: #fef9ff;           /* whisper lavender  */
+      --fg: #2a1a3a;           /* deep plum (stays readable) */
+      --muted: rgba(42,26,58,0.5);
+      --dim: rgba(42,26,58,0.2);
+      --divider: rgba(42,26,58,0.1);
+      --red: #d4608a;          /* soft rose pink    */
+      --blue: #5b8fc9;         /* sky blue          */
+      --green: #4a9e6b;        /* fresh mint green  */
+      --yellow: #c4a020;       /* warm soft gold    */
+    }
+
+    /* Easter decorative banner — hidden unless .easter is active */
+    #easter-banner {
+      display: none;
+      text-align: center;
+      font-size: 20px;
+      letter-spacing: 6px;
+      padding: 8px 0 2px;
+      animation: easterFloat 2.8s ease-in-out infinite alternate;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body.easter #easter-banner { display: block; }
+
+    /* Tint the active nav indicator to lavender during Easter */
+    body.easter nav button.active { color: #8b5fbf; border-bottom-color: #8b5fbf; }
+    body.easter nav button:hover { color: rgba(42,26,58,0.75); }
+
+    @keyframes easterFloat {
+      from { transform: translateY(0px); }
+      to   { transform: translateY(-4px); }
+    }
+
     body { background: var(--bg); color: var(--fg); font-family: system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif; min-height: 100vh; font-size: 18px; }
     #app { max-width: 680px; margin: 0 auto; padding: 0 20px 80px; }
 
@@ -172,6 +211,7 @@
 <div id="app">
   <header>
     <h1>🃏 Jim Ronny</h1>
+    <div id="easter-banner">🐣&thinsp;🥚&thinsp;🐰&thinsp;🌸&thinsp;🌷&thinsp;🥚&thinsp;🐰&thinsp;🌸&thinsp;🐣</div>
     <div id="auth-bar"></div>
   </header>
 
@@ -187,6 +227,17 @@
 </div>
 
 <script>
+// ─── ENV ──────────────────────────────────────────────────────────────────────
+// Used to gate dev-only features. Check is done in both UI rendering and in the
+// mutation functions themselves so the guard cannot be bypassed by calling the
+// function directly from the console on production.
+function isLocalhost() {
+  // Allow dev features everywhere except the public production domain.
+  // This covers localhost, 127.0.0.1, and all LAN addresses (192.168.x.x,
+  // 10.x.x.x, 172.16–31.x.x, etc.) without enumerating private IP ranges.
+  return window.location.hostname !== 'ottoema.github.io';
+}
+
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 const CLIENT_ID      = "196118672846-ou2s55la38u8gku9r9mvgld6m99ms7rl.apps.googleusercontent.com";
 const SPREADSHEET_ID = "110T-ajfYcKBmzdyCUOFZ2pnIRaujyPZ_I6dmYuZY0CQ";
@@ -621,6 +672,43 @@ function submitRound() {
   }
 }
 
+// ─── DEV TOOLS (localhost only) ───────────────────────────────────────────────
+// These functions are gated by isLocalhost() so they are inert on production
+// even if called directly from the browser console.
+
+// Removes the most recently completed round from the active game.
+function devClearLatestRound() {
+  if (!isLocalhost()) return;
+  if (!currentGame) return;
+  const completed = currentGame.players[0]?.scores.length || 0;
+  if (completed === 0) { notify("Inga omgångar att ångra", "warn"); return; }
+  currentGame.players = currentGame.players.map(p => ({
+    ...p, scores: p.scores.slice(0, -1), buys: p.buys.slice(0, -1),
+  }));
+  if (currentGame.roundWinners) currentGame.roundWinners = currentGame.roundWinners.slice(0, -1);
+  currentGame.currentRound--;
+  lsave("gin_ongoing_games", ongoingGames);
+  roundInputs = {}; goesOutIdx = null;
+  notify(`[Dev] Omgång ${completed} ångrad`, "info");
+  render();
+}
+
+// Wipes all completed rounds from the active game, resetting it to round 1.
+function devClearAllRounds() {
+  if (!isLocalhost()) return;
+  if (!currentGame) return;
+  const completed = currentGame.players[0]?.scores.length || 0;
+  if (completed === 0) { notify("Inga omgångar att nollställa", "warn"); return; }
+  if (!confirm(`Nollställ alla ${completed} avklarade omgångar? Detta går inte att ångra.`)) return;
+  currentGame.players = currentGame.players.map(p => ({ ...p, scores: [], buys: [] }));
+  currentGame.roundWinners = [];
+  currentGame.currentRound = 1;
+  lsave("gin_ongoing_games", ongoingGames);
+  roundInputs = {}; goesOutIdx = null;
+  notify("[Dev] Alla omgångar nollställda", "info");
+  render();
+}
+
 function getStats() {
   return savedPlayers.map(p => {
     const pg = allGames.filter(g=>g.players.find(gp=>gp.name===p.name));
@@ -878,6 +966,118 @@ function renderTurnGoal(round) {
   </div>`;
 }
 
+// ─── ROUND BREAKDOWN CHART ────────────────────────────────────────────────────
+// Stacked bar chart: X = players, Y = cumulative score.
+// Each bar is divided into per-round segments stacked from bottom to top.
+//   • Latest round = full player color + "+score" label above; older rounds fade.
+//   • "R1"–"R15" label rendered white inside each segment (when tall enough).
+//   • "Gick ut" player per round: bold horizontal line across their bar at the
+//     round boundary (their score is 0 so no segment; the line marks the level).
+//
+// buildRoundBreakdownSVG(game) — pure <svg> string, shared by both callers.
+// renderRoundBreakdownChart()  — stats-page section wrapper.
+// openStandingsSheet()         — post-round sheet uses buildRoundBreakdownSVG directly.
+function buildRoundBreakdownSVG(game) {
+  const completedRounds = game.players[0]?.scores.length || 0;
+  if (completedRounds === 0) return "";
+
+  const players = game.players;
+  const roundWinners = game.roundWinners || [];
+  const maxTotal = Math.max(...players.map(p => totalScore(p)), 1);
+
+  const W = 560, H = 480;
+  const padL = 40, padR = 12, padT = 30, padB = 44;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+  const groupW = chartW / players.length;
+  const barW = Math.min(Math.max(groupW * 0.58, 20), 60);
+
+  const parts = [];
+
+  // Y-axis grid lines + labels
+  const ticks = 4;
+  for (let i = 0; i <= ticks; i++) {
+    const y = H - padB - (i / ticks) * chartH;
+    const val = Math.round((i / ticks) * maxTotal);
+    parts.push(`<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}" stroke="currentColor" stroke-opacity="0.08" stroke-width="1"/>`);
+    parts.push(`<text x="${padL - 6}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="10" fill="currentColor" opacity="0.4">${val}</text>`);
+  }
+
+  // One stacked bar per player
+  players.forEach((p, pi) => {
+    const color = PLAYER_COLORS[pi % PLAYER_COLORS.length];
+    const cx = padL + groupW * (pi + 0.5);
+    const bx = cx - barW / 2; // keep as number for arithmetic
+    let yBase = H - padB;     // top of accumulated segments (moves up as rounds stack)
+
+    p.scores.forEach((score, ri) => {
+      const isLatest = ri === completedRounds - 1;
+      const isGickUt = roundWinners[ri] === pi;
+      const segH = score === 0 ? 0 : Math.max((score / maxTotal) * chartH, 2);
+
+      if (segH > 0) {
+        const t = completedRounds > 1 ? ri / (completedRounds - 1) : 1;
+        const opacity = isLatest ? 1 : (0.18 + t * 0.42).toFixed(2);
+        yBase -= segH;
+
+        // Segment rect
+        parts.push(`<rect x="${bx.toFixed(1)}" y="${yBase.toFixed(1)}" width="${barW.toFixed(1)}" height="${segH.toFixed(1)}" fill="${color}" opacity="${opacity}" rx="2"/>`);
+
+        // Round label — white, centered inside segment, only when tall enough
+        if (segH >= 14) {
+          const ly = (yBase + segH / 2 + 3.5).toFixed(1);
+          parts.push(`<text x="${cx.toFixed(1)}" y="${ly}" text-anchor="middle" font-size="9" fill="white" opacity="0.72" font-weight="600">R${ri + 1}</text>`);
+        }
+
+        // "+score" above latest segment
+        if (isLatest && score > 0) {
+          parts.push(`<text x="${cx.toFixed(1)}" y="${(yBase - 5).toFixed(1)}" text-anchor="middle" font-size="11" fill="${color}" font-weight="700">+${score}</text>`);
+        }
+      }
+
+      // "Gick ut" indicator: bold horizontal line across the bar at this round's boundary.
+      // Rendered after the segment update so it sits at the correct stacked level.
+      if (isGickUt) {
+        parts.push(`<line x1="${bx.toFixed(1)}" y1="${yBase.toFixed(1)}" x2="${(bx + barW).toFixed(1)}" y2="${yBase.toFixed(1)}" stroke="${color}" stroke-width="2.5" stroke-linecap="round"/>`);
+      }
+    });
+
+    // Cumulative total above bar
+    const tot = totalScore(p);
+    const totY = (H - padB - (tot / maxTotal) * chartH - 16).toFixed(1);
+    parts.push(`<text x="${cx.toFixed(1)}" y="${totY}" text-anchor="middle" font-size="12" fill="${color}" font-weight="bold">${tot}</text>`);
+
+    // Player name below X axis
+    const name = p.name.length > 11 ? p.name.substring(0, 10) + "…" : p.name;
+    parts.push(`<text x="${cx.toFixed(1)}" y="${(H - padB + 18).toFixed(1)}" text-anchor="middle" font-size="13" fill="currentColor">${name}</text>`);
+  });
+
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:240px;display:block;color:var(--fg)" role="img" aria-label="Stapeldiagram med poäng per omgång och spelare">
+    ${parts.join("\n    ")}
+  </svg>`;
+}
+
+function renderRoundBreakdownChart(gameOverride = null) {
+  const game = gameOverride
+    ?? (currentGame && !currentGame.finished ? currentGame : null)
+    ?? (allGames.length > 0 ? allGames[allGames.length - 1] : null);
+  if (!game) return "";
+
+  const completedRounds = game.players[0]?.scores.length || 0;
+  if (completedRounds === 0) return "";
+
+  const svg = buildRoundBreakdownSVG(game);
+  const subtitle = !game.finished
+    ? `Pågående match · omgång ${completedRounds} av ${TOTAL_ROUNDS}`
+    : `Senaste matchen · ${game.date || ""}`;
+
+  return `<div style="border-top:1px solid var(--divider);padding:28px 0 8px">
+      <div style="font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:4px">POÄNG PER OMGÅNG</div>
+      <div style="font-size:14px;color:var(--muted);margin-bottom:14px">${subtitle}</div>
+      <div style="overflow-x:auto">${svg}</div>
+    </div>`;
+}
+
 function renderScoreChart(tall = false) {
   const completedRounds = currentGame.players[0]?.scores.length || 0;
   if (completedRounds === 0) return "";
@@ -1062,7 +1262,24 @@ function renderGame() {
     <div style="padding:4px 0 0">
       <div>${playerRows}</div>
       <div id="submit-btn-container">${submitBtnHtml(allScoresFilled, currentGame.currentRound)}</div>
-    </div>`;
+    </div>
+    ${(() => {
+      if (!isLocalhost()) return "";
+      const completed = currentGame.players[0]?.scores.length || 0;
+      return `<div style="margin-top:48px;padding:12px 14px;border:1px dashed rgba(26,23,20,0.13);border-radius:8px">
+        <div style="font-size:10px;letter-spacing:3px;color:rgba(26,23,20,0.3);margin-bottom:10px">DEV</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <button class="btn" onclick="devClearLatestRound()" ${completed===0?"disabled":""}
+            style="padding:7px 14px;font-size:13px;color:rgba(26,23,20,0.5)">
+            ↩ Ångra omgång ${completed || "—"}
+          </button>
+          <button class="btn" onclick="devClearAllRounds()" ${completed===0?"disabled":""}
+            style="padding:7px 14px;font-size:13px;color:rgba(26,23,20,0.5)">
+            ✕ Nollställ alla omgångar
+          </button>
+        </div>
+      </div>`;
+    })()}`;
 }
 
 function renderFinished() {
@@ -1114,6 +1331,7 @@ function renderFinished() {
 function renderStats() {
   const stats = getStats().filter(s=>s.gamesPlayed>0);
   let html = `<div style="padding:28px 0 0;font-size:12px;letter-spacing:4px;color:var(--muted)">STATISTIK</div>`;
+  html += renderRoundBreakdownChart();
 
   if (allGames.length===0) {
     html += `<div style="text-align:center;color:var(--muted);padding:60px 20px">Inga avslutade matcher ännu</div>`;
@@ -1496,6 +1714,31 @@ function deletePlayer(name) {
   renderPlayers();
 }
 
+// ─── EASTER THEME ─────────────────────────────────────────────────────────────
+// Auto-activates March 29 – April 12 (two weeks around Easter 2026-04-05).
+// Toggle manually: add ?easter=1 to the URL to force-enable, ?easter=0 to force-disable.
+// Example: https://ottoema.github.io/jimronny/?easter=1
+function applyEasterTheme() {
+  const params = new URLSearchParams(window.location.search);
+  const override = params.get("easter");
+  let active;
+  if (override === "1") {
+    active = true;
+  } else if (override === "0") {
+    active = false;
+  } else {
+    const now = new Date();
+    const m = now.getMonth() + 1; // 1-based month
+    const d = now.getDate();
+    // Easter 2026 is April 5 — window runs March 29 – April 12
+    active = (m === 3 && d >= 29) || (m === 4 && d <= 12);
+  }
+  if (active) {
+    document.body.classList.add("easter");
+  }
+}
+applyEasterTheme();
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 const wasOAuth = handleOAuthCallback();
 if (wasOAuth && authToken) {
@@ -1591,6 +1834,13 @@ function openStandingsSheet(afterSubmit = false) {
       <div style="font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:20px">POÄNGHISTORIK</div>
       <table><thead><tr>${headers}</tr></thead><tbody>${rows}<tr style="border-top:1px solid rgba(26,23,20,0.12)">${totRow}</tr></tbody></table>
     </div>`;
+    const _breakdownSVG = buildRoundBreakdownSVG(currentGame);
+    if (_breakdownSVG) {
+      html += `<div style="border-top:1px solid var(--divider);padding:20px 24px 8px">
+        <div style="font-size:12px;letter-spacing:3px;color:var(--muted);margin-bottom:14px">POÄNG PER OMGÅNG</div>
+        <div style="overflow-x:auto">${_breakdownSVG}</div>
+      </div>`;
+    }
     html += `<div onclick="openChartOverlay()" style="padding:0 24px;cursor:pointer">
       ${renderScoreChart()}
       <div style="text-align:center;font-size:11px;color:var(--dim);letter-spacing:1px;padding-bottom:8px">TRYCK FÖR ATT FÖRSTORA ›</div>
