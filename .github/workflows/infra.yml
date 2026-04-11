@@ -1,0 +1,63 @@
+name: Provision Azure infrastructure
+
+on:
+  push:
+    paths: ['infra/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One-time setup — create the service principal and store its JSON as AZURE_CREDENTIALS:
+#
+#   az group create --name jimronny-rg --location westeurope
+#
+#   az ad sp create-for-rbac \
+#     --name jimronny-github-actions \
+#     --role Contributor \
+#     --scopes /subscriptions/<SUBSCRIPTION_ID>/resourceGroups/jimronny-rg \
+#     --json-auth
+#
+# Copy the full JSON output to a GitHub secret named AZURE_CREDENTIALS.
+# Also add secrets: GH_PAT, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET
+# And a variable: ALLOWED_EMAILS
+
+jobs:
+  provision:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy Bicep
+        id: bicep
+        run: |
+          OUTPUT=$(az deployment group create \
+            --resource-group jimronny-rg \
+            --template-file infra/main.bicep \
+            --parameters infra/main.bicepparam \
+            --query "properties.outputs" -o json)
+          echo "SWA_TOKEN=$(echo $OUTPUT | jq -r '.swaDeploymentToken.value')" >> $GITHUB_OUTPUT
+          echo "COSMOS_CONN=$(echo $OUTPUT | jq -r '.cosmosConnectionString.value')" >> $GITHUB_OUTPUT
+          echo "SWA_HOST=$(echo $OUTPUT | jq -r '.swaHostname.value')" >> $GITHUB_OUTPUT
+
+      - name: Write SWA token + Cosmos connection string to GitHub secrets
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh secret set AZURE_STATIC_WEB_APPS_API_TOKEN --body "${{ steps.bicep.outputs.SWA_TOKEN }}" --repo ${{ github.repository }}
+          gh secret set COSMOS_CONNECTION_STRING --body "${{ steps.bicep.outputs.COSMOS_CONN }}" --repo ${{ github.repository }}
+
+      - name: Configure SWA app settings
+        run: |
+          az staticwebapp appsettings set --name jimronny \
+            --setting-names \
+              ALLOWED_EMAILS="${{ vars.ALLOWED_EMAILS }}" \
+              GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
+              GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
+              SESSION_SECRET="${{ secrets.SESSION_SECRET }}" \
+              COSMOS_CONNECTION_STRING="${{ steps.bicep.outputs.COSMOS_CONN }}"

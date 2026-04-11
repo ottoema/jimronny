@@ -10,10 +10,11 @@ function isLocalhost() {
 }
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
-const CLIENT_ID      = "196118672846-ou2s55la38u8gku9r9mvgld6m99ms7rl.apps.googleusercontent.com";
-const SPREADSHEET_ID = "110T-ajfYcKBmzdyCUOFZ2pnIRaujyPZ_I6dmYuZY0CQ";
-const SCOPES         = "https://www.googleapis.com/auth/spreadsheets";
-const REDIRECT_URI   = "https://ottoema.github.io/jimronny/";
+// The redirect URI must point to the backend authCallback function.
+// window.location.origin works for both local (http://localhost:4280) and production.
+const GOOGLE_CLIENT_ID = "196118672846-ou2s55la38u8gku9r9mvgld6m99ms7rl.apps.googleusercontent.com";
+const REDIRECT_URI     = window.location.origin + "/api/authCallback";
+const API_BASE         = "/api";
 
 const TOTAL_ROUNDS = 15;
 const MAX_BUYS = 3;
