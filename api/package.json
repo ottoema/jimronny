@@ -2,7 +2,7 @@
   "name": "jimronny-api",
   "version": "1.0.0",
   "description": "Azure Functions API for JimRonny",
-  "engines": { "node": ">=18" },
+  "engines": { "node": ">=20" },
   "dependencies": {
     "@azure/cosmos": "^4.0.0"
   }
