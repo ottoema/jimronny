@@ -1,0 +1,196 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f4f0ea;
+  --fg: #1a1714;
+  --muted: rgba(26,23,20,0.5);
+  --dim: rgba(26,23,20,0.2);
+  --divider: rgba(26,23,20,0.1);
+  --red: #c9622f;
+  --blue: #2c5f8a;
+  --green: #3d6b45;
+  --yellow: #9e7820;
+}
+
+/* ─── EASTER THEME ──────────────────────────────────────────────────────────
+   Auto-activates March 29 – April 12 (two weeks around Easter 2026-04-05).
+   Manual override: append ?easter=1 to URL to force-enable, ?easter=0 to disable.
+   ─────────────────────────────────────────────────────────────────────────── */
+body.easter {
+  --bg: #fef9ff;           /* whisper lavender  */
+  --fg: #2a1a3a;           /* deep plum (stays readable) */
+  --muted: rgba(42,26,58,0.5);
+  --dim: rgba(42,26,58,0.2);
+  --divider: rgba(42,26,58,0.1);
+  --red: #d4608a;          /* soft rose pink    */
+  --blue: #5b8fc9;         /* sky blue          */
+  --green: #4a9e6b;        /* fresh mint green  */
+  --yellow: #c4a020;       /* warm soft gold    */
+}
+
+/* Easter decorative banner — hidden unless .easter is active */
+#easter-banner {
+  display: none;
+  text-align: center;
+  font-size: 20px;
+  letter-spacing: 6px;
+  padding: 8px 0 2px;
+  animation: easterFloat 2.8s ease-in-out infinite alternate;
+  user-select: none;
+  -webkit-user-select: none;
+}
+body.easter #easter-banner { display: block; }
+
+/* Tint the active nav indicator to lavender during Easter */
+body.easter nav button.active { color: #8b5fbf; border-bottom-color: #8b5fbf; }
+body.easter nav button:hover { color: rgba(42,26,58,0.75); }
+
+@keyframes easterFloat {
+  from { transform: translateY(0px); }
+  to   { transform: translateY(-4px); }
+}
+
+body { background: var(--bg); color: var(--fg); font-family: system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif; min-height: 100vh; font-size: 18px; }
+#app { max-width: 680px; margin: 0 auto; padding: 0 20px 80px; }
+
+/* NOTIFICATION */
+#notification {
+  position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+  z-index: 1000; padding: 10px 24px; border-radius: 6px;
+  font-weight: 600; font-size: 16px; font-family: inherit;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+  animation: slideDown 0.25s ease; display: none;
+}
+
+/* HEADER */
+header { padding: 40px 0 22px; text-align: center; border-bottom: 1px solid var(--divider); margin-bottom: 0; }
+.subtitle { font-size: 13px; letter-spacing: 4px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+h1 { font-family: Georgia, serif; font-size: clamp(34px,7vw,52px); font-weight: normal; letter-spacing: -1px; }
+.tagline { font-size: 15px; color: rgba(26,23,20,0.45); margin-top: 4px; letter-spacing: 2px; }
+#auth-bar { margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+
+/* NAV */
+nav { display: flex; border-bottom: 2px solid rgba(26,23,20,0.1); margin-bottom: 32px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; box-shadow: 0 3px 10px rgba(26,23,20,0.07); }
+nav::-webkit-scrollbar { display: none; }
+nav button { padding: 14px 14px; background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--muted); font-family: inherit; font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; white-space: nowrap; margin-bottom: -1px; transition: color 0.2s, border-color 0.2s; }
+nav button:hover { color: rgba(26,23,20,0.75); }
+nav button.active { color: #1a1714; border-bottom-color: #1a1714; }
+nav button:disabled { opacity: 0.22; cursor: not-allowed; }
+
+/* CARDS / SECTIONS */
+.card { border-top: 1px solid var(--divider); padding: 28px 0; background: transparent; border-radius: 0; animation: fadeIn 0.3s ease; }
+/* Boxed panel for content that needs visual containment */
+.panel { background: rgba(26,23,20,0.04); border: 1px solid var(--divider); border-radius: 10px; animation: fadeIn 0.3s ease; }
+
+/* BUTTONS */
+.btn { cursor: pointer; background: transparent; border: 1px solid var(--divider); border-radius: 8px; font-family: inherit; color: var(--fg); font-size: 16px; transition: opacity 0.15s, transform 0.1s; }
+.btn:active { opacity: 0.6; transform: scale(0.97); }
+.btn:disabled { opacity: 0.2; cursor: not-allowed; }
+
+/* INPUTS */
+input[type=text], input[type=number], input[type=tel] {
+  background: transparent; border: none; border-bottom: 1px solid rgba(26,23,20,0.2);
+  border-radius: 0; color: var(--fg); font-family: inherit;
+  padding: 8px 0; font-size: 24px; outline: none; width: 100%;
+  -webkit-appearance: none;
+}
+input:focus { border-bottom-color: rgba(26,23,20,0.55); }
+::placeholder { color: rgba(26,23,20,0.3); }
+
+/* CHIPS */
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 100px; font-size: 16px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--divider); background: transparent; font-family: inherit; color: var(--fg); }
+
+/* SPINNER */
+.spinner { display: inline-block; width: 13px; height: 13px; border: 1.5px solid rgba(26,23,20,0.15); border-top-color: #1a1714; border-radius: 50%; animation: spin 0.7s linear infinite; }
+
+/* SYNC DOT */
+.sync-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+/* SCORE TABLE */
+table { width: 100%; border-collapse: collapse; font-size: 16px; }
+th { padding: 6px 10px; font-weight: normal; font-size: 14px; color: var(--muted); }
+td { padding: 10px 10px; }
+
+/* VIEWS */
+.view { display: none; animation: fadeIn 0.3s ease; }
+.view.active { display: block; }
+
+/* GOOGLE SIGNIN BTN */
+.google-btn {
+  padding: 8px 18px; background: transparent; border: 1px solid rgba(66,133,244,0.35);
+  color: #4285f4; font-size: 15px; cursor: pointer; border-radius: 8px;
+  font-family: inherit; display: flex; align-items: center; gap: 8px; transition: background 0.15s;
+}
+.google-btn:hover { background: rgba(66,133,244,0.1); }
+
+#standings-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 499;
+  background: rgba(0,0,0,0.3);
+}
+#standings-sheet {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 500;
+  background: var(--bg);
+  border-radius: 20px 20px 0 0;
+  max-height: 80vh;
+  overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform 0.28s ease;
+  box-shadow: 0 -4px 32px rgba(0,0,0,0.14);
+}
+#standings-sheet.open {
+  transform: translateY(0);
+}
+#chart-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  background: rgba(0,0,0,0.3);
+}
+#chart-overlay {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 601;
+  background: var(--bg);
+  border-radius: 20px 20px 0 0;
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform 0.28s ease;
+  box-shadow: 0 -4px 32px rgba(0,0,0,0.14);
+}
+#chart-overlay.open {
+  transform: translateY(0);
+}
+
+@keyframes slideDown { from { opacity:0; transform: translate(-50%,-8px); } to { opacity:1; transform: translate(-50%,0); } }
+@keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes dotPop { 0% { transform:scale(1); } 40% { transform:scale(1.6); } 100% { transform:scale(1); } }
+@keyframes scoreIn { from { opacity:0; } to { opacity:1; } }
+
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-thumb { background: rgba(26,23,20,0.25); border-radius: 2px; }
+
+button, input, .chip { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+
+@media (hover: none) {
+  .btn:active { opacity: 0.6; transform: scale(0.97); }
+}
+
+@supports (padding: max(0px)) {
+  #app { padding-bottom: max(80px, env(safe-area-inset-bottom)); }
+}
+
+@media (max-width: 480px) {
+  nav button { padding: 12px 8px; font-size: 12px; letter-spacing: 0.5px; min-height: 44px; flex: 1; justify-content: center; }
+  .btn { min-height: 44px; }
+  .chip { min-height: 44px; }
+  input[type=text], input[type=number], input[type=tel] { font-size: 18px !important; }
+  header { padding: 24px 0 18px; }
+  #app { padding: 0 16px 80px; }
+}
