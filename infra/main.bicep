@@ -1,5 +1,4 @@
 param location string = 'westeurope'
-param allowedEmails string
 
 // ─── COSMOS DB ────────────────────────────────────────────────────────────────
 resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = {
@@ -68,6 +67,8 @@ resource swa 'Microsoft.Web/staticSites@2023-01-01' = {
 }
 
 // ─── OUTPUTS ─────────────────────────────────────────────────────────────────
+#disable-next-line outputs-should-not-contain-secrets
 output swaDeploymentToken string = swa.listSecrets().properties.apiKey
+#disable-next-line outputs-should-not-contain-secrets
 output cosmosConnectionString string = cosmosAccount.listConnectionStrings().connectionStrings[0].connectionString
 output swaHostname string = swa.properties.defaultHostname
