@@ -1,0 +1,9 @@
+{
+  "name": "jimronny-api",
+  "version": "1.0.0",
+  "description": "Azure Functions API for JimRonny",
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "@azure/cosmos": "^4.0.0"
+  }
+}

@@ -21,7 +21,8 @@ function startGame() {
   lsave("gin_ongoing_games", ongoingGames);
   setActiveGame(game.id);
   setupPlayers = []; roundInputs = {}; goesOutIdx = null;
-  saveOngoingGamesToSheets();
+  savePlayersToBackend();
+  saveSessionToBackend();
   showView("game");
 }
 
@@ -120,11 +121,11 @@ function submitRound() {
     ongoingGames = ongoingGames.filter(g => g.id !== currentGame.id);
     lsave("gin_ongoing_games", ongoingGames);
     setActiveGame(ongoingGames.length > 0 ? ongoingGames[0].id : null);
-    saveFinishedGame(lastFinishedGame, savedPlayers);
+    saveGameToBackend(lastFinishedGame, savedPlayers);
   } else {
     currentGame.currentRound++;
     lsave("gin_ongoing_games", ongoingGames);
-    saveOngoingGamesToSheets();
+    saveSessionToBackend();
   }
 
   roundInputs = {}; goesOutIdx = null;
@@ -182,15 +183,6 @@ function getStats() {
   }).sort((a,b)=>b.wins-a.wins);
 }
 
-async function updateGameNoteInSheets(gameId, note) {
-  if (!authToken) return;
-  try {
-    const rows = await sheetsGet("Games!A2:A1000");
-    const rowIdx = rows.findIndex(r => r[0] === gameId);
-    if (rowIdx >= 0) await sheetsUpdate(`Games!H${rowIdx + 2}`, [[note]]);
-  } catch(e) { console.warn("updateGameNoteInSheets failed", e); }
-}
-
 function saveGameNote(note) {
   const game = lastFinishedGame || currentGame;
   if (!game) return;
@@ -198,7 +190,7 @@ function saveGameNote(note) {
   if (!lastFinishedGame) lsave("gin_ongoing_games", ongoingGames);
   const idx = allGames.findIndex(g => g.id === game.id);
   if (idx >= 0) { allGames[idx].note = game.note; lsave("gin_all_games", allGames); }
-  updateGameNoteInSheets(game.id, game.note);
+  updateGameNoteInBackend(game.id, game.note);
   notify("Notat sparat ✓", "success");
 }
 

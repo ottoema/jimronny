@@ -22,7 +22,6 @@ function notify(msg, type = "info") {
 // ─── EASTER THEME ─────────────────────────────────────────────────────────────
 // Auto-activates March 29 – April 12 (two weeks around Easter 2026-04-05).
 // Toggle manually: add ?easter=1 to the URL to force-enable, ?easter=0 to force-disable.
-// Example: https://ottoema.github.io/jimronny/?easter=1
 function applyEasterTheme() {
   const params = new URLSearchParams(window.location.search);
   const override = params.get("easter");
@@ -33,34 +32,36 @@ function applyEasterTheme() {
     active = false;
   } else {
     const now = new Date();
-    const m = now.getMonth() + 1; // 1-based month
+    const m = now.getMonth() + 1;
     const d = now.getDate();
-    // Easter 2026 is April 5 — window runs March 29 – April 12
     active = (m === 3 && d >= 29) || (m === 4 && d <= 12);
   }
-  if (active) {
-    document.body.classList.add("easter");
-  }
+  if (active) document.body.classList.add("easter");
 }
 applyEasterTheme();
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-const wasOAuth = handleOAuthCallback();
-if (wasOAuth && authToken) {
-  renderAuthBar();
-  initSheets()
-    .then(() => loadFromSheets())
-    .catch(e => { notify("Sheets-fel: " + e.message, "warn"); });
-} else {
-  // Migrate old gin_current_game if present
-  const oldGame = lload("gin_current_game", null);
-  if (oldGame && !oldGame.finished && !ongoingGames.find(g => g.id === oldGame.id)) {
-    ongoingGames.push(oldGame);
-    lsave("gin_ongoing_games", ongoingGames);
-    lsave("gin_current_game", null);
-  }
-  if (ongoingGames.length > 0) {
-    setActiveGame(activeGameId && ongoingGames.find(g => g.id === activeGameId) ? activeGameId : ongoingGames[0].id);
-  }
-  render();
+// Show a ?auth_error= banner if the backend callback redirected with an error.
+(function checkAuthError() {
+  const err = new URLSearchParams(window.location.search).get("auth_error");
+  if (!err) return;
+  const msgs = { forbidden: "Åtkomst nekad — din e-post finns inte i tillåtslistan.", token: "Inloggning misslyckades — försök igen.", server: "Serverfel vid inloggning — försök igen." };
+  notify(msgs[err] || "Inloggning avbröts.", "warn");
+  window.history.replaceState({}, "", window.location.pathname);
+})();
+
+// Migrate old gin_current_game storage key if present
+const oldGame = lload("gin_current_game", null);
+if (oldGame && !oldGame.finished && !ongoingGames.find(g => g.id === oldGame.id)) {
+  ongoingGames.push(oldGame);
+  lsave("gin_ongoing_games", ongoingGames);
+  lsave("gin_current_game", null);
 }
+if (ongoingGames.length > 0) {
+  setActiveGame(activeGameId && ongoingGames.find(g => g.id === activeGameId) ? activeGameId : ongoingGames[0].id);
+}
+
+// Render immediately from localStorage so the UI is never blank,
+// then sync with the backend in the background (updates if session cookie is valid).
+render();
+loadFromBackend();
