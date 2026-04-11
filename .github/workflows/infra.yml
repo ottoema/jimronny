@@ -33,11 +33,6 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Register required resource providers
-        run: |
-          az provider register --namespace Microsoft.DocumentDB --wait
-          az provider register --namespace Microsoft.Web --wait
-
       - name: Deploy Bicep
         id: bicep
         run: |
