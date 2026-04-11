@@ -19,8 +19,10 @@ permissions:
 #     --json-auth
 #
 # Copy the full JSON output to a GitHub secret named AZURE_CREDENTIALS.
-# Also add secrets: GH_PAT, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET
+# Also add secrets: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET
 # And a variable: ALLOWED_EMAILS
+# After the first infra run, follow the job summary instructions to set
+# AZURE_STATIC_WEB_APPS_API_TOKEN and COSMOS_CONNECTION_STRING.
 
 jobs:
   provision:
@@ -45,12 +47,22 @@ jobs:
           echo "COSMOS_CONN=$(echo $OUTPUT | jq -r '.cosmosConnectionString.value')" >> $GITHUB_OUTPUT
           echo "SWA_HOST=$(echo $OUTPUT | jq -r '.swaHostname.value')" >> $GITHUB_OUTPUT
 
-      - name: Write SWA token + Cosmos connection string to GitHub secrets
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
+      - name: Print secrets for manual GitHub setup
         run: |
-          gh secret set AZURE_STATIC_WEB_APPS_API_TOKEN --body "${{ steps.bicep.outputs.SWA_TOKEN }}" --repo ${{ github.repository }}
-          gh secret set COSMOS_CONNECTION_STRING --body "${{ steps.bicep.outputs.COSMOS_CONN }}" --repo ${{ github.repository }}
+          echo "## Post-deployment setup" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Add these two secrets to the repo (Settings → Secrets → Actions):" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Run locally to set them in one step:" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "az staticwebapp secrets list --name jimronny --query 'properties.apiKey' -o tsv \\" >> $GITHUB_STEP_SUMMARY
+          echo "  | gh secret set AZURE_STATIC_WEB_APPS_API_TOKEN --repo ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "az cosmosdb keys list --name jimronny-db --resource-group jimronny-rg --type connection-strings \\" >> $GITHUB_STEP_SUMMARY
+          echo "  --query 'connectionStrings[0].connectionString' -o tsv \\" >> $GITHUB_STEP_SUMMARY
+          echo "  | gh secret set COSMOS_CONNECTION_STRING --repo ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "SWA hostname: ${{ steps.bicep.outputs.SWA_HOST }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Configure SWA app settings
         run: |
