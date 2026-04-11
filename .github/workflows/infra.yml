@@ -6,8 +6,21 @@ on:
   workflow_dispatch:
 
 permissions:
-  id-token: write   # needed for OIDC login
   contents: read
+
+# One-time setup — create the service principal and store its JSON as AZURE_CREDENTIALS:
+#
+#   az group create --name jimronny-rg --location westeurope
+#
+#   az ad sp create-for-rbac \
+#     --name jimronny-github-actions \
+#     --role Contributor \
+#     --scopes /subscriptions/<SUBSCRIPTION_ID>/resourceGroups/jimronny-rg \
+#     --json-auth
+#
+# Copy the full JSON output to a GitHub secret named AZURE_CREDENTIALS.
+# Also add secrets: GH_PAT, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET
+# And a variable: ALLOWED_EMAILS
 
 jobs:
   provision:
@@ -15,12 +28,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Login to Azure (OIDC — no stored credentials)
+      - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Deploy Bicep
         id: bicep
