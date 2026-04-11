@@ -1,12 +1,9 @@
 {
-  "routes": [
-    { "route": "/api/*", "allowedRoles": ["anonymous"] },
-    { "route": "/*",     "serve": "/index.html", "statusCode": 200 }
-  ],
   "navigationFallback": {
-    "rewrite": "/index.html"
+    "rewrite": "/index.html",
+    "exclude": ["/js/*", "/style.css", "/api/*", "/*.{png,jpg,gif,ico,svg,woff2}"]
   },
   "platform": {
-    "apiRuntime": "node:18"
+    "apiRuntime": "node:20"
   }
 }
