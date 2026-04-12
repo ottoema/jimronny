@@ -89,6 +89,7 @@ resource funcApp 'Microsoft.Web/sites@2023-01-01' = {
         { name: 'WEBSITE_NODE_DEFAULT_VERSION',            value: '~20' }
         { name: 'WEBSITE_RUN_FROM_PACKAGE',                value: '1' }
         { name: 'COSMOS_CONNECTION_STRING',                value: cosmosAccount.listConnectionStrings().connectionStrings[0].connectionString }
+        { name: 'SPA_URL',                                 value: 'https://${swa.properties.defaultHostName}' }
         // Secrets injected by infra.yml after provisioning
         { name: 'GOOGLE_CLIENT_ID',     value: '' }
         { name: 'GOOGLE_CLIENT_SECRET', value: '' }
