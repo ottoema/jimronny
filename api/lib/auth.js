@@ -47,7 +47,18 @@ function clearCookieHeader() {
 }
 
 // Throws { status, message } if not authenticated — use in every protected function.
+// Accepts auth via cookie (desktop) or Authorization: Bearer header (iOS/WebKit where
+// cross-site cookies are blocked by ITP).
 function requireAuth(req) {
+  const authHeader = req.headers['authorization'] || '';
+  if (authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    try {
+      return verifyJwt(token, process.env.SESSION_SECRET);
+    } catch(e) {
+      throw { status: 401, message: e.message };
+    }
+  }
   const cookies = parseCookies(req.headers['cookie']);
   const token = cookies[SESSION_COOKIE];
   if (!token) throw { status: 401, message: 'No session' };
