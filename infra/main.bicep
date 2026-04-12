@@ -116,5 +116,5 @@ resource swa 'Microsoft.Web/staticSites@2023-01-01' = {
 // ─── OUTPUTS ─────────────────────────────────────────────────────────────────
 #disable-next-line outputs-should-not-contain-secrets
 output swaDeploymentToken string = swa.listSecrets().properties.apiKey
-output swaHostname string = swa.properties.defaultHostname
-output funcAppHostname string = funcApp.properties.defaultHostname
+output swaHostname string = swa.properties.defaultHostName
+output funcAppHostname string = funcApp.properties.defaultHostName
