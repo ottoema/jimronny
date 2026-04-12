@@ -44,10 +44,17 @@ function authHeader() {
 
 function handle401() { isAuthenticated = false; userEmail = null; renderAuthBar(); }
 
+function throwForStatus(r, text) {
+  // When the server returns a non-2xx with an empty body (e.g. Azure Functions
+  // crashing before it can write a response), fall back to the HTTP status so
+  // the error notification is never blank.
+  throw Object.assign(new Error(text || `HTTP ${r.status}`), { status: r.status });
+}
+
 async function apiGet(path) {
   const r = await fetch(API_BASE + path, { credentials: "include", headers: authHeader() });
   if (r.status === 401) { handle401(); throw Object.assign(new Error("Ej inloggad"), { status: 401 }); }
-  if (!r.ok) throw new Error(await r.text());
+  if (!r.ok) throwForStatus(r, await r.text());
   return r.json();
 }
 
@@ -58,7 +65,7 @@ async function apiPost(path, body) {
     body: JSON.stringify(body),
   });
   if (r.status === 401) { handle401(); throw Object.assign(new Error("Ej inloggad"), { status: 401 }); }
-  if (!r.ok) throw new Error(await r.text());
+  if (!r.ok) throwForStatus(r, await r.text());
   return r.json();
 }
 
