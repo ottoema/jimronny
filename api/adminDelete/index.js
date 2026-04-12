@@ -34,7 +34,11 @@ module.exports = async function(context, req) {
     context.res = { status: 200, body: { ok: true } };
   } catch(e) {
     context.log.error('adminDelete error:', e);
-    context.res = { status: e.status || 500, body: { error: e.message } };
+    // Cosmos SDK uses e.statusCode; our own thrown objects use e.status.
+    const status = e.status || e.statusCode || 500;
+    // e.message may be undefined for non-Error throws; fall back to a string representation.
+    const message = e.message || (typeof e === 'string' ? e : JSON.stringify(e)) || 'Internal error';
+    context.res = { status, body: { error: message } };
   }
 };
 
