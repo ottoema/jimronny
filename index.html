@@ -22,11 +22,13 @@
     <button id="nav-home" class="active" onclick="showView('home')">Hem</button>
     <button id="nav-game" disabled onclick="showView('game')">Match</button>
     <button id="nav-stats" onclick="showView('stats')">Statistik</button>
+    <button id="nav-admin" onclick="showView('admin')" style="display:none">Admin</button>
   </nav>
 
   <div id="view-home" class="view active"></div>
   <div id="view-game" class="view"></div>
   <div id="view-stats" class="view"></div>
+  <div id="view-admin" class="view"></div>
 </div>
 
 <div id="standings-backdrop" onclick="closeStandingsSheet()"></div>
@@ -48,6 +50,7 @@
 <script src="js/game.js"></script>
 <script src="js/chart.js"></script>
 <script src="js/render.js"></script>
+<script src="js/admin.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
