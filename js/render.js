@@ -18,6 +18,7 @@ function render() {
   if (currentView==="home")  renderHome();
   if (currentView==="game")  renderGame();
   if (currentView==="stats") renderStats();
+  if (currentView==="admin") renderAdmin();
 }
 
 function updateNavState() {
@@ -27,6 +28,9 @@ function updateNavState() {
 
 function renderAuthBar() {
   const bar = document.getElementById("auth-bar");
+  const adminBtn = document.getElementById("nav-admin");
+  if (adminBtn) adminBtn.style.display = isAuthenticated ? "" : "none";
+
   if (!isAuthenticated) {
     bar.innerHTML = `
       <button class="google-btn" onclick="signIn()">
