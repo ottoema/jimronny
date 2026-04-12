@@ -44,13 +44,18 @@ async function deleteGame(gameId) {
 
   if (game.finished) {
     // Roll back wins and gamesPlayed for everyone who played in this game.
+    // Player documents use a numeric id, not the name — query by name instead
+    // of doing a point-read with the wrong key.
     const winner = [...game.players].sort((a, b) =>
       a.scores.reduce((s, x) => s + x, 0) - b.scores.reduce((s, x) => s + x, 0)
     )[0];
 
     await Promise.all(game.players.map(async gp => {
       try {
-        const { resource: player } = await players().item(gp.name, gp.name).read();
+        const { resources } = await players().items
+          .query({ query: 'SELECT * FROM c WHERE c.name = @name', parameters: [{ name: '@name', value: gp.name }] })
+          .fetchAll();
+        const player = resources[0];
         if (!player) return;
         player.gamesPlayed = Math.max(0, (player.gamesPlayed || 0) - 1);
         if (winner && gp.name === winner.name) {
