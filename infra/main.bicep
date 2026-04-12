@@ -56,9 +56,57 @@ resource sessionsContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/c
   }
 }
 
+// ─── FUNCTION APP ─────────────────────────────────────────────────────────────
+// Standalone Consumption-plan Function App — avoids SWA Free tier managed
+// functions which have unreliable "content distribution" during deployment.
+resource funcStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: 'jimronnyfnstore'
+  location: location
+  sku: { name: 'Standard_LRS' }
+  kind: 'StorageV2'
+  properties: { minimumTlsVersion: 'TLS1_2', allowBlobPublicAccess: false }
+}
+
+resource funcPlan 'Microsoft.Web/serverfarms@2023-01-01' = {
+  name: 'jimronny-fn-plan'
+  location: location
+  sku: { name: 'Y1', tier: 'Dynamic' }
+  kind: 'functionapp'
+}
+
+resource funcApp 'Microsoft.Web/sites@2023-01-01' = {
+  name: 'jimronny-api'
+  location: location
+  kind: 'functionapp'
+  properties: {
+    serverFarmId: funcPlan.id
+    siteConfig: {
+      appSettings: [
+        { name: 'AzureWebJobsStorage',                      value: 'DefaultEndpointsProtocol=https;AccountName=${funcStorage.name};AccountKey=${funcStorage.listKeys().keys[0].value};EndpointSuffix=core.windows.net' }
+        { name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING', value: 'DefaultEndpointsProtocol=https;AccountName=${funcStorage.name};AccountKey=${funcStorage.listKeys().keys[0].value};EndpointSuffix=core.windows.net' }
+        { name: 'WEBSITE_CONTENTSHARE',                    value: 'jimronny-api' }
+        { name: 'FUNCTIONS_EXTENSION_VERSION',             value: '~4' }
+        { name: 'WEBSITE_NODE_DEFAULT_VERSION',            value: '~20' }
+        { name: 'WEBSITE_RUN_FROM_PACKAGE',                value: '1' }
+        { name: 'COSMOS_CONNECTION_STRING',                value: cosmosAccount.listConnectionStrings().connectionStrings[0].connectionString }
+        { name: 'SPA_URL',                                 value: 'https://${swa.properties.defaultHostName}' }
+        // Secrets injected by infra.yml after provisioning
+        { name: 'GOOGLE_CLIENT_ID',     value: '' }
+        { name: 'GOOGLE_CLIENT_SECRET', value: '' }
+        { name: 'SESSION_SECRET',       value: '' }
+        { name: 'ALLOWED_EMAILS',       value: '' }
+      ]
+      cors: {
+        allowedOrigins: [ 'https://${swa.properties.defaultHostname}' ]
+        supportCredentials: true  // required for SameSite=None cross-origin cookies
+      }
+    }
+    httpsOnly: true
+  }
+}
+
 // ─── STATIC WEB APPS ─────────────────────────────────────────────────────────
-// Provisioned without a GitHub link — the deployment token is extracted as an
-// output and written to GitHub secrets by the infra workflow, then used in app.yml.
+// Static SPA only — API is deployed separately to the Function App above.
 resource swa 'Microsoft.Web/staticSites@2023-01-01' = {
   name: 'jimronny'
   location: location
@@ -69,6 +117,5 @@ resource swa 'Microsoft.Web/staticSites@2023-01-01' = {
 // ─── OUTPUTS ─────────────────────────────────────────────────────────────────
 #disable-next-line outputs-should-not-contain-secrets
 output swaDeploymentToken string = swa.listSecrets().properties.apiKey
-#disable-next-line outputs-should-not-contain-secrets
-output cosmosConnectionString string = cosmosAccount.listConnectionStrings().connectionStrings[0].connectionString
-output swaHostname string = swa.properties.defaultHostname
+output swaHostname string = swa.properties.defaultHostName
+output funcAppHostname string = funcApp.properties.defaultHostName

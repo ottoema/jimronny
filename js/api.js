@@ -1,10 +1,20 @@
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+async function loadConfig() {
+  try {
+    const data = await fetch(API_BASE + '/getConfig').then(r => r.json());
+    googleClientId = data.googleClientId;
+  } catch(e) { console.warn('loadConfig failed', e); }
+}
+
 // ─── AUTH ─────────────────────────────────────────────────────────────────────
 // Authorization Code flow — the browser redirects to Google, Google redirects
 // to /api/authCallback, the backend exchanges the code for tokens and sets an
 // HttpOnly JWT cookie. The frontend never sees a token.
-function signIn() {
+async function signIn() {
+  if (!googleClientId) await loadConfig();
+  if (!googleClientId) { notify("Konfiguration saknas — försök igen.", "warn"); return; }
   const params = new URLSearchParams({
-    client_id:     GOOGLE_CLIENT_ID,
+    client_id:     googleClientId,
     redirect_uri:  REDIRECT_URI,
     response_type: "code",
     scope:         "openid email profile",

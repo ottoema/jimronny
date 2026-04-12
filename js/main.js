@@ -64,4 +64,5 @@ if (ongoingGames.length > 0) {
 // Render immediately from localStorage so the UI is never blank,
 // then sync with the backend in the background (updates if session cookie is valid).
 render();
+loadConfig();
 loadFromBackend();

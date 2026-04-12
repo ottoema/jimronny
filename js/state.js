@@ -5,6 +5,7 @@ function lload(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let isAuthenticated  = false;
 let userEmail        = null;
+let googleClientId   = null;
 let wakeLockSentinel = null;
 let savedPlayers     = lload("gin_players", []);
 let ongoingGames     = lload("gin_ongoing_games", []);

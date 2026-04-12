@@ -3,18 +3,16 @@
 // mutation functions themselves so the guard cannot be bypassed by calling the
 // function directly from the console on production.
 function isLocalhost() {
-  // Allow dev features everywhere except the public production domain.
-  // This covers localhost, 127.0.0.1, and all LAN addresses (192.168.x.x,
-  // 10.x.x.x, 172.16–31.x.x, etc.) without enumerating private IP ranges.
-  return window.location.hostname !== 'ottoema.github.io';
+  // Allow dev features everywhere except the production SWA domain.
+  return !window.location.hostname.endsWith('azurestaticapps.net');
 }
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
-// The redirect URI must point to the backend authCallback function.
-// window.location.origin works for both local (http://localhost:4280) and production.
-const GOOGLE_CLIENT_ID = "196118672846-ou2s55la38u8gku9r9mvgld6m99ms7rl.apps.googleusercontent.com";
-const REDIRECT_URI     = window.location.origin + "/api/authCallback";
-const API_BASE         = "/api";
+// API is hosted on a standalone Azure Function App (separate from SWA).
+// Absolute URL is required because SWA and the Function App are on different origins.
+const FUNCTION_APP_URL  = "https://jimronny-api.azurewebsites.net";
+const REDIRECT_URI      = FUNCTION_APP_URL + "/api/authCallback";
+const API_BASE          = FUNCTION_APP_URL + "/api";
 
 const TOTAL_ROUNDS = 15;
 const MAX_BUYS = 3;

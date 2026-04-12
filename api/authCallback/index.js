@@ -8,7 +8,7 @@ module.exports = async function(context, req) {
   const error = req.query.error;
 
   if (error || !code) {
-    context.res = { status: 302, headers: { Location: '/?auth_error=cancelled' } };
+    context.res = { status: 302, headers: { Location: `${process.env.SPA_URL}/?auth_error=cancelled` } };
     return;
   }
 
@@ -33,7 +33,7 @@ module.exports = async function(context, req) {
     });
     if (!tokenRes.ok) {
       context.log.error('Token exchange failed:', await tokenRes.text());
-      context.res = { status: 302, headers: { Location: '/?auth_error=token' } };
+      context.res = { status: 302, headers: { Location: `${process.env.SPA_URL}/?auth_error=token` } };
       return;
     }
     const { access_token } = await tokenRes.json();
@@ -48,7 +48,7 @@ module.exports = async function(context, req) {
     const allowed = (process.env.ALLOWED_EMAILS || '')
       .split(',').map(e => e.trim().toLowerCase());
     if (!allowed.includes(email.toLowerCase())) {
-      context.res = { status: 302, headers: { Location: '/?auth_error=forbidden' } };
+      context.res = { status: 302, headers: { Location: `${process.env.SPA_URL}/?auth_error=forbidden` } };
       return;
     }
 
@@ -62,12 +62,12 @@ module.exports = async function(context, req) {
     context.res = {
       status: 302,
       headers: {
-        Location: '/',
+        Location: `${process.env.SPA_URL}/`,
         'Set-Cookie': sessionCookieHeader(token),
       },
     };
   } catch(e) {
     context.log.error('Auth callback error:', e);
-    context.res = { status: 302, headers: { Location: '/?auth_error=server' } };
+    context.res = { status: 302, headers: { Location: `${process.env.SPA_URL}/?auth_error=server` } };
   }
 };
