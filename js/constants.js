@@ -10,7 +10,6 @@ function isLocalhost() {
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 // API is hosted on a standalone Azure Function App (separate from SWA).
 // Absolute URL is required because SWA and the Function App are on different origins.
-const GOOGLE_CLIENT_ID  = "196118672846-ou2s55la38u8gku9r9mvgld6m99ms7rl.apps.googleusercontent.com";
 const FUNCTION_APP_URL  = "https://jimronny-api.azurewebsites.net";
 const REDIRECT_URI      = FUNCTION_APP_URL + "/api/authCallback";
 const API_BASE          = FUNCTION_APP_URL + "/api";
