@@ -43,8 +43,18 @@ module.exports = async function(context, req) {
 };
 
 async function deleteGame(gameId) {
-  const { resource: game } = await games().item(gameId, gameId).read();
-  if (!game) return; // already gone
+  // Cosmos SDK v4 throws on 404 instead of returning { resource: undefined },
+  // so we catch it explicitly. A 404 means the game was never persisted to the
+  // DB (e.g. saveGameToBackend failed when the game finished) — nothing to delete.
+  let game;
+  try {
+    const { resource } = await games().item(gameId, gameId).read();
+    game = resource;
+  } catch(e) {
+    if (e.statusCode === 404 || e.code === 404) return;
+    throw e;
+  }
+  if (!game) return;
 
   if (game.finished) {
     // Roll back wins and gamesPlayed for everyone who played in this game.
