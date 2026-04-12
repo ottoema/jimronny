@@ -26,6 +26,7 @@ async function signIn() {
 
 async function signOut() {
   try { await apiPost("/authSignout", {}); } catch(e) {}
+  localStorage.removeItem('jimronny_jwt');
   isAuthenticated = false;
   userEmail = null;
   renderAuthBar();
@@ -33,12 +34,19 @@ async function signOut() {
 }
 
 // ─── BACKEND API ──────────────────────────────────────────────────────────────
-// All requests send credentials:include so the browser attaches the session cookie.
-// A 401 response means the session has expired — update auth state and re-render.
+// Requests send credentials:include (cookie) plus an Authorization: Bearer header
+// for iOS/WebKit where ITP blocks cross-site cookies between azurestaticapps.net
+// and azurewebsites.net. The backend accepts either auth method.
+function authHeader() {
+  const token = localStorage.getItem('jimronny_jwt');
+  return token ? { "Authorization": `Bearer ${token}` } : {};
+}
+
+function handle401() { isAuthenticated = false; userEmail = null; renderAuthBar(); }
 
 async function apiGet(path) {
-  const r = await fetch(API_BASE + path, { credentials: "include" });
-  if (r.status === 401) { isAuthenticated = false; userEmail = null; renderAuthBar(); throw Object.assign(new Error("Ej inloggad"), { status: 401 }); }
+  const r = await fetch(API_BASE + path, { credentials: "include", headers: authHeader() });
+  if (r.status === 401) { handle401(); throw Object.assign(new Error("Ej inloggad"), { status: 401 }); }
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
@@ -46,10 +54,10 @@ async function apiGet(path) {
 async function apiPost(path, body) {
   const r = await fetch(API_BASE + path, {
     method: "POST", credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeader() },
     body: JSON.stringify(body),
   });
-  if (r.status === 401) { isAuthenticated = false; userEmail = null; renderAuthBar(); throw Object.assign(new Error("Ej inloggad"), { status: 401 }); }
+  if (r.status === 401) { handle401(); throw Object.assign(new Error("Ej inloggad"), { status: 401 }); }
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
@@ -57,10 +65,10 @@ async function apiPost(path, body) {
 async function apiPut(path, body) {
   const r = await fetch(API_BASE + path, {
     method: "PUT", credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeader() },
     body: JSON.stringify(body),
   });
-  if (r.status === 401) { isAuthenticated = false; userEmail = null; renderAuthBar(); throw Object.assign(new Error("Ej inloggad"), { status: 401 }); }
+  if (r.status === 401) { handle401(); throw Object.assign(new Error("Ej inloggad"), { status: 401 }); }
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }

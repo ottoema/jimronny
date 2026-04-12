@@ -59,10 +59,13 @@ module.exports = async function(context, req) {
       process.env.SESSION_SECRET
     );
 
+    // Set a cookie (works on desktop Chrome/Firefox) AND embed the token in the
+    // redirect hash (works on iOS Chrome/Safari where WebKit ITP blocks cross-site
+    // cookies between azurestaticapps.net and azurewebsites.net).
     context.res = {
       status: 302,
       headers: {
-        Location: `${process.env.SPA_URL}/`,
+        Location: `${process.env.SPA_URL}/#token=${token}`,
         'Set-Cookie': sessionCookieHeader(token),
       },
     };

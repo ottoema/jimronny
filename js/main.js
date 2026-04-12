@@ -41,6 +41,17 @@ function applyEasterTheme() {
 applyEasterTheme();
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
+// On iOS, WebKit ITP blocks cross-site cookies (azurewebsites.net cookie from
+// azurestaticapps.net SPA). The backend embeds the JWT in the redirect hash as a
+// fallback — extract it here and store in localStorage for Bearer-token auth.
+(function extractTokenFromHash() {
+  const hash = window.location.hash;
+  if (!hash.startsWith('#token=')) return;
+  const token = hash.slice(7);
+  if (token) localStorage.setItem('jimronny_jwt', token);
+  window.history.replaceState({}, "", window.location.pathname);
+})();
+
 // Show a ?auth_error= banner if the backend callback redirected with an error.
 (function checkAuthError() {
   const err = new URLSearchParams(window.location.search).get("auth_error");
