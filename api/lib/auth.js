@@ -39,11 +39,11 @@ function verifyJwt(token, secret) {
 }
 
 function sessionCookieHeader(token) {
-  return `${SESSION_COOKIE}=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800`;
+  return `${SESSION_COOKIE}=${token}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=604800`;
 }
 
 function clearCookieHeader() {
-  return `${SESSION_COOKIE}=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0`;
+  return `${SESSION_COOKIE}=; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=0`;
 }
 
 // Throws { status, message } if not authenticated — use in every protected function.

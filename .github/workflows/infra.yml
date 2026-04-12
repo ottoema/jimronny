@@ -22,7 +22,7 @@ permissions:
 # Also add secrets: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET
 # And a variable: ALLOWED_EMAILS
 # After the first infra run, follow the job summary instructions to set
-# AZURE_STATIC_WEB_APPS_API_TOKEN and COSMOS_CONNECTION_STRING.
+# AZURE_STATIC_WEB_APPS_API_TOKEN and AZURE_FUNCTION_APP_PUBLISH_PROFILE.
 
 jobs:
   provision:
@@ -44,32 +44,34 @@ jobs:
             --parameters infra/main.bicepparam \
             --query "properties.outputs" -o json)
           echo "SWA_TOKEN=$(echo $OUTPUT | jq -r '.swaDeploymentToken.value')" >> $GITHUB_OUTPUT
-          echo "COSMOS_CONN=$(echo $OUTPUT | jq -r '.cosmosConnectionString.value')" >> $GITHUB_OUTPUT
           echo "SWA_HOST=$(echo $OUTPUT | jq -r '.swaHostname.value')" >> $GITHUB_OUTPUT
+          echo "FUNC_HOST=$(echo $OUTPUT | jq -r '.funcAppHostname.value')" >> $GITHUB_OUTPUT
 
       - name: Print secrets for manual GitHub setup
         run: |
           echo "## Post-deployment setup" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Add these two secrets to the repo (Settings → Secrets → Actions):" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Run locally to set them in one step:" >> $GITHUB_STEP_SUMMARY
+          echo "Run these locally to set required GitHub secrets:" >> $GITHUB_STEP_SUMMARY
           echo '```bash' >> $GITHUB_STEP_SUMMARY
           echo "az staticwebapp secrets list --name jimronny --query 'properties.apiKey' -o tsv \\" >> $GITHUB_STEP_SUMMARY
           echo "  | gh secret set AZURE_STATIC_WEB_APPS_API_TOKEN --repo ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "az cosmosdb keys list --name jimronny-db --resource-group jimronny-rg --type connection-strings \\" >> $GITHUB_STEP_SUMMARY
-          echo "  --query 'connectionStrings[0].connectionString' -o tsv \\" >> $GITHUB_STEP_SUMMARY
-          echo "  | gh secret set COSMOS_CONNECTION_STRING --repo ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "az functionapp deployment list-publishing-profiles \\" >> $GITHUB_STEP_SUMMARY
+          echo "  --name jimronny-api --resource-group jimronny-rg --xml \\" >> $GITHUB_STEP_SUMMARY
+          echo "  | gh secret set AZURE_FUNCTION_APP_PUBLISH_PROFILE --repo ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "SWA hostname: ${{ steps.bicep.outputs.SWA_HOST }}" >> $GITHUB_STEP_SUMMARY
+          echo "Function App hostname: ${{ steps.bicep.outputs.FUNC_HOST }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Also add \`https://${{ steps.bicep.outputs.FUNC_HOST }}/api/authCallback\` to Google OAuth authorized redirect URIs." >> $GITHUB_STEP_SUMMARY
 
-      - name: Configure SWA app settings
+      - name: Configure Function App settings
         run: |
-          az staticwebapp appsettings set --name jimronny \
-            --setting-names \
-              ALLOWED_EMAILS="${{ vars.ALLOWED_EMAILS }}" \
+          az functionapp config appsettings set --name jimronny-api \
+            --resource-group jimronny-rg \
+            --settings \
               GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
               GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
               SESSION_SECRET="${{ secrets.SESSION_SECRET }}" \
-              COSMOS_CONNECTION_STRING="${{ steps.bicep.outputs.COSMOS_CONN }}"
+              ALLOWED_EMAILS="${{ vars.ALLOWED_EMAILS }}"
